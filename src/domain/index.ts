@@ -36,8 +36,11 @@ export {
   buildExport,
   EXPORT_FORMAT_VERSION,
   exportFileName,
+  parseImport,
   type ExportFile,
   type ExportKind,
   type ExportScope,
   type ExportSource,
+  type ImportFailureReason,
+  type ImportParseResult,
 } from './exchange';

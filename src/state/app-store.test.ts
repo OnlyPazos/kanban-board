@@ -30,6 +30,7 @@ describe('AppStore', () => {
       listCards: async () => [],
       deleteCard: async () => {},
       deleteProject: async () => {},
+      replaceAll: async () => {},
       saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
@@ -83,6 +84,7 @@ describe('AppStore', () => {
       listCards: async () => [],
       deleteCard: async () => {},
       deleteProject: async () => {},
+      replaceAll: async () => {},
       saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
@@ -219,6 +221,7 @@ describe('AppStore', () => {
       listCards: async () => [],
       deleteCard: async () => {},
       deleteProject: async () => {},
+      replaceAll: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -296,6 +299,7 @@ describe('AppStore', () => {
       listCards: async () => [card],
       deleteCard: async () => {},
       deleteProject: async () => {},
+      replaceAll: async () => {},
       saveCard,
     });
     await store.hydrate();
@@ -315,6 +319,7 @@ describe('AppStore', () => {
       listCards: async () => [card],
       deleteCard: async () => {},
       deleteProject: async () => {},
+      replaceAll: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -336,6 +341,7 @@ describe('AppStore', () => {
       listCards: async () => [card],
       deleteCard: async () => {},
       deleteProject: async () => {},
+      replaceAll: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -402,6 +408,7 @@ describe('AppStore', () => {
         throw new Error('QuotaExceededError');
       },
       deleteProject: async () => {},
+      replaceAll: async () => {},
     });
     await store.hydrate();
     await expect(store.deleteCard(card.id)).rejects.toThrow('QuotaExceededError');
@@ -504,6 +511,7 @@ describe('AppStore · archivo de proyectos', () => {
       listCards: async () => [card],
       saveCard: async () => {},
       deleteCard: async () => {},
+      replaceAll: async () => {},
       deleteProject: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -555,5 +563,50 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
     await reloaded.hydrate();
     expect(reloaded.projects).toEqual(projectsBefore);
     expect(byId(reloaded.cards)).toEqual(cardsBefore);
+  });
+
+  it('import completo: sustituye todo tal cual, incluidos proyectos archivados, y sobrevive a recargar (AC-030)', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const old = await store.createProject({ name: 'Nuevo' });
+    await store.createCard(old.id, 'Vieja', 'en-curso');
+
+    const archived = { ...createProject({ name: 'Archivado' }, new Date('2026-01-01T00:00:00.000Z')), archived: true };
+    const recent = createProject({ name: 'Reciente' }, new Date('2026-05-01T00:00:00.000Z'));
+    const cards = [
+      { ...createCard({ projectId: archived.id, title: 'A', status: 'en-pausa' }, new Date('2026-01-02T00:00:00.000Z')), archived: true },
+      createCard({ projectId: recent.id, title: 'B', status: 'finalizado' }, new Date('2026-05-02T00:00:00.000Z')),
+    ];
+    await store.replaceAll([archived, recent], cards);
+
+    expect(store.projects).toEqual([recent, archived]);
+    expect(store.cards).toEqual(cards);
+    expect(store.archivedProjects).toEqual([archived]);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.projects).toEqual([recent, archived]);
+    expect([...reloaded.cards].sort((a, b) => a.title.localeCompare(b.title))).toEqual(cards);
+  });
+
+  it('si el import completo falla al guardar, nada cambia en memoria', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
+      listCards: async () => [],
+      saveCard: async () => {},
+      deleteCard: async () => {},
+      deleteProject: async () => {},
+      replaceAll: async () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    await store.hydrate();
+    await expect(store.replaceAll([createProject({ name: 'Otra' })], [])).rejects.toThrow('QuotaExceededError');
+    expect(store.projects).toEqual([project]);
   });
 });

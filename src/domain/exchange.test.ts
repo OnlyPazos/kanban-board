@@ -7,6 +7,7 @@ import {
   createProject,
   EXPORT_FORMAT_VERSION,
   exportFileName,
+  parseImport,
 } from './index';
 
 const now = new Date('2026-10-10T10:00:00.000Z');
@@ -88,5 +89,46 @@ describe('exportFileName', () => {
     expect(exportFileName(date, 'Mi app')).toBe('kanban-Mi-app-2026-10-05.json');
     expect(exportFileName(date, ' a/b:c*? ')).toBe('kanban-a-b-c-2026-10-05.json');
     expect(exportFileName(date, '???')).toBe('kanban-proyecto-2026-10-05.json');
+  });
+});
+
+describe('parseImport (validación mínima, WI-AC-030)', () => {
+  it('un export completo vuelve idéntico: ids, fechas y flags tal cual (round-trip)', () => {
+    const file = buildExport(sample(), { kind: 'full' }, now);
+    const result = parseImport(JSON.stringify(file));
+    expect(result).toEqual({ ok: true, data: file });
+  });
+
+  it('distingue el tipo de archivo por `kind`', () => {
+    const file = buildExport(sample(), { kind: 'project', projectId: 'p-active' }, now);
+    const result = parseImport(JSON.stringify(file));
+    expect(result.ok && result.data.kind).toBe('project');
+  });
+
+  it('solo copia los campos del modelo', () => {
+    const file = buildExport(sample(), { kind: 'full' }, now);
+    const tampered = { ...file, extra: 1, projects: file.projects.map((p) => ({ ...p, colorMode: 'dark' })) };
+    const result = parseImport(JSON.stringify(tampered));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(Object.keys(result.data).sort()).toEqual(['cards', 'exportedAt', 'formatVersion', 'kind', 'projects']);
+      expect(result.data.projects[0]).not.toHaveProperty('colorMode');
+    }
+  });
+
+  it('JSON no válido → invalid-json', () => {
+    expect(parseImport('{no es json')).toMatchObject({ ok: false, reason: 'invalid-json' });
+  });
+
+  it('versión de formato desconocida → unknown-version', () => {
+    const file = { ...buildExport(sample(), { kind: 'full' }, now), formatVersion: 99 };
+    expect(parseImport(JSON.stringify(file))).toMatchObject({ ok: false, reason: 'unknown-version' });
+  });
+
+  it('estructura no válida → invalid-structure', () => {
+    const file = buildExport(sample(), { kind: 'full' }, now);
+    for (const bad of [[], 'x', { ...file, kind: 'otro' }, { ...file, projects: {} }, { ...file, cards: [1] }]) {
+      expect(parseImport(JSON.stringify(bad))).toMatchObject({ ok: false, reason: 'invalid-structure' });
+    }
   });
 });

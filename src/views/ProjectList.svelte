@@ -1,6 +1,7 @@
 <!--
   Lista de proyectos (pantalla inicial). Sin proyectos muestra el estado
-  vacío. "Importar" se conecta en WI-AC-034. Cada proyecto tiene un botón
+  vacío. "Importar" avisa con `onimport` (flujo de WI-AC-030; el del estado
+  vacío se completa en WI-AC-034). Cada proyecto tiene un botón
   "Editar" que avisa con el proyecto (identificado por id); al abrir la
   tarjeta (`onopen`) se avisa para mostrar su tablero. Cada proyecto muestra
   el recuento de sus tarjetas no archivadas en los 4 estados, en el orden de

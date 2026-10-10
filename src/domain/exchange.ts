@@ -101,3 +101,56 @@ export function exportFileName(now: Date = new Date(), projectName?: string): st
     ? `kanban-export-${date}.json`
     : `kanban-${fileSafeName(projectName)}-${date}.json`;
 }
+
+/** Motivo por el que un archivo no se puede importar (los mensajes en español van en la UI). */
+export type ImportFailureReason = 'invalid-json' | 'unknown-version' | 'invalid-structure';
+
+export type ImportParseResult =
+  | { ok: true; data: ExportFile }
+  | { ok: false; reason: ImportFailureReason; detail?: string };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Lee el contenido de un archivo de export (AC-030). No escribe nada: toda la
+ * validación ocurre antes de cualquier escritura.
+ *
+ * Validación mínima (WI-AC-030): JSON válido, `formatVersion` conocido,
+ * `kind` válido y `projects`/`cards` como listas de objetos. La validación
+ * completa con las reglas de dominio (nombres, títulos, enums, `projectId`
+ * existente) se añade aquí en WI-AC-033, como más casos de `invalid-structure`.
+ *
+ * Devuelve copias con solo los campos del modelo, con ids, fechas y flags
+ * tal cual vienen en el archivo.
+ */
+export function parseImport(text: string): ImportParseResult {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return { ok: false, reason: 'invalid-json' };
+  }
+  if (!isRecord(raw)) return { ok: false, reason: 'invalid-structure', detail: 'el archivo no es un objeto' };
+  if (raw.formatVersion !== EXPORT_FORMAT_VERSION) return { ok: false, reason: 'unknown-version' };
+  if (raw.kind !== 'full' && raw.kind !== 'project') {
+    return { ok: false, reason: 'invalid-structure', detail: 'tipo de archivo desconocido' };
+  }
+  const { projects, cards } = raw;
+  if (!Array.isArray(projects) || !projects.every(isRecord)) {
+    return { ok: false, reason: 'invalid-structure', detail: 'lista de proyectos no válida' };
+  }
+  if (!Array.isArray(cards) || !cards.every(isRecord)) {
+    return { ok: false, reason: 'invalid-structure', detail: 'lista de tarjetas no válida' };
+  }
+  return {
+    ok: true,
+    data: {
+      formatVersion: EXPORT_FORMAT_VERSION,
+      kind: raw.kind,
+      exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
+      projects: (projects as unknown as Project[]).map(copyProject),
+      cards: (cards as unknown as Card[]).map(copyCard),
+    },
+  };
+}

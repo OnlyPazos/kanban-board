@@ -27,6 +27,12 @@ function memoryRepository(initial: Project[] = []): Repository {
       for (const card of [...cards.values()]) if (card.projectId === projectId) cards.delete(card.id);
       typeFilters.delete(projectId);
     },
+    replaceAll: async (newProjects, newCards) => {
+      projects.clear();
+      cards.clear();
+      for (const p of newProjects) projects.set(p.id, { ...p });
+      for (const c of newCards) cards.set(c.id, { ...c });
+    },
     listProjects: async () => [...projects.values()],
     saveProject: async (project) => {
       projects.set(project.id, { ...project });

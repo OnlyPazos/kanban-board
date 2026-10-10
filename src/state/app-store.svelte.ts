@@ -117,6 +117,18 @@ export class AppStore {
     this.typeFilters = filters;
   }
 
+  /**
+   * Import completo (AC-030): sustituye todos los proyectos y tarjetas por
+   * los dados, conservando ids, fechas y flags tal cual (incluidos los
+   * proyectos archivados: no pasa por las guardas de edición). Se escribe en
+   * una única transacción y, solo una vez guardado, se muestra.
+   */
+  async replaceAll(projects: readonly Project[], cards: readonly Card[]): Promise<void> {
+    await this.#repository.replaceAll(projects, cards);
+    this.projects = sortProjects([...projects]);
+    this.cards = [...cards];
+  }
+
   /** Aplica `change` al proyecto, lo guarda y lo muestra una vez guardado. */
   async #saveProjectChange(id: string, change: (project: Project) => Project): Promise<Project> {
     const current = this.projects.find((p) => p.id === id);

@@ -127,3 +127,34 @@ describe('createIdbRepository · filtro por tipo', () => {
     expect(await createIdbRepository(name).listTypeFilters()).toEqual({ x: ['arreglo'], y: [] });
   });
 });
+
+describe('replaceAll (import completo, AC-030)', () => {
+  it('vacía proyectos y tarjetas y escribe los nuevos tal cual, sin tocar las preferencias', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    const old = createProject({ name: 'Vieja' });
+    await repo.saveProject(old);
+    await repo.saveCard(createCard({ projectId: old.id, title: 'Vieja tarjeta', status: 'en-curso' }), old);
+    await repo.saveTypeFilter(old.id, ['mejora']);
+
+    const imported = { ...createProject({ name: 'Importada' }), archived: true };
+    const card = { ...createCard({ projectId: imported.id, title: 'T', status: 'finalizado' }), archived: true };
+    await repo.replaceAll([imported], [card]);
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listProjects()).toEqual([imported]);
+    expect(await reloaded.listCards()).toEqual([card]);
+    expect(await reloaded.listTypeFilters()).toEqual({ [old.id]: ['mejora'] });
+  });
+
+  it('si la escritura falla, la transacción se revierte y no cambia nada', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    const old = createProject({ name: 'Vieja' });
+    await repo.saveProject(old);
+    // Un proyecto sin `id` (keyPath) hace fallar el put → se aborta la transacción.
+    const broken = { ...createProject({ name: 'Rota' }), id: undefined } as unknown as typeof old;
+    await expect(repo.replaceAll([broken], [])).rejects.toThrow();
+    expect(await createIdbRepository(name).listProjects()).toEqual([old]);
+  });
+});
