@@ -33,4 +33,23 @@ describe('CreateCardDialog', () => {
     expect(await screen.findByText('El título es obligatorio.')).toBeInTheDocument();
     expect(oncreate).not.toHaveBeenCalled();
   });
+
+  it('el campo título no admite más de 120 caracteres', () => {
+    render(CreateCardDialog, { open: true, status: 'sin-empezar', oncreate: vi.fn() });
+    expect(screen.getByLabelText(/^Título/)).toHaveAttribute('maxlength', '120');
+  });
+
+  it('con más de 120 caracteres muestra el error junto al campo y no crea', async () => {
+    const oncreate = vi.fn();
+    render(CreateCardDialog, { open: true, status: 'sin-empezar', oncreate });
+
+    const title = screen.getByLabelText(/^Título/);
+    await fireEvent.input(title, { target: { value: 'a'.repeat(121) } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Añadir' }));
+    const message = 'El título no puede superar 120 caracteres.';
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(title).toHaveAttribute('aria-invalid', 'true');
+    expect(title).toHaveAccessibleDescription(message);
+    expect(oncreate).not.toHaveBeenCalled();
+  });
 });

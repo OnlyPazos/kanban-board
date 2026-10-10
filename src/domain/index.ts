@@ -10,11 +10,12 @@ export {
   type ProjectEdit,
 } from './project';
 export {
+  CARD_TITLE_MAX_LENGTH,
   createCard,
   editCard,
   InvalidCardTitleError,
   touchProject,
-  validateNewCardTitle,
+  validateCardTitle,
   type CardEdit,
   type NewCardInput,
 } from './card';

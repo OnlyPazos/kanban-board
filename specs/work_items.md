@@ -142,7 +142,7 @@ interface Card {
 - Acceptance Checks: AC-011
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-011-card-title-validation
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Validación de dominio `validateCardTitle(title)`: rechaza vacío o solo espacios (tras `trim`) y más de 120 caracteres.
   - Se aplica al crear y al editar. El error aparece junto al campo título; no se crea ni se modifica nada.

@@ -1,13 +1,21 @@
 /** Creación de tarjetas. Funciones puras: sin dependencias de UI ni de almacenamiento. */
 import type { Card, CardStatus, CardType, Priority, Project } from './types';
 
+/** Longitud máxima del título de una tarjeta (AC-011). */
+export const CARD_TITLE_MAX_LENGTH = 120;
+
 /**
- * Validación mínima del título (WI-AC-010): obligatorio tras `trim`.
- * La validación completa (longitud máxima) llega en WI-AC-011.
+ * Valida el título de una tarjeta tras recortar los espacios exteriores (AC-011):
+ * obligatorio y como máximo `CARD_TITLE_MAX_LENGTH` caracteres.
  * Devuelve el mensaje de error, o `null` si el título es válido.
  */
-export function validateNewCardTitle(title: string): string | null {
-  return title.trim() === '' ? 'El título es obligatorio.' : null;
+export function validateCardTitle(title: string): string | null {
+  const trimmed = title.trim();
+  if (trimmed === '') return 'El título es obligatorio.';
+  if (trimmed.length > CARD_TITLE_MAX_LENGTH) {
+    return `El título no puede superar ${CARD_TITLE_MAX_LENGTH} caracteres.`;
+  }
+  return null;
 }
 
 /** Error lanzado al crear una tarjeta con un título no válido. */
@@ -16,6 +24,11 @@ export class InvalidCardTitleError extends Error {
     super(message);
     this.name = 'InvalidCardTitleError';
   }
+}
+
+function assertValidCardTitle(title: string): void {
+  const error = validateCardTitle(title);
+  if (error) throw new InvalidCardTitleError(error);
 }
 
 export interface NewCardInput {
@@ -35,8 +48,7 @@ export function createCard(
   now: Date = new Date(),
   id: string = crypto.randomUUID(),
 ): Card {
-  const error = validateNewCardTitle(input.title);
-  if (error) throw new InvalidCardTitleError(error);
+  assertValidCardTitle(input.title);
   const timestamp = now.toISOString();
   return {
     id,
@@ -69,11 +81,10 @@ export interface CardEdit {
 /**
  * Aplica una edición: título recortado, `updatedAt` a `now`; `id`, `projectId`,
  * `createdAt` y `archived` se conservan. Lanza `InvalidCardTitleError` si el
- * título no es válido (validación mínima; la completa llega en WI-AC-011).
+ * título no es válido.
  */
 export function editCard(card: Card, edit: CardEdit, now: Date = new Date()): Card {
-  const error = validateNewCardTitle(edit.title);
-  if (error) throw new InvalidCardTitleError(error);
+  assertValidCardTitle(edit.title);
   return {
     ...card,
     title: edit.title.trim(),
