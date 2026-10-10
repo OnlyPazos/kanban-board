@@ -178,8 +178,13 @@ test.describe('AC-017 táctil', () => {
     await openNewProject(page, 'Mi app');
     await addCard(page, 'Sin empezar', 'Tactil');
 
-    const zone = await centreOf(dropZone(page, 'En pausa'));
-    const { from, end: to } = await dragPath(cardIn(page, 'Sin empezar', 'Tactil'), zone);
+    const viewport = page.viewportSize();
+    if (!viewport) throw new Error('Sin viewport');
+    const card = cardIn(page, 'Sin empezar', 'Tactil');
+    const from = await gripOf(card);
+    const centre = await centreOf(card);
+    // El dedo agarra la tarjeta por su borde superior; su centro va desplazado respecto al dedo.
+    const offset = { x: centre.x - from.x, y: centre.y - from.y };
 
     // Playwright solo ofrece `tap`: el deslizamiento se emula con eventos táctiles reales del
     // navegador (CDP Input.dispatchTouchEvent): poner el dedo, deslizarlo y levantarlo.
@@ -189,11 +194,34 @@ test.describe('AC-017 táctil', () => {
         type,
         touchPoints: type === 'touchEnd' ? [] : [{ x: Math.round(x), y: Math.round(y) }],
       });
+    const slide = async (a: { x: number; y: number }, b: { x: number; y: number }, steps = 25) => {
+      for (let i = 1; i <= steps; i++) {
+        await touch('touchMove', a.x + ((b.x - a.x) * i) / steps, a.y + ((b.y - a.y) * i) / steps);
+      }
+    };
     await touch('touchStart', from.x, from.y);
-    const steps = 25;
-    for (let i = 1; i <= steps; i++) {
-      await touch('touchMove', from.x + ((to.x - from.x) * i) / steps, from.y + ((to.y - from.y) * i) / steps);
+
+    // En móvil "En pausa" queda fuera de la pantalla (AC-020): se lleva la tarjeta junto al borde
+    // derecho del tablero (dentro de él) y el tablero se desplaza solo hasta que la columna de
+    // destino entra en la vista. El dedo oscila 1 px para que cada paso sea un movimiento real.
+    const board = await page.getByTestId('board-columns').boundingBox();
+    if (!board) throw new Error('Tablero no visible');
+    const edge = { x: board.x + board.width - 10, y: from.y };
+    await slide(from, edge);
+    const zoneLocator = dropZone(page, 'En pausa');
+    for (let i = 0; i < 200; i++) {
+      const box = await zoneLocator.boundingBox();
+      if (box && box.x + box.width / 2 < viewport.width - 60) break;
+      await touch('touchMove', edge.x - (i % 2), edge.y);
+      await page.waitForTimeout(20);
     }
+    // Se aparta el dedo del borde de golpe para que el tablero deje de desplazarse.
+    const rest = { x: viewport.width / 2, y: edge.y };
+    await touch('touchMove', rest.x, rest.y);
+    await page.waitForTimeout(150);
+    const zone = await centreOf(zoneLocator);
+    const to = { x: zone.x - offset.x, y: zone.y - offset.y };
+    await slide(rest, to, 10);
     await page.waitForTimeout(150);
     await touch('touchEnd', to.x, to.y);
 

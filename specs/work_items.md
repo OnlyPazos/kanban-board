@@ -202,11 +202,12 @@ interface Card {
 - Acceptance Checks: AC-020
 - Depende de: [WI-AC-009]
 - Rama sugerida: feature/wi-ac-020-mobile-layout
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - En un viewport de 375 px, el contenedor del tablero tiene `overflow-x: auto` y las columnas un ancho mínimo. `document.documentElement.scrollWidth` no debe superar el ancho del viewport.
   - Test e2e en un viewport de 375×667.
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-020, commit 1d8a7d6). check 0 errores (1 warning conocido del design-system); test 116/116; test:e2e 26/26. Diff contra integration/kanban-board: solo Board.svelte (overflow-x: auto + minmax(calc(var(--ds-spacing-8) * 4), 1fr), solo variables --ds-*), e2e/mobile-layout.spec.ts nuevo y e2e AC-017 táctil adaptado. Verificación independiente (vite preview en el puerto 4319, script fuera del repo): 375×667 con 4 tarjetas de título largo → documentElement.scrollWidth 375, scrollX 0 (también tras window.scrollTo(500)), tablero scrollWidth 1088 / clientWidth 359, columnas de 256 px, ningún elemento fuera del tablero desborda; deslizar el dedo sobre la cabecera de columna desplaza el tablero 185 px y la página sigue en scrollX 0; "Finalizado" se ve entera al desplazar. 320 px y 1280 px sin desbordamiento de página (en 1280 el tablero no tiene scroll). AC-017 táctil sin regresión: mismas aserciones (En pausa + persistencia tras recargar), 30/30 repeticiones. Observaciones (no bloquean): deslizar sobre una tarjeta inicia el arrastre en vez de desplazar (el tablero se desplaza desde cabeceras y huecos); el e2e de teclado de AC-017 es intermitente (~1/40 bajo carga) también en integration/kanban-board, preexistente y ajeno a este WI.
 
 ## WI-AC-021
 - Contexto: archivo

@@ -158,7 +158,7 @@
     </div>
   </div>
 
-  <div class="board__columns">
+  <div class="board__columns" data-testid="board-columns">
     {#each CARD_STATUSES as status (status)}
       <section class="board__column" aria-label={CARD_STATUS_LABELS[status]} data-status={status}>
         <h2 class="board__column-title">{CARD_STATUS_LABELS[status]}</h2>
@@ -252,9 +252,16 @@
   }
 
   .board__columns {
+    /* Ancho mínimo de columna: con 4 columnas no caben en móvil y el tablero
+       se desplaza horizontalmente dentro de sí mismo, nunca la página (AC-020). */
+    --board-column-min-width: calc(var(--ds-spacing-8) * 4);
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(var(--board-column-min-width), 1fr));
     gap: var(--ds-spacing-4);
+    overflow-x: auto;
+    /* Hueco para el anillo de foco y el contorno de destino al desplazar. */
+    padding: var(--ds-spacing-2);
+    margin: calc(var(--ds-spacing-2) * -1);
   }
 
   .board__column {
