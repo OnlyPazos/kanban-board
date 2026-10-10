@@ -3,16 +3,21 @@
  *   ''  | '#/'                      → lista de proyectos
  *   '#/project/<id>'                → tablero del proyecto con ese id
  *   '#/project/<id>/archived'       → tarjetas archivadas de ese proyecto
+ *   '#/archived'                    → vista global de proyectos archivados
  * Cualquier otro hash se trata como la lista.
  */
 export type Route =
   | { name: 'list' }
+  | { name: 'archived-projects' }
   | { name: 'board'; projectId: string }
   | { name: 'archived-cards'; projectId: string };
 
 const PROJECT_PATTERN = /^#\/project\/([^/]+)(\/archived)?$/;
 
+export const ARCHIVED_PROJECTS_HREF = '#/archived';
+
 export function parseRoute(hash: string): Route {
+  if (hash === ARCHIVED_PROJECTS_HREF) return { name: 'archived-projects' };
   const match = PROJECT_PATTERN.exec(hash);
   if (match) {
     try {

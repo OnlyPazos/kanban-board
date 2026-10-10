@@ -5,6 +5,10 @@
   tarjeta (`onopen`) se avisa para mostrar su tablero. Cada proyecto muestra
   el recuento de sus tarjetas no archivadas en los 4 estados, en el orden de
   las columnas (AC-008). El orden de `projects` lo decide el store (AC-007).
+  Archivo (WI-AC-024): cada proyecto tiene "Archivar" (sin confirmación, es
+  reversible), que avisa con `onarchive`; la app solo pasa aquí proyectos no
+  archivados. La cabecera enlaza siempre a la vista global "Proyectos
+  archivados". Desde esta lista no existe borrado definitivo (AC-027).
 -->
 <script lang="ts">
   import { Button, Card } from 'design-system';
@@ -16,6 +20,7 @@
     type Card as KanbanCard,
     type Project,
   } from '../domain';
+  import { ARCHIVED_PROJECTS_HREF } from '../lib/route';
 
   let {
     projects = [],
@@ -24,6 +29,7 @@
     onimport,
     onedit,
     onopen,
+    onarchive,
   }: {
     projects?: Project[];
     cards?: KanbanCard[];
@@ -31,14 +37,25 @@
     onimport?: () => void;
     onedit?: (project: Project) => void;
     onopen?: (project: Project) => void;
+    /** "Archivar" en un proyecto (sin confirmación, AC-024). */
+    onarchive?: (project: Project) => unknown;
   } = $props();
+
+  function archive(project: Project) {
+    Promise.resolve(onarchive?.(project)).catch((error: unknown) => {
+      console.error('No se pudo archivar el proyecto', error);
+    });
+  }
 
   const countsByProject = $derived(countCardsByProject(cards));
 </script>
 
 <section class="project-list" aria-labelledby="project-list-title">
   <div class="project-list__header">
-    <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
+    <div class="project-list__heading">
+      <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
+      <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}>Proyectos archivados</a>
+    </div>
     {#if projects.length > 0}
       <div class="project-list__actions">
         <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
@@ -72,6 +89,12 @@
                 aria-label={`Editar ${project.name}`}
                 onclick={() => onedit?.(project)}>Editar</Button
               >
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Archivar ${project.name}`}
+                onclick={() => archive(project)}>Archivar</Button
+              >
             {/snippet}
           </Card>
         </li>
@@ -101,6 +124,26 @@
     justify-content: space-between;
     gap: var(--ds-spacing-3);
     margin: 0 0 var(--ds-spacing-5);
+  }
+
+  .project-list__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--ds-spacing-2) var(--ds-spacing-4);
+  }
+
+  .project-list__link {
+    color: var(--ds-color-action-primary);
+    font-size: var(--ds-font-label-size);
+    font-weight: var(--ds-font-label-weight);
+    line-height: var(--ds-font-label-line-height);
+    border-radius: var(--ds-radii-small);
+  }
+
+  .project-list__link:focus-visible {
+    outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
+    outline-offset: var(--ds-focus-ring-offset);
   }
 
   .project-list__actions {

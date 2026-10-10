@@ -75,6 +75,30 @@ describe('createIdbRepository · borrado definitivo', () => {
   });
 });
 
+describe('createIdbRepository · borrado definitivo de proyecto', () => {
+  it('deleteProject elimina el proyecto, todas sus tarjetas y su filtro; no toca otros proyectos', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    const gone = { ...createProject({ name: 'Se va' }), archived: true };
+    const keep = createProject({ name: 'Queda' });
+    const goneActive = createCard({ projectId: gone.id, title: 'Activa', status: 'en-curso' });
+    const goneArchived = { ...createCard({ projectId: gone.id, title: 'Archivada', status: 'finalizado' }), archived: true };
+    const kept = createCard({ projectId: keep.id, title: 'Otra', status: 'sin-empezar' });
+    await repo.saveCard(goneActive, gone);
+    await repo.saveCard(goneArchived, gone);
+    await repo.saveCard(kept, keep);
+    await repo.saveTypeFilter(gone.id, ['arreglo']);
+    await repo.saveTypeFilter(keep.id, ['tecnico']);
+
+    await repo.deleteProject(gone.id);
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listProjects()).toEqual([keep]);
+    expect(await reloaded.listCards()).toEqual([kept]);
+    expect(await reloaded.listTypeFilters()).toEqual({ [keep.id]: ['tecnico'] });
+  });
+});
+
 describe('createIdbRepository · filtro por tipo', () => {
   it('guarda el filtro por proyecto en prefs (clave filter:<projectId>) y se lee desde otra instancia', async () => {
     const name = freshName();

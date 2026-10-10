@@ -14,6 +14,11 @@ export interface Repository {
   saveCard(card: Card, project: Project): Promise<void>;
   /** Borra definitivamente la tarjeta y guarda su proyecto (con `updatedAt` ya actualizado) en una sola transacción. */
   deleteCard(cardId: string, project: Project): Promise<void>;
+  /**
+   * Borra definitivamente el proyecto, todas sus tarjetas (activas y
+   * archivadas) y su filtro por tipo guardado, en una única transacción.
+   */
+  deleteProject(projectId: string): Promise<void>;
   /** Filtros por tipo guardados, por `projectId` (store `prefs`, clave `filter:<projectId>`). */
   listTypeFilters(): Promise<Record<string, CardType[]>>;
   saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
@@ -54,6 +59,20 @@ export function createIdbRepository(dbName?: string): Repository {
       await Promise.all([
         tx.objectStore('cards').delete(cardId),
         tx.objectStore('projects').put({ ...project }),
+        tx.done,
+      ]);
+    },
+    async deleteProject(projectId) {
+      const tx = (await db()).transaction(['projects', 'cards', 'prefs'], 'readwrite');
+      const cards = tx.objectStore('cards');
+      const deleteCards = async () => {
+        const ids = await cards.index('projectId').getAllKeys(projectId);
+        await Promise.all(ids.map((id) => cards.delete(id)));
+      };
+      await Promise.all([
+        tx.objectStore('projects').delete(projectId),
+        deleteCards(),
+        tx.objectStore('prefs').delete(typeFilterKey(projectId)),
         tx.done,
       ]);
     },

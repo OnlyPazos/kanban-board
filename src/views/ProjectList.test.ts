@@ -77,3 +77,26 @@ describe('ProjectList', () => {
     expect(read(itemB)).toEqual(['Sin empezar=0', 'En curso=0', 'En pausa=0', 'Finalizado=0']);
   });
 });
+
+describe('ProjectList · archivo de proyectos (WI-AC-024)', () => {
+  it('cada proyecto tiene "Archivar" que avisa con ese proyecto sin abrirlo ni pedir confirmación', async () => {
+    const onarchive = vi.fn();
+    const onopen = vi.fn();
+    const a = createProject({ name: 'A' });
+    const b = createProject({ name: 'B' });
+    render(ProjectList, { projects: [a, b], onarchive, onopen });
+    await fireEvent.click(screen.getByRole('button', { name: 'Archivar B' }));
+    expect(onarchive).toHaveBeenCalledExactlyOnceWith(b);
+    expect(onopen).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('enlaza a "Proyectos archivados" (también sin proyectos) y no ofrece borrado definitivo (AC-027)', () => {
+    const { unmount } = render(ProjectList);
+    expect(screen.getByRole('link', { name: 'Proyectos archivados' })).toHaveAttribute('href', '#/archived');
+    unmount();
+    render(ProjectList, { projects: [createProject({ name: 'A' })] });
+    expect(screen.getByRole('link', { name: 'Proyectos archivados' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /borrar|eliminar/i })).not.toBeInTheDocument();
+  });
+});

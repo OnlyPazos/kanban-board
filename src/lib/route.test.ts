@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archivedCardsHref, boardHref, LIST_HREF, parseRoute } from './route';
+import { ARCHIVED_PROJECTS_HREF, archivedCardsHref, boardHref, LIST_HREF, parseRoute } from './route';
 
 describe('route', () => {
   it('sin hash o con "#/" es la lista', () => {
@@ -21,6 +21,11 @@ describe('route', () => {
     const id = crypto.randomUUID();
     expect(parseRoute(archivedCardsHref(id))).toEqual({ name: 'archived-cards', projectId: id });
     expect(parseRoute('#/project/abc-123/otra')).toEqual({ name: 'list' });
+  });
+
+  it('"#/archived" es la vista global de proyectos archivados (WI-AC-024)', () => {
+    expect(parseRoute(ARCHIVED_PROJECTS_HREF)).toEqual({ name: 'archived-projects' });
+    expect(parseRoute('#/archived/otra')).toEqual({ name: 'list' });
   });
 
   it('hashes desconocidos o mal formados vuelven a la lista', () => {

@@ -227,7 +227,7 @@ interface Card {
 - Acceptance Checks: AC-024, AC-025, AC-027
 - Depende de: [WI-AC-021]
 - Rama sugerida: feature/wi-ac-024-archive-projects
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - "Archivar proyecto" pone el `archived` del proyecto a `true`. Las tarjetas no se tocan y mantienen su propio flag `archived`, así que al restaurar el proyecto vuelve todo exactamente igual.
   - Vista global "Proyectos archivados" con "Restaurar" y "Borrar definitivamente". Este último pide confirmación indicando el nombre y el total de tarjetas (activas + archivadas) y elimina el proyecto y todas sus tarjetas en una única transacción.
