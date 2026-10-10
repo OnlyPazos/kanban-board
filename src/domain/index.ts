@@ -30,3 +30,12 @@ export {
   type StatusCounts,
 } from './card';
 export { matchesTypeFilter, normalizeTypeFilter, toggleTypeFilter } from './filter';
+export {
+  buildExport,
+  EXPORT_FORMAT_VERSION,
+  exportFileName,
+  type ExportFile,
+  type ExportKind,
+  type ExportScope,
+  type ExportSource,
+} from './exchange';

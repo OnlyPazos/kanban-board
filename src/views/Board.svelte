@@ -24,6 +24,10 @@
   Archivo (WI-AC-021): cada tarjeta tiene "Archivar", que avisa con
   `onarchivecard` sin pedir confirmación. La cabecera enlaza con la vista de
   tarjetas archivadas del proyecto. El tablero no ofrece borrado definitivo.
+
+  Export (WI-AC-028): "Exportar proyecto" avisa con `onexport`. Es una acción
+  de lectura, independiente de las de edición (seguirá disponible en el
+  tablero de solo lectura de WI-AC-026).
 -->
 <script lang="ts">
   import { tick } from 'svelte';
@@ -63,6 +67,7 @@
     onarchivecard,
     typeFilter = [],
     ontypefilterchange,
+    onexport,
   }: {
     project: Project;
     /** Tarjetas del proyecto. */
@@ -78,6 +83,8 @@
     typeFilter?: CardType[];
     /** Al cambiar la selección del filtro por tipo. */
     ontypefilterchange?: (types: CardType[]) => unknown;
+    /** "Exportar proyecto" (AC-029). */
+    onexport?: (project: Project) => void;
   } = $props();
 
   function setTypeSelected(type: CardType, selected: boolean) {
@@ -159,6 +166,7 @@
       <h1 class="board__title">{project.name}</h1>
       <div class="board__actions">
         <a class="board__link" href={archivedCardsHref(project.id)}>Tarjetas archivadas</a>
+        <Button variant="secondary" size="sm" onclick={() => onexport?.(project)}>Exportar proyecto</Button>
         <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
       </div>
     </div>

@@ -288,4 +288,11 @@ describe('Board', () => {
       expect(visibleTitles()).toHaveLength(4);
     });
   });
+  it('"Exportar proyecto" avisa con el proyecto (AC-029)', async () => {
+    const onexport = vi.fn();
+    const project = createProject({ name: 'Mi app' });
+    render(Board, { project, onexport });
+    await fireEvent.click(screen.getByRole('button', { name: 'Exportar proyecto' }));
+    expect(onexport).toHaveBeenCalledExactlyOnceWith(project);
+  });
 });

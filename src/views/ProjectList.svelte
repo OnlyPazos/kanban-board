@@ -9,6 +9,9 @@
   reversible), que avisa con `onarchive`; la app solo pasa aquí proyectos no
   archivados. La cabecera enlaza siempre a la vista global "Proyectos
   archivados". Desde esta lista no existe borrado definitivo (AC-027).
+  Export (WI-AC-028): "Exportar todo" avisa con `onexportall`; se muestra si
+  `canExportAll` (hay algún proyecto, activo o archivado), aunque la lista
+  activa esté vacía.
 -->
 <script lang="ts">
   import { Button, Card } from 'design-system';
@@ -30,6 +33,8 @@
     onedit,
     onopen,
     onarchive,
+    canExportAll = false,
+    onexportall,
   }: {
     projects?: Project[];
     cards?: KanbanCard[];
@@ -39,6 +44,10 @@
     onopen?: (project: Project) => void;
     /** "Archivar" en un proyecto (sin confirmación, AC-024). */
     onarchive?: (project: Project) => unknown;
+    /** Hay algo que exportar (proyectos activos o archivados). */
+    canExportAll?: boolean;
+    /** "Exportar todo" (AC-028). */
+    onexportall?: () => void;
   } = $props();
 
   function archive(project: Project) {
@@ -56,10 +65,15 @@
       <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
       <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}>Proyectos archivados</a>
     </div>
-    {#if projects.length > 0}
+    {#if projects.length > 0 || canExportAll}
       <div class="project-list__actions">
-        <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
-        <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
+        {#if canExportAll}
+          <Button variant="secondary" onclick={() => onexportall?.()}>Exportar todo</Button>
+        {/if}
+        {#if projects.length > 0}
+          <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
+          <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
+        {/if}
       </div>
     {/if}
   </div>

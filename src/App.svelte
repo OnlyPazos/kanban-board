@@ -10,7 +10,8 @@
   import CreateCardDialog from './views/CreateCardDialog.svelte';
   import EditCardDialog from './views/EditCardDialog.svelte';
   import { boardHref, LIST_HREF, parseRoute } from './lib/route';
-  import type { Card, CardStatus, Project } from './domain';
+  import { buildExport, exportFileName, type Card, type CardStatus, type Project } from './domain';
+  import { downloadJson } from './lib/download';
   import { createIdbRepository, type Repository } from './persistence/repository';
   import { AppStore } from './state/app-store.svelte';
 
@@ -48,6 +49,18 @@
   function startEditCard(card: Card) {
     editCardId = card.id;
     editingCard = true;
+  }
+
+  /** Descarga el export completo (AC-028) con el estado en memoria. */
+  function exportAll() {
+    const now = new Date();
+    downloadJson(exportFileName(now), buildExport(store, { kind: 'full' }, now));
+  }
+
+  /** Descarga el export del proyecto (AC-029), archivado o no. */
+  function exportProject(project: Project) {
+    const now = new Date();
+    downloadJson(exportFileName(now, project.name), buildExport(store, { kind: 'project', projectId: project.id }, now));
   }
 
   function startEdit(project: Project) {
@@ -93,6 +106,7 @@
         onarchivecard={(card) => store.archiveCard(card.id)}
         typeFilter={store.typeFilterOf(boardProject.id)}
         ontypefilterchange={(types) => store.setTypeFilter(boardProject.id, types)}
+        onexport={exportProject}
       />
     {:else if store.loaded}
       <section class="not-found">
@@ -108,6 +122,8 @@
       onedit={startEdit}
       onopen={openBoard}
       onarchive={(project) => store.archiveProject(project.id)}
+      canExportAll={store.projects.length > 0}
+      onexportall={exportAll}
     />
   {/if}
 </main>
