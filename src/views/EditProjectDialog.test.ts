@@ -33,4 +33,24 @@ describe('EditProjectDialog', () => {
       expect(onsave).toHaveBeenCalledExactlyOnceWith(project.id, { name: 'Mi app 2', description: 'Nueva' }),
     );
   });
+
+  it.each([
+    ['vacío', '', 'El nombre es obligatorio.'],
+    ['solo espacios', '   ', 'El nombre es obligatorio.'],
+    ['de 81 caracteres', 'a'.repeat(81), 'El nombre no puede superar 80 caracteres.'],
+  ])('con nombre %s muestra el error junto al campo y no guarda', async (_caso, value, message) => {
+    const project = createProject({ name: 'Mi app', description: 'Demo' });
+    const onsave = vi.fn().mockResolvedValue(undefined);
+    render(EditProjectDialog, { project, open: true, onsave });
+
+    const name = screen.getByLabelText(/^Nombre/) as HTMLInputElement;
+    await fireEvent.input(name, { target: { value } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveAccessibleDescription(message);
+    expect(onsave).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
 });

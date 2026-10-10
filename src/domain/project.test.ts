@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createProject, editProject } from './index';
+import {
+  createProject,
+  editProject,
+  InvalidProjectNameError,
+  PROJECT_NAME_MAX_LENGTH,
+  validateProjectName,
+} from './index';
 
 describe('createProject', () => {
   it('recorta nombre y descripción y fija fechas, id y archived', () => {
@@ -39,5 +45,43 @@ describe('editProject', () => {
       archived: false,
     });
     expect(created.name).toBe('Mi app');
+  });
+});
+
+describe('validateProjectName', () => {
+  it('acepta un nombre normal y uno de exactamente 80 caracteres', () => {
+    expect(PROJECT_NAME_MAX_LENGTH).toBe(80);
+    expect(validateProjectName('Mi app')).toBeNull();
+    expect(validateProjectName('a'.repeat(80))).toBeNull();
+  });
+
+  it('rechaza el nombre vacío o formado solo por espacios', () => {
+    expect(validateProjectName('')).toBe('El nombre es obligatorio.');
+    expect(validateProjectName('   ')).toBe('El nombre es obligatorio.');
+    expect(validateProjectName('\t\n ')).toBe('El nombre es obligatorio.');
+  });
+
+  it('rechaza más de 80 caracteres', () => {
+    expect(validateProjectName('a'.repeat(81))).toBe('El nombre no puede superar 80 caracteres.');
+  });
+
+  it('mide la longitud tras recortar los espacios exteriores', () => {
+    expect(validateProjectName(`  ${'a'.repeat(80)}  `)).toBeNull();
+  });
+});
+
+describe('validación al crear y editar', () => {
+  it('createProject lanza InvalidProjectNameError con un nombre no válido', () => {
+    expect(() => createProject({ name: '  ' })).toThrow(InvalidProjectNameError);
+    expect(() => createProject({ name: 'a'.repeat(81) })).toThrow(InvalidProjectNameError);
+  });
+
+  it('editProject lanza InvalidProjectNameError y no altera el original', () => {
+    const created = createProject({ name: 'Mi app', description: 'Demo' });
+    expect(() => editProject(created, { name: '', description: 'X' })).toThrow(InvalidProjectNameError);
+    expect(() => editProject(created, { name: 'a'.repeat(81), description: 'X' })).toThrow(
+      InvalidProjectNameError,
+    );
+    expect(created).toMatchObject({ name: 'Mi app', description: 'Demo' });
   });
 });
