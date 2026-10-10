@@ -1,7 +1,8 @@
 <!--
   Lista de proyectos (pantalla inicial). Sin proyectos muestra el estado
   vacío. "Importar" se conecta en WI-AC-034. Cada proyecto tiene un botón
-  "Editar" que avisa con el proyecto (identificado por id).
+  "Editar" que avisa con el proyecto (identificado por id); al abrir la
+  tarjeta (`onopen`) se avisa para mostrar su tablero.
 -->
 <script lang="ts">
   import { Button, Card } from 'design-system';
@@ -12,11 +13,13 @@
     oncreate,
     onimport,
     onedit,
+    onopen,
   }: {
     projects?: Project[];
     oncreate?: () => void;
     onimport?: () => void;
     onedit?: (project: Project) => void;
+    onopen?: (project: Project) => void;
   } = $props();
 </script>
 
@@ -35,7 +38,11 @@
     <ul class="project-list__items">
       {#each projects as project (project.id)}
         <li>
-          <Card title={project.name} description={project.description || undefined}>
+          <Card
+            title={project.name}
+            description={project.description || undefined}
+            onopen={onopen ? () => onopen(project) : undefined}
+          >
             {#snippet footer()}
               <Button
                 variant="ghost"
