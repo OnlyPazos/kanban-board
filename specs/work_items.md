@@ -176,12 +176,13 @@ interface Card {
 - Acceptance Checks: AC-015, AC-016, AC-017
 - Depende de: [WI-AC-014]
 - Rama sugerida: feature/wi-ac-015-drag-and-drop
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - `svelte-dnd-action` entre columnas. Al soltar en otra columna se cambia `status` y se persiste. Al soltar en la misma columna se descarta el orden visual y se re-aplica `sortCards`.
   - Operable con teclado (soporte nativo de `svelte-dnd-action`) y táctil.
   - Test e2e con teclado y con emulación táctil en viewport móvil (Playwright `hasTouch`).
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-015, AC-016, AC-017, commit 1155f0b). check 0 errores (1 warning conocido del design-system); build OK; test 104/104; test:e2e 22/22; e2e independiente de QA (puerto 4191, script fuera del repo). AC-015: arrastre con ratón de "Sin empezar" a "En pausa" → queda P-Alta, Mover, P-Baja; IndexedDB status=en-pausa; persiste tras recargar. AC-016: el hueco llega al final de la columna y al soltar vuelve el orden automático A, M, B; IndexedDB sin cambios. AC-017 teclado: Tab hasta la tarjeta (anillo de foco visible), Espacio, Tab recorre las columnas (incluso da la vuelta), Espacio/Escape suelta; persiste. AC-017 táctil (390×844, hasTouch, CDP Input.dispatchTouchEvent) → movida y persistida; un tap en el título abre la edición. Juicio sobre lo declarado: (1) agarrar por el título no arrastra ni abre nada; el botón del título es el 4,7 % del área de la tarjeta en escritorio, el resto sí arrastra → aceptable; (2) con teclado cada columna por la que pasa se guarda (status/updatedAt intermedios); el estado final es correcto y el AC no lo prohíbe → aceptable; (3) CDP produce eventos táctiles reales del navegador, encaja con "emulación táctil en Playwright". Reglas base OK (svelte-dnd-action según D-009, solo variables --ds-* existentes, tests unitarios y e2e). Observaciones no bloqueantes: tras soltar con teclado el foco se va a <body>; en móvil las columnas miden unos 78 px (WI-AC-020).
 
 ## WI-AC-018
 - Contexto: tablero
