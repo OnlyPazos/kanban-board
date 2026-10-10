@@ -106,6 +106,38 @@ describe('Board', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Login' }));
     expect(oneditcard).toHaveBeenCalledExactlyOnceWith(card);
   });
+  describe('archivo (WI-AC-021)', () => {
+    it('"Archivar" en una tarjeta avisa con esa tarjeta, sin pedir confirmación (AC-021)', async () => {
+      const onarchivecard = vi.fn();
+      const project = createProject({ name: 'Mi app' });
+      const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+      render(Board, { project, cards: [card], onarchivecard });
+      await fireEvent.click(screen.getByRole('button', { name: 'Archivar' }));
+      expect(onarchivecard).toHaveBeenCalledExactlyOnceWith(card);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('las tarjetas archivadas no se muestran en el tablero', () => {
+      const project = createProject({ name: 'Mi app' });
+      const active = createCard({ projectId: project.id, title: 'Activa', status: 'en-curso' });
+      const archived = { ...createCard({ projectId: project.id, title: 'Archivada', status: 'en-curso' }), archived: true };
+      render(Board, { project, cards: [active, archived] });
+      expect(screen.getByText('Activa')).toBeInTheDocument();
+      expect(screen.queryByText('Archivada')).not.toBeInTheDocument();
+    });
+
+    it('enlaza con la vista de tarjetas archivadas y no ofrece borrado definitivo (AC-023)', () => {
+      const project = createProject({ name: 'Mi app' });
+      const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+      render(Board, { project, cards: [card] });
+      expect(screen.getByRole('link', { name: 'Tarjetas archivadas' })).toHaveAttribute(
+        'href',
+        `#/project/${project.id}/archived`,
+      );
+      expect(screen.queryByRole('button', { name: /borrar|eliminar/i })).not.toBeInTheDocument();
+    });
+  });
+
   it('AC-014: cada columna muestra sus tarjetas en el orden automático (prioridad y luego createdAt)', () => {
     const project = createProject({ name: 'Mi app' });
     const make = (title: string, priority: 'alta' | 'baja' | null, minute: number, status: 'sin-empezar' | 'en-curso' = 'sin-empezar') => ({

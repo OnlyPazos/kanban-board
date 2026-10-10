@@ -104,6 +104,22 @@ export function moveCard(card: Card, status: CardStatus, now: Date = new Date())
   return { ...card, status, updatedAt: now.toISOString() };
 }
 
+/**
+ * Archiva la tarjeta (AC-021): solo pone `archived` a `true`. Conserva todos
+ * sus campos (incluido `updatedAt`), para que al restaurarla vuelva igual.
+ */
+export function archiveCard(card: Card): Card {
+  return { ...card, archived: true };
+}
+
+/**
+ * Restaura una tarjeta archivada (AC-022): solo pone `archived` a `false` y
+ * conserva el resto de campos, así que vuelve a la columna de su estado.
+ */
+export function restoreCard(card: Card): Card {
+  return { ...card, archived: false };
+}
+
 /** Rango de cada prioridad en el orden automático (D-005): alta, media, baja y sin prioridad. */
 const PRIORITY_RANK: Record<NonNullable<Priority> | 'none', number> = { alta: 0, media: 1, baja: 2, none: 3 };
 

@@ -3,6 +3,8 @@
  * arrancar. Cada mutación se persiste inmediatamente: no hay botón "Guardar".
  */
 import {
+  archiveCard,
+  restoreCard,
   createCard,
   createProject,
   editCard,
@@ -131,6 +133,54 @@ export class AppStore {
     this.cards = this.cards.map((c) => (c.id === id ? moved : c));
     this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
     return moved;
+  }
+
+  /**
+   * Archiva la tarjeta con ese `id` (AC-021, sin confirmación): pone
+   * `archived` a `true` y la guarda junto con el `updatedAt` del proyecto.
+   * Una vez guardada desaparece del tablero y de los recuentos.
+   */
+  async archiveCard(id: string): Promise<Card> {
+    return this.#saveCardChange(id, archiveCard);
+  }
+
+  /**
+   * Restaura la tarjeta archivada con ese `id` (AC-022): pone `archived` a
+   * `false` conservando el resto de campos, así que vuelve a su columna.
+   */
+  async restoreCard(id: string): Promise<Card> {
+    return this.#saveCardChange(id, restoreCard);
+  }
+
+  /**
+   * Borra definitivamente la tarjeta con ese `id` (AC-023): solo se permite
+   * con tarjetas archivadas. Elimina el registro de IndexedDB junto con el
+   * `updatedAt` del proyecto y, una vez borrada, la quita de memoria.
+   */
+  async deleteCard(id: string): Promise<void> {
+    const current = this.cards.find((c) => c.id === id);
+    if (!current) throw new Error(`Tarjeta no encontrada: ${id}`);
+    if (!current.archived) throw new Error(`Solo se pueden borrar tarjetas archivadas: ${id}`);
+    const project = this.projects.find((p) => p.id === current.projectId);
+    if (!project) throw new Error(`Proyecto no encontrado: ${current.projectId}`);
+    const touched = touchProject(project);
+    await this.#repository.deleteCard(id, touched);
+    this.cards = this.cards.filter((c) => c.id !== id);
+    this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
+  }
+
+  /** Aplica `change` a la tarjeta, la guarda con el proyecto tocado y la muestra una vez guardada. */
+  async #saveCardChange(id: string, change: (card: Card) => Card): Promise<Card> {
+    const current = this.cards.find((c) => c.id === id);
+    if (!current) throw new Error(`Tarjeta no encontrada: ${id}`);
+    const project = this.projects.find((p) => p.id === current.projectId);
+    if (!project) throw new Error(`Proyecto no encontrado: ${current.projectId}`);
+    const changed = change(current);
+    const touched = touchProject(project);
+    await this.#repository.saveCard(changed, touched);
+    this.cards = this.cards.map((c) => (c.id === id ? changed : c));
+    this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
+    return changed;
   }
 
   /** Tipos seleccionados en el filtro del proyecto; `[]` → sin filtro (D-012). */

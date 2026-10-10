@@ -214,7 +214,7 @@ interface Card {
 - Acceptance Checks: AC-021, AC-022, AC-023
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-021-archive-cards
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Acción "Archivar" en la tarjeta, sin confirmación: pone `archived` a `true`. El tablero y los recuentos solo muestran tarjetas no archivadas.
   - Vista "Tarjetas archivadas" del proyecto con "Restaurar" (pone `archived` a `false` y conserva el resto de campos) y "Borrar definitivamente" (con confirmación; elimina el registro de IndexedDB).
