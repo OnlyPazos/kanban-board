@@ -257,12 +257,13 @@ interface Card {
 - Acceptance Checks: AC-026
 - Depende de: [WI-AC-024, WI-AC-028]
 - Rama sugerida: feature/wi-ac-026-archived-project-readonly
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - Desde la vista de proyectos archivados se puede abrir el tablero en modo solo lectura: sin añadir, editar, archivar ni arrastrar tarjetas, y sin editar el proyecto (arrastre desactivado en `svelte-dnd-action`).
   - La guarda también va en la capa de dominio: las mutaciones sobre un proyecto archivado se rechazan.
   - "Exportar proyecto" sigue disponible.
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-026, commit 3730ee3). check 0 errores (1 warning conocido del design-system); build OK; test 167/167; test:e2e 35/35; archived-project-readonly + drag-and-drop + archive-projects con --repeat-each=10 → 80/80. Verificación independiente (vite preview en el puerto 4193, script fuera del repo) con "Vieja" (A1 Sin empezar, A2 En curso, A3 En pausa, X archivada) y "Otra": "Ver tablero" desde #/archived abre #/project/<id>; se ven A1-A3 y no X; sin "Añadir tarjeta", "Archivar" ni "Editar proyecto"; clic, doble clic, Enter y Espacio sobre la tarjeta no abren diálogo; arrastre con ratón y Espacio+flechas no mueven (zonas con aria-describedby dnd-zone-drag-disabled); en sus tarjetas archivadas se ve X sin Restaurar/Borrar; IndexedDB idéntico antes y después; "Exportar proyecto" descarga kanban-Vieja-<fecha>.json (formatVersion 1, kind project, 1 proyecto archivado, 4 tarjetas); al recargar por URL sigue en solo lectura; 375 px sin desbordamiento. Sin regresión: restaurar (AC-025) deja el proyecto idéntico salvo archived=false y el tablero vuelve a ser editable (crear tarjeta OK, Restaurar/Borrar de nuevo en archivadas); borrar definitivamente (AC-027) muestra nombre y total (5) y elimina proyecto y tarjetas tras recargar sin tocar "Otra". Sin errores de consola ni peticiones de red. Juicio sobre lo declarado: (1) guarda en editProject/touchProject: cubre todas las mutaciones de tarjetas y la edición del proyecto; restoreProject/deleteProject/export no pasan por ella → correcto. (2) Ocultar Restaurar/Borrar tarjetas en un proyecto archivado: coherente con D-007(6) "un proyecto archivado es de solo lectura" → aceptable. Reglas base de stack OK (solo variables --ds-* existentes, Alert del design-system, sin dependencias nuevas, tests unitarios y e2e). Observación (no bloquea, para WI de AC-036): sin sincronización entre pestañas, una pestaña con el proyecto aún activo en memoria puede guardar una edición tras archivarlo en otra y reescribir el proyecto con archived=false, porque la guarda mira la copia en memoria; es la limitación conocida de que AC-036 está pendiente, no de este WI.
 
 ## WI-AC-030
 - Contexto: intercambio

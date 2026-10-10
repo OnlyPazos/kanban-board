@@ -296,3 +296,54 @@ describe('Board', () => {
     expect(onexport).toHaveBeenCalledExactlyOnceWith(project);
   });
 });
+
+describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
+  const project = { ...createProject({ name: 'Vieja' }), archived: true };
+  const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+
+  it('se ve, pero sin añadir, editar, archivar tarjetas ni editar el proyecto; exportar sigue disponible', async () => {
+    const onedit = vi.fn();
+    const onaddcard = vi.fn();
+    const oneditcard = vi.fn();
+    const onarchivecard = vi.fn();
+    const onexport = vi.fn();
+    render(Board, { project, cards: [card], onedit, onaddcard, oneditcard, onarchivecard, onexport });
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Vieja' })).toBeInTheDocument();
+    const item = within(screen.getByRole('region', { name: 'En curso' })).getByRole('listitem', { name: 'Login' });
+    expect(item).toHaveTextContent('Login');
+    expect(screen.getByRole('status')).toHaveTextContent(/solo lectura/i);
+
+    expect(screen.queryByRole('button', { name: 'Añadir tarjeta' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Archivar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar proyecto' })).not.toBeInTheDocument();
+    expect(within(item).queryByRole('button')).not.toBeInTheDocument();
+    await fireEvent.click(within(item).getByText('Login'));
+    expect(oneditcard).not.toHaveBeenCalled();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Exportar proyecto' }));
+    expect(onexport).toHaveBeenCalledExactlyOnceWith(project);
+    expect(screen.getByRole('link', { name: 'Tarjetas archivadas' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /volver a proyectos archivados/i })).toHaveAttribute('href', '#/archived');
+  });
+
+  it('el arrastre está desactivado: las tarjetas no se pueden coger con el teclado', async () => {
+    const onmovecard = vi.fn();
+    render(Board, { project, cards: [card], onmovecard });
+    const item = within(screen.getByRole('region', { name: 'En curso' })).getByRole('listitem', { name: 'Login' });
+    expect(item).toHaveAttribute('tabindex', '-1');
+    expect(screen.getByRole('list', { name: 'En curso' })).toHaveAttribute('aria-describedby', 'dnd-zone-drag-disabled');
+    await fireEvent.keyDown(item, { key: 'Enter' });
+    await fireEvent.keyDown(item, { key: ' ' });
+    expect(onmovecard).not.toHaveBeenCalled();
+  });
+
+  it('un proyecto activo sí es editable y sus tarjetas se pueden coger', () => {
+    render(Board, { project: { ...project, archived: false }, cards: [card] });
+    expect(screen.getAllByRole('button', { name: 'Añadir tarjeta' })).toHaveLength(4);
+    expect(screen.getByRole('button', { name: 'Editar proyecto' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    const item = within(screen.getByRole('region', { name: 'En curso' })).getByRole('listitem', { name: 'Login' });
+    expect(item).toHaveAttribute('tabindex', '0');
+  });
+});

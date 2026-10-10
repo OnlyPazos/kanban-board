@@ -30,6 +30,23 @@ function assertValidProjectName(name: string): void {
   if (error) throw new InvalidProjectNameError(error);
 }
 
+/**
+ * Error lanzado al intentar modificar un proyecto archivado (AC-026): un
+ * proyecto archivado es de solo lectura (D-007). Solo se puede restaurar,
+ * borrar definitivamente desde archivados o exportar.
+ */
+export class ArchivedProjectError extends Error {
+  constructor(projectId: string) {
+    super(`El proyecto está archivado y es de solo lectura: ${projectId}`);
+    this.name = 'ArchivedProjectError';
+  }
+}
+
+/** Lanza `ArchivedProjectError` si el proyecto está archivado (AC-026). */
+export function assertProjectEditable(project: Project): void {
+  if (project.archived) throw new ArchivedProjectError(project.id);
+}
+
 export interface NewProjectInput {
   name: string;
   description?: string;
@@ -64,9 +81,11 @@ export interface ProjectEdit {
 /**
  * Devuelve una copia del proyecto con el nombre y la descripción editados
  * (recortados) y `updatedAt` actualizado. La identidad es el `id`, que no cambia.
- * Lanza `InvalidProjectNameError` si el nombre no es válido.
+ * Lanza `InvalidProjectNameError` si el nombre no es válido y
+ * `ArchivedProjectError` si el proyecto está archivado (AC-026).
  */
 export function editProject(project: Project, edit: ProjectEdit, now: Date = new Date()): Project {
+  assertProjectEditable(project);
   assertValidProjectName(edit.name);
   return {
     ...project,
