@@ -7,11 +7,13 @@
   - "Borrar definitivamente" (AC-027): pide confirmación en un `Dialog`
     pequeño que indica el nombre y el total de tarjetas; solo al confirmar
     avisa con `ondelete`.
+  - "Ver tablero" (AC-026): enlace al tablero del proyecto, que se muestra en
+    modo solo lectura (desde ahí se puede exportar).
 -->
 <script lang="ts">
   import { Button, Card, Dialog } from 'design-system';
   import type { Card as CardData, Project } from '../domain';
-  import { LIST_HREF } from '../lib/route';
+  import { boardHref, LIST_HREF } from '../lib/route';
 
   let {
     projects = [],
@@ -85,6 +87,11 @@
             {#snippet footer()}
               <p class="archived-projects__total" data-testid="archived-project-total">{cardTotalLabel(total)}</p>
               <div class="archived-projects__actions">
+                <a
+                  class="archived-projects__open"
+                  href={boardHref(project.id)}
+                  aria-label={`Ver tablero de ${project.name}`}>Ver tablero</a
+                >
                 <Button
                   variant="secondary"
                   size="sm"
@@ -143,6 +150,16 @@
     border-radius: var(--ds-radii-small);
   }
 
+  .archived-projects__open {
+    align-self: center;
+    color: var(--ds-color-action-primary);
+    font-size: var(--ds-font-label-size);
+    font-weight: var(--ds-font-label-weight);
+    line-height: var(--ds-font-label-line-height);
+    border-radius: var(--ds-radii-small);
+  }
+
+  .archived-projects__open:focus-visible,
   .archived-projects__back:focus-visible {
     outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
     outline-offset: var(--ds-focus-ring-offset);

@@ -1,7 +1,9 @@
 export type { Card, CardStatus, CardType, Priority, Project } from './types';
 export * from './labels';
 export {
+  ArchivedProjectError,
   archiveProject,
+  assertProjectEditable,
   createProject,
   editProject,
   InvalidProjectNameError,

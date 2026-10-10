@@ -128,7 +128,7 @@
   {/if}
 </main>
 <CreateProjectDialog bind:open={creating} oncreate={(input) => store.createProject(input)} />
-{#if boardProject}
+{#if boardProject && !boardProject.archived}
   {@const projectId = boardProject.id}
   <CreateCardDialog
     bind:open={addingCard}

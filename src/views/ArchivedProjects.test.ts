@@ -65,3 +65,13 @@ describe('ArchivedProjects (WI-AC-024)', () => {
     await waitFor(() => expect(ondelete).toHaveBeenCalledExactlyOnceWith(archived));
   });
 });
+
+describe('ArchivedProjects · ver tablero (AC-026)', () => {
+  it('cada proyecto archivado enlaza con su tablero', () => {
+    render(ArchivedProjects, { projects: [archived], cards });
+    expect(screen.getByRole('link', { name: 'Ver tablero de Mi app' })).toHaveAttribute(
+      'href',
+      `#/project/${encodeURIComponent(archived.id)}`,
+    );
+  });
+});

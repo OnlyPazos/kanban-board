@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ArchivedProjectError,
   archiveProject,
+  assertProjectEditable,
   createProject,
   editProject,
   InvalidProjectNameError,
@@ -107,5 +109,25 @@ describe('archiveProject / restoreProject', () => {
     expect(archived).toEqual({ ...project, archived: true });
     expect(project.archived).toBe(false);
     expect(restoreProject(archived)).toEqual(project);
+  });
+});
+
+describe('proyecto archivado de solo lectura (AC-026)', () => {
+  it('assertProjectEditable lanza ArchivedProjectError solo con proyectos archivados', () => {
+    const project = createProject({ name: 'Mi app' });
+    expect(() => assertProjectEditable(project)).not.toThrow();
+    expect(() => assertProjectEditable(archiveProject(project))).toThrow(ArchivedProjectError);
+  });
+
+  it('editProject rechaza editar un proyecto archivado y no altera el original', () => {
+    const archived = archiveProject(createProject({ name: 'Mi app' }));
+    const copy = { ...archived };
+    expect(() => editProject(archived, { name: 'Otro', description: '' })).toThrow(ArchivedProjectError);
+    expect(archived).toEqual(copy);
+  });
+
+  it('restaurar un proyecto archivado sigue permitido', () => {
+    const archived = archiveProject(createProject({ name: 'Mi app' }));
+    expect(restoreProject(archived).archived).toBe(false);
   });
 });

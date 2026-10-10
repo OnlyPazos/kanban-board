@@ -80,3 +80,11 @@ describe('ArchivedCards (WI-AC-021)', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });
+
+describe('ArchivedCards · proyecto archivado (AC-026)', () => {
+  it('lista las tarjetas archivadas pero sin restaurar ni borrar', () => {
+    render(ArchivedCards, { project: { ...project, archived: true }, cards: [archivedCard] });
+    expect(screen.getByRole('listitem', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /restaurar|borrar/i })).not.toBeInTheDocument();
+  });
+});

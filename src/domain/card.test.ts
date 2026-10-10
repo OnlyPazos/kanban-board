@@ -12,7 +12,7 @@ import {
   touchProject,
   validateCardTitle,
 } from './card';
-import { createProject } from './project';
+import { archiveProject, ArchivedProjectError, createProject } from './project';
 import type { Card, Priority } from './types';
 
 describe('createCard', () => {
@@ -193,5 +193,12 @@ describe('archiveCard / restoreCard (WI-AC-021)', () => {
 
   it('restaurar solo pone archived a false: vuelve igual que antes de archivar', () => {
     expect(restoreCard(archiveCard(card))).toEqual(card);
+  });
+});
+
+describe('mutaciones de tarjetas en un proyecto archivado (AC-026)', () => {
+  it('touchProject, por el que pasa toda mutación de tarjetas, rechaza un proyecto archivado', () => {
+    const archived = archiveProject(createProject({ name: 'Mi app' }));
+    expect(() => touchProject(archived)).toThrow(ArchivedProjectError);
   });
 });

@@ -7,6 +7,8 @@
     `false` y la tarjeta vuelve a la columna de su estado.
   - "Borrar definitivamente" (AC-023): pide confirmación en un `Dialog`
     pequeño; solo al confirmar avisa con `ondeletecard`.
+  Si el proyecto está archivado (AC-026, solo lectura) se listan igual pero
+  sin "Restaurar" ni "Borrar definitivamente".
 -->
 <script lang="ts">
   import { Badge, Button, Card, Dialog } from 'design-system';
@@ -35,6 +37,9 @@
     /** Solo se llama tras confirmar el borrado definitivo. */
     ondeletecard?: (card: CardData) => unknown;
   } = $props();
+
+  /** Proyecto archivado → solo lectura (AC-026). */
+  const readonly = $derived(project.archived);
 
   const archived = $derived(sortCards(cards.filter((c) => c.projectId === project.id && c.archived)));
 
@@ -102,20 +107,22 @@
                   <dd><time datetime={card.updatedAt}>{dateFormat.format(new Date(card.updatedAt))}</time></dd>
                 </div>
               </dl>
-              <div class="archived__actions">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  aria-label={`Restaurar ${card.title}`}
-                  onclick={() => restore(card)}>Restaurar</Button
-                >
-                <Button
-                  variant="danger"
-                  size="sm"
-                  aria-label={`Borrar definitivamente ${card.title}`}
-                  onclick={() => askDelete(card)}>Borrar definitivamente</Button
-                >
-              </div>
+              {#if !readonly}
+                <div class="archived__actions">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    aria-label={`Restaurar ${card.title}`}
+                    onclick={() => restore(card)}>Restaurar</Button
+                  >
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    aria-label={`Borrar definitivamente ${card.title}`}
+                    onclick={() => askDelete(card)}>Borrar definitivamente</Button
+                  >
+                </div>
+              {/if}
             {/snippet}
           </Card>
         </li>

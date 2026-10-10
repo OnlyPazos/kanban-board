@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createIdbRepository } from '../persistence/repository';
 import { AppStore } from './app-store.svelte';
-import { createCard, createProject } from '../domain';
+import { ArchivedProjectError, createCard, createProject } from '../domain';
 
 const freshName = () => `kanban-board-store-${crypto.randomUUID()}`;
 
@@ -512,5 +512,48 @@ describe('AppStore · archivo de proyectos', () => {
     await expect(store.deleteProject(project.id)).rejects.toThrow('QuotaExceededError');
     expect(store.projects).toEqual([project]);
     expect(store.cards).toEqual([card]);
+  });
+});
+
+describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
+  it('rechaza crear, editar, mover, archivar, restaurar y borrar tarjetas y editar el proyecto, sin guardar nada', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    const a = await store.createCard(project.id, 'A', 'sin-empezar');
+    const b = await store.createCard(project.id, 'B', 'en-curso');
+    await store.archiveCard(b.id);
+    await store.archiveProject(project.id);
+    const byId = <T extends { id: string }>(items: T[]) => [...items].sort((x, y) => x.id.localeCompare(y.id));
+    const projectsBefore = JSON.parse(JSON.stringify(store.projects));
+    const cardsBefore = byId(JSON.parse(JSON.stringify(store.cards)));
+
+    const attempts: (() => Promise<unknown>)[] = [
+      () => store.createCard(project.id, 'Nueva', 'sin-empezar'),
+      () =>
+        store.updateCard(a.id, {
+          title: 'Editada',
+          type: 'arreglo',
+          status: 'en-curso',
+          description: 'x',
+          priority: 'alta',
+        }),
+      () => store.moveCard(a.id, 'finalizado'),
+      () => store.archiveCard(a.id),
+      () => store.restoreCard(b.id),
+      () => store.deleteCard(b.id),
+      () => store.updateProject(project.id, { name: 'Otro', description: '' }),
+    ];
+    for (const attempt of attempts) {
+      await expect(attempt()).rejects.toThrow(ArchivedProjectError);
+    }
+    expect(store.projects).toEqual(projectsBefore);
+    expect(byId(store.cards)).toEqual(cardsBefore);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.projects).toEqual(projectsBefore);
+    expect(byId(reloaded.cards)).toEqual(cardsBefore);
   });
 });

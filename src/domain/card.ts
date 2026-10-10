@@ -1,5 +1,6 @@
 /** Creación de tarjetas. Funciones puras: sin dependencias de UI ni de almacenamiento. */
 import type { Card, CardStatus, CardType, Priority, Project } from './types';
+import { assertProjectEditable } from './project';
 
 /** Longitud máxima del título de una tarjeta (AC-011). */
 export const CARD_TITLE_MAX_LENGTH = 120;
@@ -64,8 +65,13 @@ export function createCard(
   };
 }
 
-/** Copia del proyecto con `updatedAt` actualizado (al crear/editar sus tarjetas). */
+/**
+ * Copia del proyecto con `updatedAt` actualizado (al crear/editar sus tarjetas).
+ * Toda mutación de tarjetas pasa por aquí, así que es la guarda de solo
+ * lectura: lanza `ArchivedProjectError` si el proyecto está archivado (AC-026).
+ */
 export function touchProject(project: Project, now: Date = new Date()): Project {
+  assertProjectEditable(project);
   return { ...project, updatedAt: now.toISOString() };
 }
 

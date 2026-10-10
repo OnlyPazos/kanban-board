@@ -26,12 +26,19 @@
   tarjetas archivadas del proyecto. El tablero no ofrece borrado definitivo.
 
   Export (WI-AC-028): "Exportar proyecto" avisa con `onexport`. Es una acción
-  de lectura, independiente de las de edición (seguirá disponible en el
+  de lectura, independiente de las de edición (sigue disponible en el
   tablero de solo lectura de WI-AC-026).
+
+  Solo lectura (WI-AC-026, D-007): si el proyecto está archivado, el tablero
+  se puede ver (tarjetas, filtro, tarjetas archivadas, "Exportar proyecto")
+  pero no ofrece "Añadir tarjeta", "Archivar", "Editar proyecto" ni abrir una
+  tarjeta para editarla, y el arrastre está desactivado (`dragDisabled`).
+  El enlace de vuelta lleva a la vista de proyectos archivados. La guarda
+  también está en el dominio (`ArchivedProjectError`).
 -->
 <script lang="ts">
   import { tick } from 'svelte';
-  import { Badge, Button, Card, Chip } from 'design-system';
+  import { Alert, Badge, Button, Card, Chip } from 'design-system';
   import {
     dndzone,
     DRAGGED_ELEMENT_ID,
@@ -54,7 +61,7 @@
     type CardType,
     type Project,
   } from '../domain';
-  import { archivedCardsHref, LIST_HREF } from '../lib/route';
+  import { ARCHIVED_PROJECTS_HREF, archivedCardsHref, LIST_HREF } from '../lib/route';
   import { applyDndAriaStrings } from '../lib/dnd';
 
   let {
@@ -86,6 +93,9 @@
     /** "Exportar proyecto" (AC-029). */
     onexport?: (project: Project) => void;
   } = $props();
+
+  /** Proyecto archivado → tablero de solo lectura (AC-026). */
+  const readonly = $derived(project.archived);
 
   function setTypeSelected(type: CardType, selected: boolean) {
     Promise.resolve(ontypefilterchange?.(toggleTypeFilter(typeFilter, type, selected))).catch((error: unknown) => {
@@ -161,15 +171,27 @@
 
 <div class="board" bind:this={boardEl}>
   <div class="board__header">
-    <a class="board__back" href={LIST_HREF}>← Volver a proyectos</a>
+    {#if readonly}
+      <a class="board__back" href={ARCHIVED_PROJECTS_HREF}>← Volver a proyectos archivados</a>
+    {:else}
+      <a class="board__back" href={LIST_HREF}>← Volver a proyectos</a>
+    {/if}
     <div class="board__title-row">
       <h1 class="board__title">{project.name}</h1>
       <div class="board__actions">
         <a class="board__link" href={archivedCardsHref(project.id)}>Tarjetas archivadas</a>
         <Button variant="secondary" size="sm" onclick={() => onexport?.(project)}>Exportar proyecto</Button>
-        <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
+        {#if !readonly}
+          <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
+        {/if}
       </div>
     </div>
+    {#if readonly}
+      <Alert tone="info" title="Proyecto archivado">
+        Este tablero es de solo lectura: no se pueden crear, editar, mover ni archivar tarjetas, ni editar el
+        proyecto. Puedes exportarlo o restaurarlo desde «Proyectos archivados».
+      </Alert>
+    {/if}
     <div class="board__filter" role="group" aria-label="Filtrar por tipo">
       {#each CARD_TYPES as type (type)}
         <Chip
@@ -195,6 +217,9 @@
             dropAnimationDisabled: reducedMotion,
             dropTargetStyle: {},
             dropTargetClasses: ['board-drop-target'],
+            dragDisabled: readonly,
+            // Sin arrastre, las tarjetas no son paradas de tabulación "cogibles".
+            zoneItemTabIndex: readonly ? -1 : 0,
             transformDraggedElement: reflectDragging,
           }}
           onconsider={(event) => handleConsider(status, event)}
@@ -209,7 +234,13 @@
               data-priority={card.priority ?? ''}
               data-dnd-shadow={dragging || undefined}
             >
-              <Card title={card.title} description={card.description} {dragging} onopen={() => oneditcard?.(card)}>
+              <Card
+                title={card.title}
+                description={card.description}
+                {dragging}
+                {readonly}
+                onopen={readonly ? undefined : () => oneditcard?.(card)}
+              >
                 {#snippet tags()}
                   <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
                   {#if card.priority !== null}
@@ -217,13 +248,17 @@
                   {/if}
                 {/snippet}
                 {#snippet footer()}
-                  <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
+                  {#if !readonly}
+                    <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
+                  {/if}
                 {/snippet}
               </Card>
             </li>
           {/each}
         </ul>
-        <Button variant="ghost" size="sm" onclick={() => onaddcard?.(status)}>Añadir tarjeta</Button>
+        {#if !readonly}
+          <Button variant="ghost" size="sm" onclick={() => onaddcard?.(status)}>Añadir tarjeta</Button>
+        {/if}
       </section>
     {/each}
   </div>
