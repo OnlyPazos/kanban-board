@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  archiveProject,
   createProject,
   editProject,
   InvalidProjectNameError,
   PROJECT_NAME_MAX_LENGTH,
+  restoreProject,
   sortProjects,
   validateProjectName,
 } from './index';
@@ -95,5 +97,15 @@ describe('sortProjects', () => {
     const input = [a, b, c];
     expect(sortProjects(input).map((p) => p.name)).toEqual(['C', 'B', 'A']);
     expect(input.map((p) => p.name)).toEqual(['A', 'B', 'C']);
+  });
+});
+
+describe('archiveProject / restoreProject', () => {
+  it('archivar solo cambia archived a true y restaurar lo devuelve exactamente igual (AC-024, AC-025)', () => {
+    const project = createProject({ name: 'Mi app', description: 'Demo' }, new Date('2026-01-01T00:00:00Z'));
+    const archived = archiveProject(project);
+    expect(archived).toEqual({ ...project, archived: true });
+    expect(project.archived).toBe(false);
+    expect(restoreProject(archived)).toEqual(project);
   });
 });

@@ -80,3 +80,17 @@ export function editProject(project: Project, edit: ProjectEdit, now: Date = new
 export function sortProjects(projects: readonly Project[]): Project[] {
   return [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
+
+/**
+ * Archiva el proyecto (AC-024): solo pone `archived` a `true`. Conserva el
+ * resto de campos (incluido `updatedAt`) y no toca sus tarjetas, que mantienen
+ * su propio flag `archived`; así, al restaurarlo vuelve exactamente igual.
+ */
+export function archiveProject(project: Project): Project {
+  return { ...project, archived: true };
+}
+
+/** Restaura un proyecto archivado (AC-025): solo pone `archived` a `false`. */
+export function restoreProject(project: Project): Project {
+  return { ...project, archived: false };
+}

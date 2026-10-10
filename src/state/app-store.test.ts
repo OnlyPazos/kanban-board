@@ -29,6 +29,7 @@ describe('AppStore', () => {
       saveTypeFilter: async () => {},
       listCards: async () => [],
       deleteCard: async () => {},
+      deleteProject: async () => {},
       saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
@@ -81,6 +82,7 @@ describe('AppStore', () => {
       saveTypeFilter: async () => {},
       listCards: async () => [],
       deleteCard: async () => {},
+      deleteProject: async () => {},
       saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
@@ -216,6 +218,7 @@ describe('AppStore', () => {
       saveTypeFilter: async () => {},
       listCards: async () => [],
       deleteCard: async () => {},
+      deleteProject: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -292,6 +295,7 @@ describe('AppStore', () => {
       saveTypeFilter: async () => {},
       listCards: async () => [card],
       deleteCard: async () => {},
+      deleteProject: async () => {},
       saveCard,
     });
     await store.hydrate();
@@ -310,6 +314,7 @@ describe('AppStore', () => {
       saveTypeFilter: async () => {},
       listCards: async () => [card],
       deleteCard: async () => {},
+      deleteProject: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -330,6 +335,7 @@ describe('AppStore', () => {
       saveTypeFilter: async () => {},
       listCards: async () => [card],
       deleteCard: async () => {},
+      deleteProject: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -395,6 +401,7 @@ describe('AppStore', () => {
       deleteCard: async () => {
         throw new Error('QuotaExceededError');
       },
+      deleteProject: async () => {},
     });
     await store.hydrate();
     await expect(store.deleteCard(card.id)).rejects.toThrow('QuotaExceededError');
@@ -422,5 +429,88 @@ describe('AppStore', () => {
     const again = new AppStore(createIdbRepository(dbName));
     await again.hydrate();
     expect(again.typeFilterOf(a.id)).toEqual([]);
+  });
+});
+
+describe('AppStore · archivo de proyectos', () => {
+  it('archivar un proyecto lo pasa a archivados sin tocar sus tarjetas, y restaurarlo lo devuelve igual (AC-024, AC-025)', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    const other = await store.createProject({ name: 'Otra' });
+    await store.createCard(project.id, 'A', 'sin-empezar');
+    await store.createCard(project.id, 'B', 'en-curso');
+    await store.createCard(project.id, 'C', 'finalizado');
+    const d = await store.createCard(project.id, 'D', 'en-pausa');
+    await store.archiveCard(d.id);
+    const before = store.projects.find((p) => p.id === project.id)!;
+    const cardsBefore = [...store.cards];
+
+    const archived = await store.archiveProject(project.id);
+    expect(archived).toEqual({ ...before, archived: true });
+    expect(store.activeProjects.map((p) => p.id)).toEqual([other.id]);
+    expect(store.archivedProjects.map((p) => p.id)).toEqual([project.id]);
+    expect(store.cards).toEqual(cardsBefore);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.archivedProjects).toEqual([archived]);
+
+    const restored = await reloaded.restoreProject(project.id);
+    expect(restored).toEqual(before);
+    expect(reloaded.archivedProjects).toEqual([]);
+    expect(reloaded.activeProjects.map((p) => p.id).sort()).toEqual([project.id, other.id].sort());
+    expect(reloaded.cards.filter((c) => c.projectId === project.id && !c.archived)).toHaveLength(3);
+    expect(reloaded.cards.filter((c) => c.projectId === project.id && c.archived)).toHaveLength(1);
+  });
+
+  it('borrar definitivamente un proyecto archivado elimina el proyecto y todas sus tarjetas tras recargar (AC-027)', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    const other = await store.createProject({ name: 'Otra' });
+    await store.createCard(project.id, 'A', 'sin-empezar');
+    const b = await store.createCard(project.id, 'B', 'en-curso');
+    await store.archiveCard(b.id);
+    const kept = await store.createCard(other.id, 'Queda', 'sin-empezar');
+    await store.setTypeFilter(project.id, ['arreglo']);
+
+    await expect(store.deleteProject(project.id)).rejects.toThrow('Solo se pueden borrar proyectos archivados');
+    expect(store.projects).toHaveLength(2);
+
+    await store.archiveProject(project.id);
+    await store.deleteProject(project.id);
+    expect(store.projects.map((p) => p.id)).toEqual([other.id]);
+    expect(store.cards).toEqual([kept]);
+    expect(store.typeFilterOf(project.id)).toEqual([]);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.projects.map((p) => p.id)).toEqual([other.id]);
+    expect(reloaded.cards).toEqual([kept]);
+    expect(reloaded.typeFilters).toEqual({});
+  });
+
+  it('si el borrado definitivo del proyecto falla, nada cambia', async () => {
+    const project = { ...createProject({ name: 'Mi app' }), archived: true };
+    const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
+      listCards: async () => [card],
+      saveCard: async () => {},
+      deleteCard: async () => {},
+      deleteProject: async () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    await store.hydrate();
+    await expect(store.deleteProject(project.id)).rejects.toThrow('QuotaExceededError');
+    expect(store.projects).toEqual([project]);
+    expect(store.cards).toEqual([card]);
   });
 });

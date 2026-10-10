@@ -22,6 +22,11 @@ function memoryRepository(initial: Project[] = []): Repository {
       cards.delete(cardId);
       projects.set(project.id, { ...project });
     },
+    deleteProject: async (projectId) => {
+      projects.delete(projectId);
+      for (const card of [...cards.values()]) if (card.projectId === projectId) cards.delete(card.id);
+      typeFilters.delete(projectId);
+    },
     listProjects: async () => [...projects.values()],
     saveProject: async (project) => {
       projects.set(project.id, { ...project });
@@ -117,6 +122,47 @@ describe('App', () => {
     const column = await screen.findByRole('region', { name: 'En curso' });
     expect(within(column).getByText('Login')).toBeInTheDocument();
     expect((await repository.listCards())[0]).toMatchObject({ title: 'Login', archived: false });
+  });
+
+  it('archivar un proyecto lo pasa a "Proyectos archivados"; restaurarlo lo devuelve a la lista (AC-024, AC-025)', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const other = createProject({ name: 'Otra' });
+    const repository = memoryRepository([project, other]);
+    render(App, { repository });
+    await screen.findByRole('button', { name: 'Mi app' });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Archivar Mi app' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Mi app' })).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Otra' })).toBeInTheDocument();
+    expect((await repository.listProjects()).find((p) => p.id === project.id)).toEqual({ ...project, archived: true });
+
+    window.location.hash = '#/archived';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    await screen.findByRole('heading', { level: 1, name: 'Proyectos archivados' });
+    expect(screen.getAllByRole('listitem').map((li) => li.getAttribute('aria-label'))).toEqual(['Mi app']);
+    await fireEvent.click(screen.getByRole('button', { name: 'Restaurar Mi app' }));
+    await waitFor(() => expect(screen.queryByRole('listitem', { name: 'Mi app' })).not.toBeInTheDocument());
+    expect((await repository.listProjects()).find((p) => p.id === project.id)).toEqual(project);
+
+    window.location.hash = '';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(await screen.findByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+  });
+
+  it('borrar definitivamente un proyecto archivado lo elimina con sus tarjetas (AC-027)', async () => {
+    const project = { ...createProject({ name: 'Mi app' }), archived: true };
+    const repository = memoryRepository([project]);
+    window.location.hash = '#/archived';
+    render(App, { repository });
+    await screen.findByRole('listitem', { name: 'Mi app' });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Borrar definitivamente Mi app' }));
+    const dialog = screen.getByRole('dialog', { name: '¿Borrar definitivamente el proyecto?' });
+    expect(dialog).toHaveTextContent('«Mi app»');
+    expect(dialog).toHaveTextContent('0 tarjetas');
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Borrar definitivamente' }));
+    await waitFor(() => expect(screen.queryByRole('listitem', { name: 'Mi app' })).not.toBeInTheDocument());
+    expect(await repository.listProjects()).toEqual([]);
   });
 
   it('un id de proyecto inexistente muestra "Proyecto no encontrado"', async () => {

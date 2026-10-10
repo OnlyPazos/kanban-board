@@ -1,10 +1,12 @@
 export type { Card, CardStatus, CardType, Priority, Project } from './types';
 export * from './labels';
 export {
+  archiveProject,
   createProject,
   editProject,
   InvalidProjectNameError,
   PROJECT_NAME_MAX_LENGTH,
+  restoreProject,
   sortProjects,
   validateProjectName,
   type NewProjectInput,

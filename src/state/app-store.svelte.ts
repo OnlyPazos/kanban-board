@@ -4,6 +4,8 @@
  */
 import {
   archiveCard,
+  archiveProject,
+  restoreProject,
   restoreCard,
   createCard,
   createProject,
@@ -33,6 +35,11 @@ export class AppStore {
   loaded = $state(false);
   /** Filtro por tipo de cada proyecto, por `projectId` (AC-019). Sin entrada → sin filtro. */
   typeFilters = $state<Record<string, CardType[]>>({});
+
+  /** Proyectos de la lista activa (AC-024): los no archivados, en el orden de `projects`. */
+  activeProjects = $derived(this.projects.filter((p) => !p.archived));
+  /** Proyectos de la vista global de archivados (AC-024), en el orden de `projects`. */
+  archivedProjects = $derived(this.projects.filter((p) => p.archived));
 
   readonly #repository: Repository;
 
@@ -77,6 +84,47 @@ export class AppStore {
     await this.#repository.saveProject(updated);
     this.projects = sortProjects(this.projects.map((p) => (p.id === id ? updated : p)));
     return updated;
+  }
+
+  /**
+   * Archiva el proyecto con ese `id` (AC-024): solo pone su `archived` a
+   * `true` y lo guarda. Sus tarjetas no se tocan (conservan su propio flag
+   * `archived`), así que al restaurarlo vuelve todo exactamente igual.
+   */
+  async archiveProject(id: string): Promise<Project> {
+    return this.#saveProjectChange(id, archiveProject);
+  }
+
+  /** Restaura el proyecto archivado con ese `id` (AC-025): vuelve a la lista activa. */
+  async restoreProject(id: string): Promise<Project> {
+    return this.#saveProjectChange(id, restoreProject);
+  }
+
+  /**
+   * Borra definitivamente el proyecto con ese `id` y todas sus tarjetas
+   * (AC-027), en una única transacción. Solo se permite con proyectos
+   * archivados. Una vez borrado, lo quita de memoria.
+   */
+  async deleteProject(id: string): Promise<void> {
+    const current = this.projects.find((p) => p.id === id);
+    if (!current) throw new Error(`Proyecto no encontrado: ${id}`);
+    if (!current.archived) throw new Error(`Solo se pueden borrar proyectos archivados: ${id}`);
+    await this.#repository.deleteProject(id);
+    this.projects = this.projects.filter((p) => p.id !== id);
+    this.cards = this.cards.filter((c) => c.projectId !== id);
+    const filters = { ...this.typeFilters };
+    delete filters[id];
+    this.typeFilters = filters;
+  }
+
+  /** Aplica `change` al proyecto, lo guarda y lo muestra una vez guardado. */
+  async #saveProjectChange(id: string, change: (project: Project) => Project): Promise<Project> {
+    const current = this.projects.find((p) => p.id === id);
+    if (!current) throw new Error(`Proyecto no encontrado: ${id}`);
+    const changed = change(current);
+    await this.#repository.saveProject(changed);
+    this.projects = sortProjects(this.projects.map((p) => (p.id === id ? changed : p)));
+    return changed;
   }
 
   /**
