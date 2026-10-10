@@ -4,6 +4,7 @@ import {
   editProject,
   InvalidProjectNameError,
   PROJECT_NAME_MAX_LENGTH,
+  sortProjects,
   validateProjectName,
 } from './index';
 
@@ -83,5 +84,16 @@ describe('validación al crear y editar', () => {
       InvalidProjectNameError,
     );
     expect(created).toMatchObject({ name: 'Mi app', description: 'Demo' });
+  });
+});
+
+describe('sortProjects', () => {
+  it('ordena por updatedAt descendente sin mutar la entrada', () => {
+    const a = createProject({ name: 'A' }, new Date('2026-10-10T10:00:00.000Z'));
+    const b = createProject({ name: 'B' }, new Date('2026-10-10T11:00:00.000Z'));
+    const c = { ...a, id: 'c', name: 'C', updatedAt: '2026-10-10T12:00:00.000Z' };
+    const input = [a, b, c];
+    expect(sortProjects(input).map((p) => p.name)).toEqual(['C', 'B', 'A']);
+    expect(input.map((p) => p.name)).toEqual(['A', 'B', 'C']);
   });
 });

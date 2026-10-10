@@ -5,18 +5,22 @@ export {
   editProject,
   InvalidProjectNameError,
   PROJECT_NAME_MAX_LENGTH,
+  sortProjects,
   validateProjectName,
   type NewProjectInput,
   type ProjectEdit,
 } from './project';
 export {
   CARD_TITLE_MAX_LENGTH,
+  countCardsByProject,
   createCard,
   editCard,
+  emptyStatusCounts,
   InvalidCardTitleError,
   sortCards,
   touchProject,
   validateCardTitle,
   type CardEdit,
   type NewCardInput,
+  type StatusCounts,
 } from './card';

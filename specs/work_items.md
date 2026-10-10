@@ -165,7 +165,7 @@ interface Card {
 - Acceptance Checks: AC-007, AC-008
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-007-project-list-order-counts
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - La lista de proyectos activos se ordena por `updatedAt` descendente. Cualquier creación o edición de tarjeta debe actualizar el `updatedAt` del proyecto (verificar que WI-AC-010 y WI-AC-012 lo hacen).
   - Recuento por estado de las tarjetas no archivadas (4 números, en el orden de las columnas).

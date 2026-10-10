@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createIdbRepository } from '../persistence/repository';
 import { AppStore } from './app-store.svelte';
 import { createCard, createProject } from '../domain';
@@ -140,6 +140,65 @@ describe('AppStore', () => {
     await new Promise((r) => setTimeout(r, 2));
     await store.createCard(a.id, 'T1', 'sin-empezar');
     expect(store.projects.map((p) => p.id)).toEqual([a.id, b.id]);
+  });
+
+  describe('orden por última modificación en vivo (AC-007)', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    /** Reloj fijo (solo `Date`; IndexedDB sigue usando timers reales). */
+    function at(iso: string) {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(iso));
+    }
+
+    async function storeWithAB() {
+      const store = new AppStore(createIdbRepository(freshName()));
+      await store.hydrate();
+      at('2026-10-10T10:00:00.000Z');
+      const a = await store.createProject({ name: 'A' });
+      at('2026-10-10T11:00:00.000Z');
+      const b = await store.createProject({ name: 'B' });
+      expect(store.projects.map((p) => p.name)).toEqual(['B', 'A']);
+      return { store, a, b };
+    }
+
+    it('crear y editar una tarjeta de un proyecto lo pone el primero sin recargar', async () => {
+      const { store, a, b } = await storeWithAB();
+      at('2026-10-10T12:00:00.000Z');
+      const card = await store.createCard(a.id, 'T1', 'sin-empezar');
+      expect(store.projects.map((p) => p.name)).toEqual(['A', 'B']);
+      at('2026-10-10T13:00:00.000Z');
+      await store.createCard(b.id, 'T2', 'sin-empezar');
+      expect(store.projects.map((p) => p.name)).toEqual(['B', 'A']);
+      at('2026-10-10T14:00:00.000Z');
+      await store.updateCard(card.id, { ...card, title: 'T1 bis' });
+      expect(store.projects.map((p) => p.name)).toEqual(['A', 'B']);
+    });
+
+    it('editar el proyecto A lo pone el primero sin recargar', async () => {
+      const { store, a } = await storeWithAB();
+      at('2026-10-10T12:00:00.000Z');
+      await store.updateProject(a.id, { name: 'A2', description: '' });
+      expect(store.projects.map((p) => p.name)).toEqual(['A2', 'B']);
+    });
+
+    it('al hidratar se respeta el mismo orden', async () => {
+      const dbName = freshName();
+      const store = new AppStore(createIdbRepository(dbName));
+      await store.hydrate();
+      at('2026-10-10T10:00:00.000Z');
+      const a = await store.createProject({ name: 'A' });
+      at('2026-10-10T11:00:00.000Z');
+      await store.createProject({ name: 'B' });
+      at('2026-10-10T12:00:00.000Z');
+      await store.createCard(a.id, 'T1', 'en-curso');
+
+      const reloaded = new AppStore(createIdbRepository(dbName));
+      await reloaded.hydrate();
+      expect(reloaded.projects.map((p) => p.name)).toEqual(['A', 'B']);
+    });
   });
 
   it('con título vacío o si el guardado falla, la tarjeta no se crea', async () => {

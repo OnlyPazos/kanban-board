@@ -7,6 +7,7 @@ import {
   createProject,
   editCard,
   editProject,
+  sortProjects,
   touchProject,
   type Card,
   type CardEdit,
@@ -17,10 +18,11 @@ import {
 } from '../domain';
 import type { Repository } from '../persistence/repository';
 
-function byUpdatedDesc(a: Project, b: Project): number {
-  return b.updatedAt.localeCompare(a.updatedAt);
-}
-
+/**
+ * La lista `projects` se mantiene siempre ordenada por `updatedAt`
+ * descendente (AC-007): tras crear o editar un proyecto y tras crear o
+ * editar cualquiera de sus tarjetas, sin esperar a recargar.
+ */
 export class AppStore {
   projects = $state<Project[]>([]);
   cards = $state<Card[]>([]);
@@ -40,7 +42,7 @@ export class AppStore {
     // Conserva lo creado en memoria mientras se cargaba.
     const storedIds = new Set(stored.map((p) => p.id));
     const pending = this.projects.filter((p) => !storedIds.has(p.id));
-    this.projects = [...pending, ...stored].sort(byUpdatedDesc);
+    this.projects = sortProjects([...pending, ...stored]);
     const storedCardIds = new Set(storedCards.map((c) => c.id));
     const pendingCards = this.cards.filter((c) => !storedCardIds.has(c.id));
     this.cards = [...storedCards, ...pendingCards];
@@ -51,7 +53,7 @@ export class AppStore {
   async createProject(input: NewProjectInput): Promise<Project> {
     const project = createProject(input);
     await this.#repository.saveProject(project);
-    this.projects = [project, ...this.projects];
+    this.projects = sortProjects([project, ...this.projects]);
     return project;
   }
 
@@ -64,7 +66,7 @@ export class AppStore {
     if (!current) throw new Error(`Proyecto no encontrado: ${id}`);
     const updated = editProject(current, edit);
     await this.#repository.saveProject(updated);
-    this.projects = this.projects.map((p) => (p.id === id ? updated : p));
+    this.projects = sortProjects(this.projects.map((p) => (p.id === id ? updated : p)));
     return updated;
   }
 
@@ -81,7 +83,7 @@ export class AppStore {
     const touched = touchProject(project, now);
     await this.#repository.saveCard(card, touched);
     this.cards = [...this.cards, card];
-    this.projects = this.projects.map((p) => (p.id === projectId ? touched : p)).sort(byUpdatedDesc);
+    this.projects = sortProjects(this.projects.map((p) => (p.id === projectId ? touched : p)));
     return card;
   }
 
@@ -100,7 +102,7 @@ export class AppStore {
     const touched = touchProject(project, now);
     await this.#repository.saveCard(updated, touched);
     this.cards = this.cards.map((c) => (c.id === id ? updated : c));
-    this.projects = this.projects.map((p) => (p.id === project.id ? touched : p)).sort(byUpdatedDesc);
+    this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
     return updated;
   }
 }
