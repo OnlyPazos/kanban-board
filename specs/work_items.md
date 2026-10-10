@@ -310,11 +310,11 @@ interface Card {
 - Acceptance Checks: AC-034
 - Depende de: [WI-AC-001, WI-AC-031]
 - Rama sugerida: feature/wi-ac-034-import-from-empty-state
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Conectar la opción "Importar" del estado vacío (WI-AC-001) al mismo flujo de importación de WI-AC-030 y WI-AC-031, aceptando ambos valores de `kind`.
   - Con 0 proyectos no se muestra la confirmación de import completo (D-014). Esa regla se implementa y verifica en WI-AC-041; aquí basta con que no bloquee la importación.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-034 (commit bc5aefe). check 0 errores (1 warning conocido del design-system); test 225/225; test:e2e 45/45 (incl. los 2 nuevos de AC-034). Reproducción propia con Playwright sobre preview: exports reales (completo con 3 proyectos y de proyecto) importados desde el "Importar" del estado vacío en contextos limpios → la lista muestra los proyectos importados, desaparece el estado vacío y persiste tras recargar; el export de proyecto entra sin diálogo de conflicto. Con 0 proyectos aún aparece la confirmación "0 proyectos" y no bloquea (D-014 queda para WI-AC-041). Reglas base OK: el único cambio de producto es un comentario en ProjectList.svelte; sin dependencias nuevas ni estilos. AC-017 (teclado) pasó en esta ejecución; el diff no toca tablero]
 
 ## WI-AC-035
 - Contexto: persistencia
