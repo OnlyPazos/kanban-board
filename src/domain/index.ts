@@ -9,3 +9,10 @@ export {
   type NewProjectInput,
   type ProjectEdit,
 } from './project';
+export {
+  createCard,
+  InvalidCardTitleError,
+  touchProject,
+  validateNewCardTitle,
+  type NewCardInput,
+} from './card';

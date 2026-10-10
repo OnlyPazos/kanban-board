@@ -25,6 +25,8 @@ describe('AppStore', () => {
   it('si el guardado falla, el proyecto no aparece como creado', async () => {
     const store = new AppStore({
       listProjects: async () => [],
+      listCards: async () => [],
+      saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -72,6 +74,8 @@ describe('AppStore', () => {
     const created = createProject({ name: 'Mi app' });
     const store = new AppStore({
       listProjects: async () => [created],
+      listCards: async () => [],
+      saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -97,5 +101,61 @@ describe('AppStore', () => {
     const reloaded = new AppStore(createIdbRepository(dbName));
     await reloaded.hydrate();
     expect(reloaded.projects).toEqual([created]);
+  });
+
+  it('crear una tarjeta la persiste con tipo novedad y sin prioridad, y actualiza el updatedAt del proyecto', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    await new Promise((r) => setTimeout(r, 2));
+
+    const card = await store.createCard(project.id, '  Login ', 'en-curso');
+    expect(card).toMatchObject({
+      projectId: project.id,
+      title: 'Login',
+      status: 'en-curso',
+      type: 'novedad',
+      priority: null,
+      description: '',
+      archived: false,
+    });
+    expect(store.cards).toEqual([card]);
+    expect(store.projects[0].updatedAt).toBe(card.createdAt);
+    expect(store.projects[0].updatedAt > project.updatedAt).toBe(true);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.cards).toEqual([card]);
+    expect(reloaded.projects[0].updatedAt).toBe(card.createdAt);
+  });
+
+  it('crear una tarjeta en un proyecto lo pone el primero de la lista', async () => {
+    const store = new AppStore(createIdbRepository(freshName()));
+    await store.hydrate();
+    const a = await store.createProject({ name: 'A' });
+    await new Promise((r) => setTimeout(r, 2));
+    const b = await store.createProject({ name: 'B' });
+    expect(store.projects.map((p) => p.id)).toEqual([b.id, a.id]);
+    await new Promise((r) => setTimeout(r, 2));
+    await store.createCard(a.id, 'T1', 'sin-empezar');
+    expect(store.projects.map((p) => p.id)).toEqual([a.id, b.id]);
+  });
+
+  it('con título vacío o si el guardado falla, la tarjeta no se crea', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listCards: async () => [],
+      saveCard: async () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    await store.hydrate();
+    await expect(store.createCard(project.id, '   ', 'en-curso')).rejects.toThrow('El título es obligatorio.');
+    await expect(store.createCard(project.id, 'Login', 'en-curso')).rejects.toThrow('QuotaExceededError');
+    expect(store.cards).toEqual([]);
+    expect(store.projects).toEqual([project]);
   });
 });

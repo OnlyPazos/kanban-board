@@ -5,8 +5,9 @@
   import CreateProjectDialog from './views/CreateProjectDialog.svelte';
   import EditProjectDialog from './views/EditProjectDialog.svelte';
   import Board from './views/Board.svelte';
+  import CreateCardDialog from './views/CreateCardDialog.svelte';
   import { boardHref, LIST_HREF, parseRoute } from './lib/route';
-  import type { Project } from './domain';
+  import type { CardStatus, Project } from './domain';
   import { createIdbRepository, type Repository } from './persistence/repository';
   import { AppStore } from './state/app-store.svelte';
 
@@ -18,6 +19,8 @@
   let creating = $state(false);
   let editing = $state(false);
   let editTarget = $state<Project | null>(null);
+  let addingCard = $state(false);
+  let addCardStatus = $state<CardStatus>('sin-empezar');
   let route = $state(parseRoute(window.location.hash));
   // Siempre el valor actual del store: tras editar, el tablero ve el nuevo nombre.
   const boardProject = $derived.by(() => {
@@ -28,6 +31,11 @@
 
   function openBoard(project: Project) {
     window.location.hash = boardHref(project.id);
+  }
+
+  function startAddCard(status: CardStatus) {
+    addCardStatus = status;
+    addingCard = true;
   }
 
   function startEdit(project: Project) {
@@ -49,7 +57,7 @@
 <main>
   {#if route.name === 'board'}
     {#if boardProject}
-      <Board project={boardProject} onedit={startEdit} />
+      <Board project={boardProject} cards={store.cards} onedit={startEdit} onaddcard={startAddCard} />
     {:else if store.loaded}
       <section class="not-found">
         <h1 class="not-found__title">Proyecto no encontrado</h1>
@@ -66,6 +74,14 @@
   {/if}
 </main>
 <CreateProjectDialog bind:open={creating} oncreate={(input) => store.createProject(input)} />
+{#if boardProject}
+  {@const projectId = boardProject.id}
+  <CreateCardDialog
+    bind:open={addingCard}
+    status={addCardStatus}
+    oncreate={(title, status) => store.createCard(projectId, title, status)}
+  />
+{/if}
 <EditProjectDialog
   project={editTarget}
   bind:open={editing}
