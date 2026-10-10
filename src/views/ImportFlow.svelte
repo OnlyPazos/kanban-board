@@ -6,6 +6,8 @@
   - `kind: "full"` (AC-030): confirmación "Se borrarán tus N proyectos
     actuales" (N = activos + archivados). Cancelar o cerrar no cambia nada;
     al confirmar se avisa con `onreplaceall`, que sustituye todos los datos.
+    Si N es 0 no hay nada que perder: no se pide confirmación y el contenido
+    se escribe directamente (AC-041, D-014).
   - `kind: "project"` (WI-AC-031): si su `id` no existe, se añade con sus
     tarjetas (AC-031). Si ya existe, un diálogo ofrece "Reemplazar" (sustituye
     el existente y sus tarjetas) e "Importar como copia" (ids nuevos y nombre
@@ -86,8 +88,13 @@
     }
     switch (result.data.kind) {
       case 'full':
-        pendingFull = result.data;
-        confirming = true;
+        if (projectCount === 0) {
+          // Sin proyectos (ni activos ni archivados) no hay nada que perder (D-014).
+          await replaceAllDirectly(result.data);
+        } else {
+          pendingFull = result.data;
+          confirming = true;
+        }
         break;
       case 'project': {
         // `parseImport` garantiza exactamente un proyecto.
@@ -139,6 +146,19 @@
       confirming = false;
     } catch (error: unknown) {
       console.error('No se pudo importar el archivo', error);
+    } finally {
+      replacing = false;
+    }
+  }
+
+  /** Import completo sin confirmación (N = 0): si el guardado falla, se avisa. */
+  async function replaceAllDirectly(data: ExportFile) {
+    replacing = true;
+    try {
+      await onreplaceall?.(data);
+    } catch (error: unknown) {
+      console.error('No se pudo importar el archivo', error);
+      fail('No se han podido guardar los datos importados.');
     } finally {
       replacing = false;
     }

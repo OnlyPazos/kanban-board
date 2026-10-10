@@ -370,11 +370,11 @@ interface Card {
 - Acceptance Checks: AC-041
 - Depende de: [WI-AC-030]
 - Rama sugerida: feature/wi-ac-041-import-full-no-confirm-when-empty
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - En el flujo de import completo de WI-AC-030, si N (proyectos activos + archivados) es 0, no se abre la confirmación y se escribe el contenido directamente (D-014). Con N ≥ 1 se mantiene la confirmación de AC-030.
   - Test e2e: con almacenamiento limpio, importar un export completo muestra los proyectos sin ningún diálogo. Con 1 proyecto archivado y ninguno activo, sí aparece la confirmación.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-041 (commit 1d42bd1). check 0 errores (1 warning conocido del design-system); test 228/228; test:e2e 47/47 (build incluido); verificación independiente (vite preview en el puerto 4391, script fuera del repo): export completo real con "Mi app" (1 tarjeta), "Otra" y "Vieja" archivada; con IndexedDB vacía, "Importar" del estado vacío no abre ningún diálogo (MutationObserver 3 s), aparecen "Mi app" y "Otra" (Vieja solo archivada), IndexedDB idéntica al export (JSON exacto) y persiste al recargar; con 1 solo proyecto archivado sí aparece la confirmación en singular y Escape no cambia nada; con 2 activos la confirmación dice 2 y Reemplazar deja los datos del archivo; 375 px sin desbordamiento. Juicio sobre lo declarado: (1) N=0 con fallo de guardado (put forzado a QuotaExceededError) → diálogo "No se pudo importar el archivo" con "No se han podido guardar los datos importados.", sin confirmación, lista sin los proyectos e IndexedDB vacía tras recargar: aceptable, coherente con el error del import de proyecto y no indica que se guardó. (2) Cambios en tests de AC-034 (App.test.ts, import-from-empty-state.spec.ts): solo sustituyen el paso de confirmación por exigir ausencia de diálogo; siguen comprobando lista, IndexedDB igual al export y recarga, y el caso de export de proyecto no se toca; AC-030 sigue cubierto por import-full.spec.ts (sin cambios) y por el nuevo e2e con 1 archivado. Reglas base de stack OK (sin dependencias nuevas, sin CSS ni colores, reutiliza Dialog existente, escritura en la transacción única de replaceAll, tests unitarios y e2e)]
 
 ## WI-AC-042
 - Contexto: apariencia
