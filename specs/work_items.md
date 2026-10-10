@@ -239,7 +239,7 @@ interface Card {
 - Acceptance Checks: AC-028, AC-029
 - Depende de: [WI-AC-024]
 - Rama sugerida: feature/wi-ac-028-export
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Formato de export (contrato para todos los items de intercambio):
     ```json
