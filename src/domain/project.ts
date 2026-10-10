@@ -25,3 +25,21 @@ export function createProject(
     archived: false,
   };
 }
+
+export interface ProjectEdit {
+  name: string;
+  description: string;
+}
+
+/**
+ * Devuelve una copia del proyecto con el nombre y la descripción editados
+ * (recortados) y `updatedAt` actualizado. La identidad es el `id`, que no cambia.
+ */
+export function editProject(project: Project, edit: ProjectEdit, now: Date = new Date()): Project {
+  return {
+    ...project,
+    name: edit.name.trim(),
+    description: edit.description.trim(),
+    updatedAt: now.toISOString(),
+  };
+}
