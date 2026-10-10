@@ -1,10 +1,9 @@
 <!--
-  Lista de proyectos (pantalla inicial). En este Work Item solo existe el
-  estado vacío; "Crear proyecto" se conecta en WI-AC-002 e "Importar" en
-  WI-AC-034.
+  Lista de proyectos (pantalla inicial). Sin proyectos muestra el estado
+  vacío. "Importar" se conecta en WI-AC-034.
 -->
 <script lang="ts">
-  import { Button } from 'design-system';
+  import { Button, Card } from 'design-system';
   import type { Project } from '../domain';
 
   let {
@@ -19,9 +18,25 @@
 </script>
 
 <section class="project-list" aria-labelledby="project-list-title">
-  <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
+  <div class="project-list__header">
+    <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
+    {#if projects.length > 0}
+      <div class="project-list__actions">
+        <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
+        <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
+      </div>
+    {/if}
+  </div>
 
-  {#if projects.length === 0}
+  {#if projects.length > 0}
+    <ul class="project-list__items">
+      {#each projects as project (project.id)}
+        <li>
+          <Card title={project.name} description={project.description || undefined} />
+        </li>
+      {/each}
+    </ul>
+  {:else}
     <div class="empty-state">
       <p class="empty-state__title">Todavía no tienes proyectos</p>
       <p class="empty-state__text">Crea tu primer proyecto o importa un archivo exportado.</p>
@@ -38,8 +53,32 @@
     padding: var(--ds-spacing-5) var(--ds-spacing-4);
   }
 
-  .project-list__title {
+  .project-list__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-spacing-3);
     margin: 0 0 var(--ds-spacing-5);
+  }
+
+  .project-list__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-spacing-3);
+  }
+
+  .project-list__items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project-list__title {
+    margin: 0;
     font-size: var(--ds-font-heading-size);
     font-weight: var(--ds-font-heading-weight);
     line-height: var(--ds-font-heading-line-height);
