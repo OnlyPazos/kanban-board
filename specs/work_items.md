@@ -153,7 +153,7 @@ interface Card {
 - Acceptance Checks: AC-014
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-014-auto-sort
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Función pura `sortCards(cards)`: rango de prioridad alta=0, media=1, baja=2, null=3; empate por `createdAt` ascendente. No se guarda ninguna posición manual.
   - Test unitario con el escenario exacto de AC-014 (T1 Baja, T2 sin prioridad, T3 Alta, T4 Alta → T3, T4, T1, T2).

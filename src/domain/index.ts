@@ -14,6 +14,7 @@ export {
   createCard,
   editCard,
   InvalidCardTitleError,
+  sortCards,
   touchProject,
   validateCardTitle,
   type CardEdit,

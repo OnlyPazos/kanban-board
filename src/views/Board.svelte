@@ -3,7 +3,7 @@
   valor actual del store, así que se actualiza al editarlo), enlace para
   volver a la lista y botón "Editar". Debajo, exactamente 4 columnas en el
   orden de `CARD_STATUSES` (constante única del dominio). Cada columna lista
-  sus tarjetas no archivadas (componente `Card`, con el tipo y la prioridad
+  sus tarjetas no archivadas en el orden automático de `sortCards` (componente `Card`, con el tipo y la prioridad
   como `Badge` según `CARD_TYPE_TONE`/`PRIORITY_TONE`; al abrirla avisa con
   `oneditcard`) y tiene el botón "Añadir tarjeta", que avisa con el estado de
   la columna.
@@ -17,6 +17,7 @@
     CARD_TYPE_TONE,
     PRIORITY_LABELS,
     PRIORITY_TONE,
+    sortCards,
     type Card as CardData,
     type CardStatus,
     type Project,
@@ -46,6 +47,7 @@
     for (const card of cards) {
       if (card.projectId === project.id && !card.archived) groups[card.status].push(card);
     }
+    for (const status of CARD_STATUSES) groups[status] = sortCards(groups[status]);
     return groups;
   });
 </script>

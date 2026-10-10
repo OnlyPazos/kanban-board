@@ -4,10 +4,12 @@ import {
   createCard,
   editCard,
   InvalidCardTitleError,
+  sortCards,
   touchProject,
   validateCardTitle,
 } from './card';
 import { createProject } from './project';
+import type { Card, Priority } from './types';
 
 describe('createCard', () => {
   it('crea la tarjeta con el estado de la columna, tipo novedad y sin prioridad', () => {
@@ -103,5 +105,37 @@ describe('editCard', () => {
     const card = base();
     expect(() => editCard(card, { ...card, title }, later)).toThrow(InvalidCardTitleError);
     expect(card).toEqual(base());
+  });
+});
+
+describe('sortCards', () => {
+  const at = (minute: number) => new Date(Date.UTC(2026, 9, 10, 10, minute));
+  const make = (title: string, priority: Priority, minute: number): Card => ({
+    ...createCard({ projectId: 'p1', title, status: 'sin-empezar' }, at(minute), title),
+    priority,
+  });
+
+  it('AC-014: T1 (Baja), T2 (sin prioridad), T3 (Alta), T4 (Alta) → T3, T4, T1, T2', () => {
+    const cards = [make('T1', 'baja', 1), make('T2', null, 2), make('T3', 'alta', 3), make('T4', 'alta', 4)];
+    expect(sortCards(cards).map((c) => c.title)).toEqual(['T3', 'T4', 'T1', 'T2']);
+  });
+
+  it('ordena alta, media, baja, sin prioridad y desempata por createdAt ascendente', () => {
+    const cards = [
+      make('sin-b', null, 6),
+      make('baja', 'baja', 1),
+      make('media-b', 'media', 5),
+      make('sin-a', null, 0),
+      make('alta', 'alta', 9),
+      make('media-a', 'media', 2),
+    ];
+    expect(sortCards(cards).map((c) => c.title)).toEqual(['alta', 'media-a', 'media-b', 'baja', 'sin-a', 'sin-b']);
+  });
+
+  it('no depende del orden de entrada ni modifica el array recibido', () => {
+    const cards = [make('T4', 'alta', 4), make('T2', null, 2), make('T3', 'alta', 3), make('T1', 'baja', 1)];
+    const copy = [...cards];
+    expect(sortCards(cards).map((c) => c.title)).toEqual(['T3', 'T4', 'T1', 'T2']);
+    expect(cards).toEqual(copy);
   });
 });
