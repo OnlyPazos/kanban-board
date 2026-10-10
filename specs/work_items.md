@@ -202,7 +202,7 @@ interface Card {
 - Acceptance Checks: AC-020
 - Depende de: [WI-AC-009]
 - Rama sugerida: feature/wi-ac-020-mobile-layout
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - En un viewport de 375 px, el contenedor del tablero tiene `overflow-x: auto` y las columnas un ancho mínimo. `document.documentElement.scrollWidth` no debe superar el ancho del viewport.
   - Test e2e en un viewport de 375×667.
