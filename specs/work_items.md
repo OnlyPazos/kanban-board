@@ -270,7 +270,7 @@ interface Card {
 - Acceptance Checks: AC-030
 - Depende de: [WI-AC-028]
 - Rama sugerida: feature/wi-ac-030-import-full
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - "Importar" abre un `<input type="file" accept=".json,application/json">` y la app distingue el tipo de archivo por el campo `kind`.
   - Si `kind` es `full`: confirmación "Se borrarán tus N proyectos actuales" (N = proyectos activos + archivados). Al confirmar, se vacían `projects` y `cards` y se escribe el contenido del archivo en una única transacción. Se conservan ids, fechas y flags tal cual.
