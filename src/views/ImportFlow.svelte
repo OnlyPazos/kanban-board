@@ -11,12 +11,21 @@
     el existente y sus tarjetas) e "Importar como copia" (ids nuevos y nombre
     `<original> (copia)`); cerrar o cancelar no cambia nada (AC-032). Ambos
     casos se avisan con `onimportproject`, que escribe en una transacción.
-  Validación mínima (`parseImport`); los motivos y mensajes completos van en
-  WI-AC-033. Un archivo no válido no modifica nada.
+  Validación completa antes de escribir nada (`parseImport`, AC-033): si el
+  archivo no es JSON válido, tiene una versión de formato desconocida o su
+  estructura no es válida, se muestra un error en español con el motivo
+  (`importFailureMessage`) y no se modifica ningún dato.
 -->
 <script lang="ts">
   import { Button, Dialog } from 'design-system';
-  import { copyImportedProject, parseImport, type Card, type ExportFile, type Project } from '../domain';
+  import {
+    copyImportedProject,
+    importFailureMessage,
+    parseImport,
+    type Card,
+    type ExportFile,
+    type Project,
+  } from '../domain';
 
   let {
     projectCount = 0,
@@ -72,7 +81,7 @@
     }
     const result = parseImport(text);
     if (!result.ok) {
-      fail('El archivo no es un export válido de la app.');
+      fail(importFailureMessage(result.reason, result.detail));
       return;
     }
     switch (result.data.kind) {
@@ -81,11 +90,9 @@
         confirming = true;
         break;
       case 'project': {
+        // `parseImport` garantiza exactamente un proyecto.
         const [project] = result.data.projects;
-        if (result.data.projects.length !== 1 || !project) {
-          fail('El archivo no es un export válido de la app.');
-          return;
-        }
+        if (!project) return;
         const cards = result.data.cards;
         if (projectIds.includes(project.id)) {
           pendingProject = { project, cards };

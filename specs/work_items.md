@@ -298,12 +298,12 @@ interface Card {
 - Acceptance Checks: AC-033
 - Depende de: [WI-AC-030, WI-AC-031]
 - Rama sugerida: feature/wi-ac-033-import-validation
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - Función pura `parseImport(text)` que devuelve `{ ok: true, data } | { ok: false, reason }`, con `reason` igual a `invalid-json`, `unknown-version` o `invalid-structure` (este último con detalle, por ejemplo "tarjeta sin título").
   - La estructura se valida con las mismas reglas de dominio: `validateProjectName`, `validateCardTitle` y enums válidos de tipo, estado y prioridad. Además, cada `card.projectId` debe existir en `projects`.
   - Toda la validación ocurre antes de cualquier escritura. Si falla, se muestra un error con el motivo en español y no se modifica nada.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-033 (commit 31f0cb7). check 0 errores (1 warning conocido del design-system); test 223/223; test:e2e 43/43 (incl. AC-030/031/032 con exports reales descargados, con archivados, y AC-033: JSON no válido, versión desconocida, tarjeta sin título, estado inexistente, projectId ajeno → mensaje en español y datos intactos tras recargar). Decisiones del builder (ids repetidos, fechas ISO, priority obligatoria como null, kind project = 1 proyecto en parseImport) coherentes con el modelo de la spec. Reglas base OK (sin dependencias nuevas, dominio sin UI, sin estilos). Observación: e2e de teclado AC-017 intermitente previo, no causado por este WI: rama 31/640 fallos (4,8 %) vs integration/kanban-board 22/640 (3,4 %), Fisher bilateral p≈0,26; el diff no toca tablero ni drag-and-drop]
 
 ## WI-AC-034
 - Contexto: intercambio
