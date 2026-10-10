@@ -50,7 +50,7 @@ interface Card {
 - Acceptance Checks: AC-001
 - Depende de: []
 - Rama sugerida: feature/wi-ac-001-scaffold-empty-state
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Andamiaje del proyecto según "Reglas base de stack": Vite + Svelte 5 (runes, SPA, sin SvelteKit) + TypeScript `strict`, Vitest + `@testing-library/svelte`, Playwright. Scripts npm para `dev`, `build`, `test` (unit) y `test:e2e`.
   - Tipos de dominio del bloque "Modelo de datos común" en un módulo `domain` sin dependencias de UI, con las etiquetas en español de tipos, estados y prioridades.
@@ -58,7 +58,8 @@ interface Card {
   - Integración del sistema de diseño (D-015): `design-system` como dependencia local de la app (`"design-system": "file:./design-system"`), junto con `@fontsource-variable/inter` y `@fontsource/jetbrains-mono`. En el punto de entrada se importan una sola vez `design-system/tokens.css` y las fuentes. El build de la app debe compilar los `.svelte` de `design-system` (nunca se han compilado; si falla la compilación, el defecto se devuelve a `design-builder`, no se parchea en la app).
   - Esqueleto de la app con una cabecera común a todas las vistas, que luego usará el selector de modo de WI-AC-042.
   - Test e2e: con almacenamiento limpio, se ven "Crear proyecto" e "Importar".
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-001, commit d58ca6e). check 0 errores; build OK (compila los `.svelte` de design-system); test 7/7; test:e2e 1/1; check independiente de QA en claro/oscuro y 375px sin errores de consola ni peticiones externas. Reglas base de stack OK.
 
 ## WI-AC-002
 - Contexto: persistencia
