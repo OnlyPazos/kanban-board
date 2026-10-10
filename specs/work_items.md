@@ -117,12 +117,12 @@ interface Card {
 - Acceptance Checks: AC-010
 - Depende de: [WI-AC-009]
 - Rama sugerida: feature/wi-ac-010-create-card
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Botón "Añadir tarjeta" en cada columna. La tarjeta se crea con `status` igual a la columna, `type` igual a `novedad` y `priority` igual a `null`.
   - Persistencia en el store `cards`. Actualiza el `updatedAt` del proyecto.
   - Validación mínima del título en este item; la validación completa va en WI-AC-011.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-010 (commit 688fac1). check 0 errores (1 warning conocido del design-system); build OK; test 62/62; test:e2e 11/11; e2e independiente de QA (script propio, preview en puerto 4185, ya parado): "Añadir tarjeta" en "En curso" → diálogo solo con título → la tarjeta aparece solo en "En curso" con data-type=novedad y data-priority vacío; IndexedDB `cards` con status en-curso, type novedad, priority null; tras recargar, idéntico; título solo espacios → error junto al campo y no se crea; sin errores de consola. Reglas base de stack OK (solo variables --ds-*, componentes Button/Card/Dialog/Input de design-system, sin dependencias nuevas, tarjeta y updatedAt del proyecto en una transacción, tests unitarios/componentes/e2e)]
 
 ## WI-AC-012
 - Contexto: tablero
