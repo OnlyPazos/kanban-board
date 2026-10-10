@@ -165,11 +165,11 @@ interface Card {
 - Acceptance Checks: AC-007, AC-008
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-007-project-list-order-counts
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - La lista de proyectos activos se ordena por `updatedAt` descendente. Cualquier creación o edición de tarjeta debe actualizar el `updatedAt` del proyecto (verificar que WI-AC-010 y WI-AC-012 lo hacen).
   - Recuento por estado de las tarjetas no archivadas (4 números, en el orden de las columnas).
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-007 y AC-008 (commit 0d9659a). check 0 errores (1 warning conocido del design-system); build OK; test 96/96; test:e2e 18/18; e2e independiente de QA con reloj real (puerto 4199): A y B → B,A; crear tarjeta en A → A,B sin recargar y tras recargar; crear tarjeta en B → B,A; editar tarjeta en A → A,B; proyecto con 2 en Sin empezar y 1 en En curso muestra 2,1,0,0 con etiquetas en orden de columnas; tarjetas archivadas sembradas en IndexedDB excluidas del recuento (2,1,0,1 con una activa en Finalizado). Reglas base de stack OK (solo variables --ds-* existentes, sin dependencias nuevas)]
 
 ## WI-AC-015
 - Contexto: tablero
