@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "description": "Escala de espaciado en múltiplos de 4 (spacing.1..8) y radios redondeados (radii.*). Densidad cómoda: los componentes usan pasos amplios (p. ej. spacing.4 de relleno en tarjetas). Controles con radii.medium; tarjetas y diálogos con radii.large; chips y badges con radii.full."
+  },
+  "spacing": {
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 24,
+    "6": 32,
+    "7": 48,
+    "8": 64
+  },
+  "radii": {
+    "small": 6,
+    "medium": 10,
+    "large": 16,
+    "full": 999
+  }
+}

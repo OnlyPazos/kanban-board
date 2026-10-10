@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "description": "Dimensiones de componentes que no encajan en spacing ni typography: bordes, anillo de foco, alturas mínimas de controles, zona táctil mínima (hit-area, 44px), spinner, y medidas propias de chip, tarjeta y diálogo. Las claves terminadas en scale/lines son números sin unidad."
+  },
+  "border": {
+    "width": {
+      "default": 1,
+      "accent": 4
+    }
+  },
+  "focus-ring": {
+    "width": 2,
+    "offset": 2
+  },
+  "spinner": {
+    "size": 18
+  },
+  "control": {
+    "min-height": {
+      "sm": 36,
+      "md": 44,
+      "lg": 52
+    },
+    "hit-area": 44,
+    "press-scale": 0.97,
+    "chevron-size": 8
+  },
+  "chip": {
+    "dot-size": 8
+  },
+  "card": {
+    "lift": 2,
+    "drag-rotate": "1.5deg",
+    "description-lines": 3
+  },
+  "dialog": {
+    "max-width": {
+      "sm": 400,
+      "md": 560
+    },
+    "enter-scale": 0.96
+  }
+}

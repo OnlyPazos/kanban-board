@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "description": "Pares de color que los componentes usan realmente, referenciados por ruta de colors.json. Se validan en modo claro y oscuro. 'text' exige 4.5:1 (AA texto normal), 'large-text' 3:1, 'ui' 3:1 (bordes, foco e indicadores, WCAG 1.4.11). Al añadir una variante o componente, añade aquí sus pares. Los estados disabled están exentos por WCAG y no se listan."
+  },
+  "pairs": [
+    { "use": "text", "fg": "text.primary", "bg": "background", "where": "texto base" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.base", "where": "texto sobre columna/panel" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.raised", "where": "texto sobre tarjeta/diálogo/control" },
+    { "use": "text", "fg": "text.secondary", "bg": "background", "where": "texto secundario" },
+    { "use": "text", "fg": "text.secondary", "bg": "surface.base", "where": "texto secundario sobre columna" },
+    { "use": "text", "fg": "text.secondary", "bg": "surface.raised", "where": "metadatos de tarjeta, hint, placeholder" },
+    { "use": "text", "fg": "action.primary", "bg": "background", "where": "enlaces, button outline sobre página" },
+    { "use": "text", "fg": "action.primary", "bg": "surface.base", "where": "button outline sobre columna" },
+    { "use": "text", "fg": "action.primary", "bg": "surface.raised", "where": "button outline sobre tarjeta/diálogo" },
+
+    { "use": "text", "fg": "action.on-primary", "bg": "action.primary", "where": "button primary" },
+    { "use": "text", "fg": "action.on-primary", "bg": "action.primary-hover", "where": "button primary :hover" },
+    { "use": "text", "fg": "action.on-primary", "bg": "action.primary-active", "where": "button primary :active" },
+    { "use": "text", "fg": "action.on-tint", "bg": "action.tint", "where": "button outline :hover, chip seleccionado" },
+    { "use": "text", "fg": "action.on-tint", "bg": "action.tint-active", "where": "button outline :active, chip seleccionado :active" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.hover", "where": "button secondary/ghost, chip, :hover" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.active", "where": "button secondary/ghost, chip, :active" },
+    { "use": "text", "fg": "feedback.on-danger", "bg": "feedback.danger", "where": "button danger" },
+    { "use": "text", "fg": "feedback.on-danger", "bg": "feedback.danger-hover", "where": "button danger :hover/:active" },
+
+    { "use": "text", "fg": "feedback.danger", "bg": "background", "where": "mensaje de error sobre página" },
+    { "use": "text", "fg": "feedback.danger", "bg": "surface.raised", "where": "error de campo, alert danger, badge danger" },
+    { "use": "text", "fg": "feedback.warning", "bg": "surface.raised", "where": "alert warning, badge warning" },
+    { "use": "text", "fg": "feedback.success", "bg": "surface.raised", "where": "alert success, badge success" },
+    { "use": "text", "fg": "feedback.info", "bg": "surface.raised", "where": "alert info, badge info" },
+    { "use": "text", "fg": "text.secondary", "bg": "surface.base", "where": "badge neutral" },
+
+    { "use": "text", "fg": "tag.feature.fg", "bg": "tag.feature.bg", "where": "badge feature (Novedad)" },
+    { "use": "text", "fg": "tag.improvement.fg", "bg": "tag.improvement.bg", "where": "badge improvement (Mejora)" },
+    { "use": "text", "fg": "tag.bugfix.fg", "bg": "tag.bugfix.bg", "where": "badge bugfix (Arreglo)" },
+    { "use": "text", "fg": "tag.technical.fg", "bg": "tag.technical.bg", "where": "badge technical (Técnico)" },
+
+    { "use": "ui", "fg": "border.strong", "bg": "background", "where": "borde de control/chip sobre página" },
+    { "use": "ui", "fg": "border.strong", "bg": "surface.base", "where": "borde de control/chip sobre columna" },
+    { "use": "ui", "fg": "border.strong", "bg": "surface.raised", "where": "borde de control sobre su relleno/diálogo" },
+    { "use": "ui", "fg": "action.primary", "bg": "surface.raised", "where": "borde de button outline y chip seleccionado" },
+    { "use": "ui", "fg": "action.primary", "bg": "action.tint", "where": "borde de chip seleccionado sobre su relleno" },
+    { "use": "ui", "fg": "feedback.danger", "bg": "surface.raised", "where": "borde de control con error, acento de alert danger" },
+    { "use": "ui", "fg": "feedback.warning", "bg": "surface.raised", "where": "acento de alert warning" },
+    { "use": "ui", "fg": "feedback.success", "bg": "surface.raised", "where": "acento de alert success" },
+    { "use": "ui", "fg": "feedback.info", "bg": "surface.raised", "where": "acento de alert info" },
+    { "use": "ui", "fg": "tag.feature.fg", "bg": "surface.raised", "where": "punto de chip feature" },
+    { "use": "ui", "fg": "tag.improvement.fg", "bg": "surface.raised", "where": "punto de chip improvement" },
+    { "use": "ui", "fg": "tag.bugfix.fg", "bg": "surface.raised", "where": "punto de chip bugfix" },
+    { "use": "ui", "fg": "tag.technical.fg", "bg": "surface.raised", "where": "punto de chip technical" },
+    { "use": "ui", "fg": "focus", "bg": "background", "where": "anillo de foco sobre página" },
+    { "use": "ui", "fg": "focus", "bg": "surface.base", "where": "anillo de foco sobre columna" },
+    { "use": "ui", "fg": "focus", "bg": "surface.raised", "where": "anillo de foco sobre tarjeta/diálogo" }
+  ]
+}

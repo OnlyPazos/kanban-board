@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "description": "Paleta semántica 'ámbar cálido' sobre neutros stone, con modo claro y oscuro. Cada rol es { light, dark }. Los colores apuntan a roles (background, surface.*, text.*, action.*, feedback.*, tag.*), no a tonos. Todo par texto/fondo o borde/fondo usado por un componente está en scripts/contrast-pairs.json y se valida en ambos modos.",
+    "tag": "Etiquetas de categoría para tarjetas. En la app kanban: feature = Novedad, improvement = Mejora, bugfix = Arreglo, technical = Técnico."
+  },
+  "background": { "light": "#FCFBF8", "dark": "#1C1917" },
+  "surface": {
+    "base": { "light": "#F5F3EF", "dark": "#292524" },
+    "raised": { "light": "#FFFFFF", "dark": "#35302C" },
+    "hover": { "light": "#ECE8E1", "dark": "#44403C" },
+    "active": { "light": "#E1DCD3", "dark": "#57534E" }
+  },
+  "text": {
+    "primary": { "light": "#1C1917", "dark": "#FAFAF9" },
+    "secondary": { "light": "#57534E", "dark": "#D6D3D1" },
+    "disabled": { "light": "#A8A29E", "dark": "#78716C" }
+  },
+  "border": {
+    "default": { "light": "#E7E5E4", "dark": "#44403C" },
+    "strong": { "light": "#78716C", "dark": "#A8A29E" }
+  },
+  "action": {
+    "primary": { "light": "#B45309", "dark": "#F59E0B" },
+    "primary-hover": { "light": "#92400E", "dark": "#FBBF24" },
+    "primary-active": { "light": "#78350F", "dark": "#FCD34D" },
+    "on-primary": { "light": "#FFFFFF", "dark": "#1C1917" },
+    "tint": { "light": "#FEF3C7", "dark": "#451A03" },
+    "tint-active": { "light": "#FDE68A", "dark": "#78350F" },
+    "on-tint": { "light": "#92400E", "dark": "#FDE68A" }
+  },
+  "feedback": {
+    "danger": { "light": "#B91C1C", "dark": "#F87171" },
+    "danger-hover": { "light": "#991B1B", "dark": "#FCA5A5" },
+    "on-danger": { "light": "#FFFFFF", "dark": "#1C1917" },
+    "warning": { "light": "#A16207", "dark": "#FACC15" },
+    "success": { "light": "#15803D", "dark": "#4ADE80" },
+    "info": { "light": "#1D4ED8", "dark": "#60A5FA" }
+  },
+  "tag": {
+    "feature": {
+      "bg": { "light": "#DBEAFE", "dark": "#1E3A8A" },
+      "fg": { "light": "#1E40AF", "dark": "#BFDBFE" }
+    },
+    "improvement": {
+      "bg": { "light": "#DCFCE7", "dark": "#14532D" },
+      "fg": { "light": "#166534", "dark": "#BBF7D0" }
+    },
+    "bugfix": {
+      "bg": { "light": "#FEE2E2", "dark": "#7F1D1D" },
+      "fg": { "light": "#991B1B", "dark": "#FECACA" }
+    },
+    "technical": {
+      "bg": { "light": "#EDE9FE", "dark": "#4C1D95" },
+      "fg": { "light": "#5B21B6", "dark": "#DDD6FE" }
+    }
+  },
+  "focus": { "light": "#B45309", "dark": "#FBBF24" },
+  "overlay": { "light": "rgba(28, 25, 23, 0.45)", "dark": "rgba(0, 0, 0, 0.65)" }
+}
