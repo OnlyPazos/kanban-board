@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createCard, editCard, InvalidCardTitleError, touchProject, validateNewCardTitle } from './card';
+import {
+  CARD_TITLE_MAX_LENGTH,
+  createCard,
+  editCard,
+  InvalidCardTitleError,
+  touchProject,
+  validateCardTitle,
+} from './card';
 import { createProject } from './project';
 
 describe('createCard', () => {
@@ -20,9 +27,30 @@ describe('createCard', () => {
     });
   });
 
-  it.each(['', '   '])('rechaza el título %j', (title) => {
-    expect(validateNewCardTitle(title)).toBe('El título es obligatorio.');
+  it.each(['', '   ', 'a'.repeat(121)])('rechaza el título %j', (title) => {
     expect(() => createCard({ projectId: 'p1', title, status: 'sin-empezar' })).toThrow(InvalidCardTitleError);
+  });
+});
+
+describe('validateCardTitle', () => {
+  it('acepta un título normal y uno de exactamente 120 caracteres', () => {
+    expect(CARD_TITLE_MAX_LENGTH).toBe(120);
+    expect(validateCardTitle('Login')).toBeNull();
+    expect(validateCardTitle('a'.repeat(120))).toBeNull();
+  });
+
+  it('rechaza el título vacío o formado solo por espacios', () => {
+    expect(validateCardTitle('')).toBe('El título es obligatorio.');
+    expect(validateCardTitle('   ')).toBe('El título es obligatorio.');
+    expect(validateCardTitle('\t\n ')).toBe('El título es obligatorio.');
+  });
+
+  it('rechaza más de 120 caracteres', () => {
+    expect(validateCardTitle('a'.repeat(121))).toBe('El título no puede superar 120 caracteres.');
+  });
+
+  it('mide la longitud tras recortar los espacios exteriores', () => {
+    expect(validateCardTitle(`  ${'a'.repeat(120)}  `)).toBeNull();
   });
 });
 
@@ -71,8 +99,9 @@ describe('editCard', () => {
     expect(card.updatedAt).toBe(created.toISOString());
   });
 
-  it('rechaza un título vacío', () => {
+  it.each(['', '   ', 'a'.repeat(121)])('rechaza el título %j y no altera el original', (title) => {
     const card = base();
-    expect(() => editCard(card, { ...card, title: '   ' }, later)).toThrow(InvalidCardTitleError);
+    expect(() => editCard(card, { ...card, title }, later)).toThrow(InvalidCardTitleError);
+    expect(card).toEqual(base());
   });
 });

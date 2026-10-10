@@ -2,8 +2,9 @@
   Diálogo "Editar tarjeta": título, tipo, estado, descripción (multilínea) y
   prioridad (Alta, Media, Baja o Sin prioridad) de la tarjeta indicada. Al
   abrirse parte de sus valores actuales. Las fechas de creación y de última
-  modificación se muestran en solo lectura. Validación mínima del título
-  (`validateNewCardTitle`); la completa llega en WI-AC-011.
+  modificación se muestran en solo lectura. Si el título no es válido
+  (`validateCardTitle`), muestra el error junto al campo y no guarda nada.
+  Sin `maxlength`: AC-011 exige ver el error con más de 120 caracteres, no recortar.
 -->
 <script lang="ts">
   import { Button, Dialog, Input, Select, Textarea } from 'design-system';
@@ -15,7 +16,7 @@
     NO_PRIORITY_LABEL,
     PRIORITIES,
     PRIORITY_LABELS,
-    validateNewCardTitle,
+    validateCardTitle,
     type Card,
     type CardEdit,
     type CardStatus,
@@ -70,7 +71,7 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (!card || saving) return;
-    titleError = validateNewCardTitle(title);
+    titleError = validateCardTitle(title);
     if (titleError) return;
     saving = true;
     try {
@@ -90,7 +91,13 @@
 
 <Dialog bind:open title="Editar tarjeta">
   <form id={formId} class="edit-card" novalidate onsubmit={submit}>
-    <Input label="Título" bind:value={title} error={titleError ?? undefined} required autocomplete="off" />
+    <Input
+      label="Título"
+      bind:value={title}
+      error={titleError ?? undefined}
+      required
+      autocomplete="off"
+    />
     <Select label="Tipo" bind:value={type} options={typeOptions} />
     <Select label="Estado" bind:value={status} options={statusOptions} />
     <Textarea label="Descripción" bind:value={description} rows={5} />

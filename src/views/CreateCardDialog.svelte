@@ -1,11 +1,12 @@
 <!--
   Diálogo "Añadir tarjeta": solo el título. La tarjeta se crea en la columna
-  `status` desde la que se abrió (tipo Novedad, sin prioridad). Validación
-  mínima del título (`validateNewCardTitle`); la completa llega en WI-AC-011.
+  `status` desde la que se abrió (tipo Novedad, sin prioridad). Si el título no
+  es válido (`validateCardTitle`), muestra el error junto al campo y no crea nada.
+  Sin `maxlength`: AC-011 exige ver el error con más de 120 caracteres, no recortar.
 -->
 <script lang="ts">
   import { Button, Dialog, Input } from 'design-system';
-  import { CARD_STATUS_LABELS, validateNewCardTitle, type CardStatus } from '../domain';
+  import { CARD_STATUS_LABELS, validateCardTitle, type CardStatus } from '../domain';
 
   let {
     open = $bindable(false),
@@ -31,7 +32,7 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (saving) return;
-    titleError = validateNewCardTitle(title);
+    titleError = validateCardTitle(title);
     if (titleError) return;
     saving = true;
     try {
@@ -45,7 +46,13 @@
 
 <Dialog bind:open title="Añadir tarjeta" description={`Columna: ${CARD_STATUS_LABELS[status]}`} onclose={reset}>
   <form id={formId} class="create-card" novalidate onsubmit={submit}>
-    <Input label="Título" bind:value={title} error={titleError ?? undefined} required autocomplete="off" />
+    <Input
+      label="Título"
+      bind:value={title}
+      error={titleError ?? undefined}
+      required
+      autocomplete="off"
+    />
   </form>
 
   {#snippet actions()}
