@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createIdbRepository } from '../persistence/repository';
 import { AppStore } from './app-store.svelte';
-import { createProject } from '../domain';
+import { createCard, createProject } from '../domain';
 
 const freshName = () => `kanban-board-store-${crypto.randomUUID()}`;
 
@@ -156,6 +156,58 @@ describe('AppStore', () => {
     await expect(store.createCard(project.id, '   ', 'en-curso')).rejects.toThrow('El título es obligatorio.');
     await expect(store.createCard(project.id, 'Login', 'en-curso')).rejects.toThrow('QuotaExceededError');
     expect(store.cards).toEqual([]);
+    expect(store.projects).toEqual([project]);
+  });
+
+  it('editar una tarjeta persiste todos sus campos, conserva createdAt y actualiza el updatedAt de tarjeta y proyecto', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    const card = await store.createCard(project.id, 'Login', 'sin-empezar');
+    await new Promise((r) => setTimeout(r, 2));
+
+    const updated = await store.updateCard(card.id, {
+      title: ' Login 2 ',
+      type: 'arreglo',
+      status: 'en-pausa',
+      description: 'línea 1\nlínea 2',
+      priority: 'alta',
+    });
+    expect(updated).toMatchObject({
+      id: card.id,
+      projectId: project.id,
+      title: 'Login 2',
+      type: 'arreglo',
+      status: 'en-pausa',
+      description: 'línea 1\nlínea 2',
+      priority: 'alta',
+      createdAt: card.createdAt,
+    });
+    expect(updated.updatedAt > card.updatedAt).toBe(true);
+    expect(store.cards).toEqual([updated]);
+    expect(store.projects[0].updatedAt).toBe(updated.updatedAt);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.cards).toEqual([updated]);
+    expect(reloaded.projects[0].updatedAt).toBe(updated.updatedAt);
+  });
+
+  it('si el guardado de la edición de una tarjeta falla, se conservan los valores anteriores', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const card = createCard({ projectId: project.id, title: 'Login', status: 'sin-empezar' });
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listCards: async () => [card],
+      saveCard: async () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    await store.hydrate();
+    await expect(store.updateCard(card.id, { ...card, title: 'Otro' })).rejects.toThrow('QuotaExceededError');
+    expect(store.cards).toEqual([card]);
     expect(store.projects).toEqual([project]);
   });
 });

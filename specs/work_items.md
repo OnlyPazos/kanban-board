@@ -129,7 +129,7 @@ interface Card {
 - Acceptance Checks: AC-012, AC-013
 - Depende de: [WI-AC-010]
 - Rama sugerida: feature/wi-ac-012-edit-card
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Diálogo o panel de edición con título, tipo, estado, descripción (textarea multilínea) y prioridad (Alta, Media, Baja o Sin prioridad). Las fechas de creación y modificación se muestran en solo lectura.
   - Si cambia el estado, la tarjeta pasa a la columna correspondiente. Al guardar se actualizan el `updatedAt` de la tarjeta y del proyecto, y `createdAt` no se toca.
