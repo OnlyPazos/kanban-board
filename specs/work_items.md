@@ -298,7 +298,7 @@ interface Card {
 - Acceptance Checks: AC-033
 - Depende de: [WI-AC-030, WI-AC-031]
 - Rama sugerida: feature/wi-ac-033-import-validation
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Función pura `parseImport(text)` que devuelve `{ ok: true, data } | { ok: false, reason }`, con `reason` igual a `invalid-json`, `unknown-version` o `invalid-structure` (este último con detalle, por ejemplo "tarjeta sin título").
   - La estructura se valida con las mismas reglas de dominio: `validateProjectName`, `validateCardTitle` y enums válidos de tipo, estado y prioridad. Además, cada `card.projectId` debe existir en `projects`.
