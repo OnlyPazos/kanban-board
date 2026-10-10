@@ -227,12 +227,12 @@ interface Card {
 - Acceptance Checks: AC-024, AC-025, AC-027
 - Depende de: [WI-AC-021]
 - Rama sugerida: feature/wi-ac-024-archive-projects
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - "Archivar proyecto" pone el `archived` del proyecto a `true`. Las tarjetas no se tocan y mantienen su propio flag `archived`, así que al restaurar el proyecto vuelve todo exactamente igual.
   - Vista global "Proyectos archivados" con "Restaurar" y "Borrar definitivamente". Este último pide confirmación indicando el nombre y el total de tarjetas (activas + archivadas) y elimina el proyecto y todas sus tarjetas en una única transacción.
   - La lista activa no ofrece borrado definitivo.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-024, AC-025 y AC-027 (commit 6373ddb). check 0 errores (1 warning conocido del design-system); build OK; test 145/145; test:e2e 32/32; e2e independiente de QA (puerto 4180): archivar sin confirmación ni navegación, sale de la lista y aparece en #/archived (también tras recargar), solo cambia `archived` del proyecto y no toca tarjetas; restaurar devuelve el proyecto idéntico en IndexedDB, tarjetas activas/archivadas y filtro intactos; confirmación de borrado con nombre y total (0 y 3 tarjetas: activas+archivadas), Cancelar y Escape no cambian nada; confirmar borra proyecto, sus tarjetas y `filter:<id>` sin tocar otro proyecto, y no reaparece tras recargar; lista activa sin borrado; 375px sin overflow; sin errores de consola. Decisiones del builder aceptadas: updatedAt sin cambios al archivar/restaurar (glosario "Restaurar" y D-007(3)), "Archivar" solo en la lista (la spec no fija ubicación), borrar `filter:<id>` (sin datos huérfanos). Reglas base de stack OK]
 
 ## WI-AC-028
 - Contexto: intercambio
