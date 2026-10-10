@@ -1,7 +1,7 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import App from './App.svelte';
-import { createProject, type Card, type CardType, type Project } from './domain';
+import { buildExport, createCard, createProject, type Card, type CardType, type Project } from './domain';
 import type { Repository } from './persistence/repository';
 
 function memoryRepository(initial: Project[] = []): Repository {
@@ -205,5 +205,62 @@ describe('App', () => {
     const item = within(reloaded).getByRole('listitem');
     expect(item.dataset.type).toBe('novedad');
     expect(item.dataset.priority).toBe('');
+  });
+});
+
+describe('App: "Importar" del estado vacío (AC-034)', () => {
+  const miApp = { ...createProject({ name: 'Mi app' }), archived: false };
+  const vieja = { ...createProject({ name: 'Vieja' }), archived: true };
+  const otra = createProject({ name: 'Otra' });
+  const source = {
+    projects: [miApp, vieja, otra],
+    cards: [
+      createCard({ projectId: miApp.id, title: 'A', status: 'en-curso' }),
+      createCard({ projectId: vieja.id, title: 'B', status: 'finalizado' }),
+    ],
+  };
+
+  /** Pulsa "Importar" del estado vacío y elige `content` en el selector. */
+  async function importFromEmptyState(content: string) {
+    const emptyState = await screen.findByText('Todavía no tienes proyectos');
+    const actions = emptyState.parentElement!;
+    const input = screen.getByLabelText<HTMLInputElement>('Archivo para importar');
+    const click = vi.spyOn(input, 'click').mockImplementation(() => {});
+    await fireEvent.click(within(actions).getByRole('button', { name: 'Importar' }));
+    expect(click).toHaveBeenCalledOnce();
+    const file = new File([content], 'export.json', { type: 'application/json' });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    await fireEvent.change(input);
+  }
+
+  it('acepta un export completo y muestra en la lista los proyectos importados', async () => {
+    const repository = memoryRepository();
+    render(App, { repository });
+    await importFromEmptyState(JSON.stringify(buildExport(source, { kind: 'full' })));
+
+    const dialog = await screen.findByRole('dialog', { name: '¿Importar y reemplazar todos tus datos?' });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Reemplazar' }));
+
+    const list = screen.getByRole('region', { name: 'Proyectos' });
+    expect(await within(list).findByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+    expect(within(list).getByRole('button', { name: 'Otra' })).toBeInTheDocument();
+    // El archivado se importa archivado: no aparece en la lista activa.
+    expect(within(list).queryByRole('button', { name: 'Vieja' })).toBeNull();
+    expect(screen.queryByText('Todavía no tienes proyectos')).toBeNull();
+    expect(await repository.listProjects()).toHaveLength(3);
+    expect(await repository.listCards()).toHaveLength(2);
+  });
+
+  it('acepta un export de proyecto y muestra en la lista el proyecto importado', async () => {
+    const repository = memoryRepository();
+    render(App, { repository });
+    await importFromEmptyState(JSON.stringify(buildExport(source, { kind: 'project', projectId: miApp.id })));
+
+    const list = screen.getByRole('region', { name: 'Proyectos' });
+    expect(await within(list).findByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Este proyecto ya existe' })).toBeNull();
+    expect(screen.queryByText('Todavía no tienes proyectos')).toBeNull();
+    expect(await repository.listProjects()).toEqual([miApp]);
+    expect(await repository.listCards()).toEqual([source.cards[0]]);
   });
 });
