@@ -105,7 +105,7 @@ interface Card {
 - Acceptance Checks: AC-009
 - Depende de: [WI-AC-002]
 - Rama sugerida: feature/wi-ac-009-board-columns
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Navegación lista → tablero (estado de vista en memoria o hash `#/project/<id>`; no hace falta router externo).
   - Tablero con exactamente 4 columnas en el orden: Sin empezar, En curso, En pausa, Finalizado. El orden sale de una constante única del dominio.
