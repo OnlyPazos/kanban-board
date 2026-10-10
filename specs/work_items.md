@@ -257,7 +257,7 @@ interface Card {
 - Acceptance Checks: AC-026
 - Depende de: [WI-AC-024, WI-AC-028]
 - Rama sugerida: feature/wi-ac-026-archived-project-readonly
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Desde la vista de proyectos archivados se puede abrir el tablero en modo solo lectura: sin añadir, editar, archivar ni arrastrar tarjetas, y sin editar el proyecto (arrastre desactivado en `svelte-dnd-action`).
   - La guarda también va en la capa de dominio: las mutaciones sobre un proyecto archivado se rechazan.
