@@ -1,12 +1,82 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import App from './App.svelte';
+import { createProject, type Project } from './domain';
+import type { Repository } from './persistence/repository';
+
+function memoryRepository(initial: Project[] = []): Repository {
+  const projects = new Map(initial.map((p) => [p.id, p]));
+  return {
+    listProjects: async () => [...projects.values()],
+    saveProject: async (project) => {
+      projects.set(project.id, { ...project });
+    },
+  };
+}
+
+// jsdom no implementa showModal/close de <dialog>.
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    this.open = false;
+    this.dispatchEvent(new Event('close'));
+  };
+});
+
+afterEach(() => {
+  window.location.hash = '';
+});
 
 describe('App', () => {
   it('renderiza la cabecera común y la lista de proyectos vacía', () => {
-    render(App);
+    render(App, { repository: memoryRepository() });
     expect(screen.getByRole('banner')).toHaveTextContent('Kanban de proyectos');
     expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Crear proyecto' })).toBeInTheDocument();
+  });
+
+  it('abrir un proyecto muestra su tablero y el enlace vuelve a la lista', async () => {
+    const project = createProject({ name: 'Mi app' });
+    render(App, { repository: memoryRepository([project]) });
+    await fireEvent.click(await screen.findByRole('button', { name: 'Mi app' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mi app' })).toBeInTheDocument();
+    expect(window.location.hash).toBe(`#/project/${project.id}`);
+    expect(screen.getAllByRole('region').map((c) => c.getAttribute('aria-label'))).toEqual([
+      'Sin empezar',
+      'En curso',
+      'En pausa',
+      'Finalizado',
+    ]);
+
+    window.location.hash = '#/';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(await screen.findByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
+  });
+
+  it('editar el proyecto desde el tablero actualiza el nombre de la cabecera', async () => {
+    const project = createProject({ name: 'Mi app' });
+    window.location.hash = `#/project/${project.id}`;
+    render(App, { repository: memoryRepository([project]) });
+    await screen.findByRole('heading', { level: 1, name: 'Mi app' });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Editar proyecto' }));
+    const dialog = screen.getByRole('dialog', { name: 'Editar proyecto' });
+    const nameInput = within(dialog).getByLabelText(/Nombre/);
+    await fireEvent.input(nameInput, { target: { value: 'Renombrada' } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1, name: 'Renombrada' })).toBeInTheDocument(),
+    );
+  });
+
+  it('un id de proyecto inexistente muestra "Proyecto no encontrado"', async () => {
+    window.location.hash = '#/project/no-existe';
+    render(App, { repository: memoryRepository() });
+    expect(await screen.findByRole('heading', { name: 'Proyecto no encontrado' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /volver a proyectos/i })).toHaveAttribute('href', '#/');
   });
 });

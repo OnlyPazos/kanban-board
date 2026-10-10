@@ -44,4 +44,17 @@ describe('ProjectList', () => {
     await fireEvent.click(buttons[1]);
     expect(onedit).toHaveBeenCalledExactlyOnceWith(b);
   });
+
+  it('abrir un proyecto (título o tarjeta) avisa con ese proyecto; "Editar" no lo abre', async () => {
+    const onopen = vi.fn();
+    const onedit = vi.fn();
+    const a = createProject({ name: 'A' });
+    const b = createProject({ name: 'B' });
+    render(ProjectList, { projects: [a, b], onopen, onedit });
+    await fireEvent.click(screen.getByRole('button', { name: 'B' }));
+    expect(onopen).toHaveBeenCalledExactlyOnceWith(b);
+    await fireEvent.click(screen.getByRole('button', { name: 'Editar A' }));
+    expect(onedit).toHaveBeenCalledExactlyOnceWith(a);
+    expect(onopen).toHaveBeenCalledOnce();
+  });
 });

@@ -10,7 +10,7 @@ async function createProject(page: Page, name: string, description: string) {
 }
 
 // AC-005: editar nombre y descripción → se ven en la lista y se conservan al recargar.
-// (La comprobación en la cabecera del tablero llega con WI-AC-009.)
+// (La comprobación en la cabecera del tablero está en board-columns.spec.ts.)
 test('AC-005: editar proyecto → nuevos valores en la lista y tras recargar', async ({ page }) => {
   await page.goto('/');
   await createProject(page, 'Mi app', 'Demo');
