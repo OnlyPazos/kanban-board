@@ -11,6 +11,7 @@ export {
   type ProjectEdit,
 } from './project';
 export {
+  archiveCard,
   CARD_TITLE_MAX_LENGTH,
   countCardsByProject,
   createCard,
@@ -18,6 +19,7 @@ export {
   emptyStatusCounts,
   InvalidCardTitleError,
   moveCard,
+  restoreCard,
   sortCards,
   touchProject,
   validateCardTitle,

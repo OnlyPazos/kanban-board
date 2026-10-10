@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  archiveCard,
+  restoreCard,
   CARD_TITLE_MAX_LENGTH,
   createCard,
   editCard,
@@ -171,5 +173,25 @@ describe('countCardsByProject', () => {
     expect(counts.get('p1')).toEqual({ 'sin-empezar': 2, 'en-curso': 1, 'en-pausa': 0, finalizado: 0 });
     expect(counts.get('p2')).toEqual({ 'sin-empezar': 0, 'en-curso': 0, 'en-pausa': 1, finalizado: 0 });
     expect(counts.has('p3')).toBe(false);
+  });
+});
+
+describe('archiveCard / restoreCard (WI-AC-021)', () => {
+  const card: Card = {
+    ...createCard({ projectId: 'p1', title: 'Login', status: 'en-curso' }, new Date('2026-10-10T10:00:00.000Z'), 'c1'),
+    type: 'arreglo',
+    description: 'Línea 1\nLínea 2',
+    priority: 'alta',
+    updatedAt: '2026-10-11T10:00:00.000Z',
+  };
+
+  it('archivar solo pone archived a true y conserva el resto de campos', () => {
+    const archived = archiveCard(card);
+    expect(archived).toEqual({ ...card, archived: true });
+    expect(card.archived).toBe(false);
+  });
+
+  it('restaurar solo pone archived a false: vuelve igual que antes de archivar', () => {
+    expect(restoreCard(archiveCard(card))).toEqual(card);
   });
 });

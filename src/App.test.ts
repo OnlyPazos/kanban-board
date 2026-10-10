@@ -18,6 +18,10 @@ function memoryRepository(initial: Project[] = []): Repository {
       cards.set(card.id, { ...card });
       projects.set(project.id, { ...project });
     },
+    deleteCard: async (cardId, project) => {
+      cards.delete(cardId);
+      projects.set(project.id, { ...project });
+    },
     listProjects: async () => [...projects.values()],
     saveProject: async (project) => {
       projects.set(project.id, { ...project });
@@ -82,6 +86,37 @@ describe('App', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 1, name: 'Renombrada' })).toBeInTheDocument(),
     );
+  });
+
+  it('archivar una tarjeta la lleva a "Tarjetas archivadas" y restaurarla la devuelve a su columna (AC-021, AC-022)', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const repository = memoryRepository([project]);
+    window.location.hash = `#/project/${project.id}`;
+    render(App, { repository });
+    await screen.findByRole('heading', { level: 1, name: 'Mi app' });
+
+    const enCurso = screen.getByRole('region', { name: 'En curso' });
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    const dialog = screen.getByRole('dialog', { name: 'Añadir tarjeta' });
+    await fireEvent.input(within(dialog).getByLabelText(/Título/), { target: { value: 'Login' } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Añadir' }));
+    await within(enCurso).findByRole('button', { name: 'Archivar' });
+
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Archivar' }));
+    await waitFor(() => expect(within(enCurso).queryByText('Login')).not.toBeInTheDocument());
+    expect((await repository.listCards())[0]).toMatchObject({ title: 'Login', archived: true });
+
+    window.location.hash = `#/project/${project.id}/archived`;
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    await screen.findByRole('heading', { level: 1, name: 'Tarjetas archivadas' });
+    await fireEvent.click(screen.getByRole('button', { name: 'Restaurar Login' }));
+    await waitFor(() => expect(screen.queryByRole('listitem', { name: 'Login' })).not.toBeInTheDocument());
+
+    window.location.hash = `#/project/${project.id}`;
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    const column = await screen.findByRole('region', { name: 'En curso' });
+    expect(within(column).getByText('Login')).toBeInTheDocument();
+    expect((await repository.listCards())[0]).toMatchObject({ title: 'Login', archived: false });
   });
 
   it('un id de proyecto inexistente muestra "Proyecto no encontrado"', async () => {

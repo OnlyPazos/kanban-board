@@ -28,6 +28,7 @@ describe('AppStore', () => {
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
       listCards: async () => [],
+      deleteCard: async () => {},
       saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
@@ -79,6 +80,7 @@ describe('AppStore', () => {
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
       listCards: async () => [],
+      deleteCard: async () => {},
       saveCard: async () => {},
       saveProject: async () => {
         throw new Error('QuotaExceededError');
@@ -213,6 +215,7 @@ describe('AppStore', () => {
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
       listCards: async () => [],
+      deleteCard: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -288,6 +291,7 @@ describe('AppStore', () => {
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
       listCards: async () => [card],
+      deleteCard: async () => {},
       saveCard,
     });
     await store.hydrate();
@@ -305,6 +309,7 @@ describe('AppStore', () => {
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
       listCards: async () => [card],
+      deleteCard: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
@@ -324,12 +329,75 @@ describe('AppStore', () => {
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
       listCards: async () => [card],
+      deleteCard: async () => {},
       saveCard: async () => {
         throw new Error('QuotaExceededError');
       },
     });
     await store.hydrate();
     await expect(store.updateCard(card.id, { ...card, title: 'Otro' })).rejects.toThrow('QuotaExceededError');
+    expect(store.cards).toEqual([card]);
+    expect(store.projects).toEqual([project]);
+  });
+
+  it('archivar, restaurar y borrar definitivamente una tarjeta persiste tras recargar (AC-021, AC-022, AC-023)', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    const card = await store.createCard(project.id, 'Login', 'en-curso');
+    const edited = await store.updateCard(card.id, {
+      title: 'Login',
+      type: 'arreglo',
+      status: 'en-curso',
+      description: 'Una\nDos',
+      priority: 'alta',
+    });
+    const projectBefore = store.projects[0];
+
+    const archived = await store.archiveCard(card.id);
+    expect(archived).toEqual({ ...edited, archived: true });
+    expect(store.projects[0].updatedAt >= projectBefore.updatedAt).toBe(true);
+
+    let reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.cards).toEqual([archived]);
+
+    const restored = await reloaded.restoreCard(card.id);
+    expect(restored).toEqual(edited);
+    reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.cards).toEqual([edited]);
+
+    // Solo se borran definitivamente tarjetas archivadas.
+    await expect(reloaded.deleteCard(card.id)).rejects.toThrow('Solo se pueden borrar tarjetas archivadas');
+    expect(reloaded.cards).toEqual([edited]);
+
+    await reloaded.archiveCard(card.id);
+    await reloaded.deleteCard(card.id);
+    expect(reloaded.cards).toEqual([]);
+    const again = new AppStore(createIdbRepository(dbName));
+    await again.hydrate();
+    expect(again.cards).toEqual([]);
+    expect(again.projects.map((p) => p.id)).toEqual([project.id]);
+  });
+
+  it('si el borrado definitivo falla, la tarjeta sigue archivada', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const card = { ...createCard({ projectId: project.id, title: 'Login', status: 'en-curso' }), archived: true };
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
+      listCards: async () => [card],
+      saveCard: async () => {},
+      deleteCard: async () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    await store.hydrate();
+    await expect(store.deleteCard(card.id)).rejects.toThrow('QuotaExceededError');
     expect(store.cards).toEqual([card]);
     expect(store.projects).toEqual([project]);
   });

@@ -56,6 +56,25 @@ describe('createIdbRepository · tarjetas', () => {
   });
 });
 
+describe('createIdbRepository · borrado definitivo', () => {
+  it('deleteCard elimina el registro y guarda el proyecto; no reaparece desde otra instancia', async () => {
+    const name = freshName();
+    const project = createProject({ name: 'Mi app' });
+    const repo = createIdbRepository(name);
+    const keep = createCard({ projectId: project.id, title: 'Queda', status: 'en-curso' });
+    const gone = { ...createCard({ projectId: project.id, title: 'Se va', status: 'en-curso' }), archived: true };
+    await repo.saveCard(keep, project);
+    await repo.saveCard(gone, project);
+
+    const touched = { ...project, updatedAt: '2999-01-01T00:00:00.000Z' };
+    await repo.deleteCard(gone.id, touched);
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listCards()).toEqual([keep]);
+    expect(await reloaded.listProjects()).toEqual([touched]);
+  });
+});
+
 describe('createIdbRepository · filtro por tipo', () => {
   it('guarda el filtro por proyecto en prefs (clave filter:<projectId>) y se lee desde otra instancia', async () => {
     const name = freshName();

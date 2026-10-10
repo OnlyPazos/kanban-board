@@ -5,6 +5,7 @@
   import CreateProjectDialog from './views/CreateProjectDialog.svelte';
   import EditProjectDialog from './views/EditProjectDialog.svelte';
   import Board from './views/Board.svelte';
+  import ArchivedCards from './views/ArchivedCards.svelte';
   import CreateCardDialog from './views/CreateCardDialog.svelte';
   import EditCardDialog from './views/EditCardDialog.svelte';
   import { boardHref, LIST_HREF, parseRoute } from './lib/route';
@@ -30,7 +31,7 @@
   // Siempre el valor actual del store: tras editar, el tablero ve el nuevo nombre.
   const boardProject = $derived.by(() => {
     const current = route;
-    if (current.name !== 'board') return undefined;
+    if (current.name === 'list') return undefined;
     return store.projects.find((p) => p.id === current.projectId);
   });
 
@@ -65,8 +66,15 @@
 
 <AppHeader />
 <main>
-  {#if route.name === 'board'}
-    {#if boardProject}
+  {#if route.name !== 'list'}
+    {#if boardProject && route.name === 'archived-cards'}
+      <ArchivedCards
+        project={boardProject}
+        cards={store.cards}
+        onrestorecard={(card) => store.restoreCard(card.id)}
+        ondeletecard={(card) => store.deleteCard(card.id)}
+      />
+    {:else if boardProject}
       <Board
         project={boardProject}
         cards={store.cards}
@@ -74,6 +82,7 @@
         onaddcard={startAddCard}
         oneditcard={startEditCard}
         onmovecard={(card, status) => store.moveCard(card.id, status)}
+        onarchivecard={(card) => store.archiveCard(card.id)}
         typeFilter={store.typeFilterOf(boardProject.id)}
         ontypefilterchange={(types) => store.setTypeFilter(boardProject.id, types)}
       />

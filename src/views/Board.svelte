@@ -20,6 +20,10 @@
   Solo se ven las tarjetas de los tipos seleccionados; sin ninguno, se ven
   todas. La selección llega en `typeFilter` y cada cambio se avisa con
   `ontypefilterchange` (la app la recuerda por proyecto).
+
+  Archivo (WI-AC-021): cada tarjeta tiene "Archivar", que avisa con
+  `onarchivecard` sin pedir confirmación. La cabecera enlaza con la vista de
+  tarjetas archivadas del proyecto. El tablero no ofrece borrado definitivo.
 -->
 <script lang="ts">
   import { tick } from 'svelte';
@@ -46,7 +50,7 @@
     type CardType,
     type Project,
   } from '../domain';
-  import { LIST_HREF } from '../lib/route';
+  import { archivedCardsHref, LIST_HREF } from '../lib/route';
   import { applyDndAriaStrings } from '../lib/dnd';
 
   let {
@@ -56,6 +60,7 @@
     onaddcard,
     oneditcard,
     onmovecard,
+    onarchivecard,
     typeFilter = [],
     ontypefilterchange,
   }: {
@@ -67,6 +72,8 @@
     oneditcard?: (card: CardData) => void;
     /** Al soltar una tarjeta en otra columna. Si la promesa falla, el tablero vuelve a los datos. */
     onmovecard?: (card: CardData, status: CardStatus) => unknown;
+    /** "Archivar" en una tarjeta (sin confirmación, AC-021). */
+    onarchivecard?: (card: CardData) => unknown;
     /** Tipos seleccionados en el filtro; vacío → se ven todas las tarjetas. */
     typeFilter?: CardType[];
     /** Al cambiar la selección del filtro por tipo. */
@@ -76,6 +83,12 @@
   function setTypeSelected(type: CardType, selected: boolean) {
     Promise.resolve(ontypefilterchange?.(toggleTypeFilter(typeFilter, type, selected))).catch((error: unknown) => {
       console.error('No se pudo guardar el filtro por tipo', error);
+    });
+  }
+
+  function archive(card: CardData) {
+    Promise.resolve(onarchivecard?.(card)).catch((error: unknown) => {
+      console.error('No se pudo archivar la tarjeta', error);
     });
   }
 
@@ -144,7 +157,10 @@
     <a class="board__back" href={LIST_HREF}>← Volver a proyectos</a>
     <div class="board__title-row">
       <h1 class="board__title">{project.name}</h1>
-      <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
+      <div class="board__actions">
+        <a class="board__link" href={archivedCardsHref(project.id)}>Tarjetas archivadas</a>
+        <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
+      </div>
     </div>
     <div class="board__filter" role="group" aria-label="Filtrar por tipo">
       {#each CARD_TYPES as type (type)}
@@ -192,6 +208,9 @@
                     <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
                   {/if}
                 {/snippet}
+                {#snippet footer()}
+                  <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
+                {/snippet}
               </Card>
             </li>
           {/each}
@@ -214,7 +233,8 @@
     margin: 0 0 var(--ds-spacing-5);
   }
 
-  .board__back {
+  .board__back,
+  .board__link {
     align-self: flex-start;
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);
@@ -223,7 +243,8 @@
     border-radius: var(--ds-radii-small);
   }
 
-  .board__back:focus-visible {
+  .board__back:focus-visible,
+  .board__link:focus-visible {
     outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
     outline-offset: var(--ds-focus-ring-offset);
   }
@@ -234,6 +255,17 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--ds-spacing-3);
+  }
+
+  .board__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-spacing-3);
+  }
+
+  .board__link {
+    align-self: center;
   }
 
   .board__title {

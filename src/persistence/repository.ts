@@ -12,6 +12,8 @@ export interface Repository {
   listCards(): Promise<Card[]>;
   /** Guarda la tarjeta y su proyecto (con `updatedAt` ya actualizado) en una sola transacción. */
   saveCard(card: Card, project: Project): Promise<void>;
+  /** Borra definitivamente la tarjeta y guarda su proyecto (con `updatedAt` ya actualizado) en una sola transacción. */
+  deleteCard(cardId: string, project: Project): Promise<void>;
   /** Filtros por tipo guardados, por `projectId` (store `prefs`, clave `filter:<projectId>`). */
   listTypeFilters(): Promise<Record<string, CardType[]>>;
   saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
@@ -43,6 +45,14 @@ export function createIdbRepository(dbName?: string): Repository {
       const tx = (await db()).transaction(['cards', 'projects'], 'readwrite');
       await Promise.all([
         tx.objectStore('cards').put({ ...card }),
+        tx.objectStore('projects').put({ ...project }),
+        tx.done,
+      ]);
+    },
+    async deleteCard(cardId, project) {
+      const tx = (await db()).transaction(['cards', 'projects'], 'readwrite');
+      await Promise.all([
+        tx.objectStore('cards').delete(cardId),
         tx.objectStore('projects').put({ ...project }),
         tx.done,
       ]);
