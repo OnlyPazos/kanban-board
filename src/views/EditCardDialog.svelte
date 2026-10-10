@@ -4,6 +4,7 @@
   abrirse parte de sus valores actuales. Las fechas de creación y de última
   modificación se muestran en solo lectura. Si el título no es válido
   (`validateCardTitle`), muestra el error junto al campo y no guarda nada.
+  Sin `maxlength`: AC-011 exige ver el error con más de 120 caracteres, no recortar.
 -->
 <script lang="ts">
   import { Button, Dialog, Input, Select, Textarea } from 'design-system';
@@ -15,7 +16,6 @@
     NO_PRIORITY_LABEL,
     PRIORITIES,
     PRIORITY_LABELS,
-    CARD_TITLE_MAX_LENGTH,
     validateCardTitle,
     type Card,
     type CardEdit,
@@ -96,7 +96,6 @@
       bind:value={title}
       error={titleError ?? undefined}
       required
-      maxlength={CARD_TITLE_MAX_LENGTH}
       autocomplete="off"
     />
     <Select label="Tipo" bind:value={type} options={typeOptions} />

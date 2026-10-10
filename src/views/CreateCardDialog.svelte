@@ -2,10 +2,11 @@
   Diálogo "Añadir tarjeta": solo el título. La tarjeta se crea en la columna
   `status` desde la que se abrió (tipo Novedad, sin prioridad). Si el título no
   es válido (`validateCardTitle`), muestra el error junto al campo y no crea nada.
+  Sin `maxlength`: AC-011 exige ver el error con más de 120 caracteres, no recortar.
 -->
 <script lang="ts">
   import { Button, Dialog, Input } from 'design-system';
-  import { CARD_STATUS_LABELS, CARD_TITLE_MAX_LENGTH, validateCardTitle, type CardStatus } from '../domain';
+  import { CARD_STATUS_LABELS, validateCardTitle, type CardStatus } from '../domain';
 
   let {
     open = $bindable(false),
@@ -50,7 +51,6 @@
       bind:value={title}
       error={titleError ?? undefined}
       required
-      maxlength={CARD_TITLE_MAX_LENGTH}
       autocomplete="off"
     />
   </form>

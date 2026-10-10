@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const LONG_TITLE = 'a'.repeat(121);
+const PASTED_TITLE = 'b'.repeat(150);
 const REQUIRED = 'El título es obligatorio.';
 const TOO_LONG = 'El título no puede superar 120 caracteres.';
 
@@ -14,12 +15,13 @@ async function openNewProjectBoard(page: Page) {
   await page.getByRole('list').getByRole('button', { name: 'Mi app', exact: true }).click();
 }
 
-/** Escribe el valor saltándose `maxlength`, como haría un pegado programático. */
-async function forceValue(input: Locator, value: string) {
-  await input.evaluate((el, v) => {
-    (el as HTMLInputElement).value = v;
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-  }, value);
+/** Pega `value` en el campo como un usuario: portapapeles del sistema + Ctrl/Cmd+V. */
+async function paste(page: Page, input: Locator, value: string) {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.evaluate((v) => navigator.clipboard.writeText(v), value);
+  await input.click();
+  await input.press('ControlOrMeta+A');
+  await input.press('ControlOrMeta+V');
 }
 
 /** Lee un store de IndexedDB. */
@@ -62,10 +64,17 @@ test('AC-011: crear con título no válido no crea la tarjeta', async ({ page })
   await expect(dialog).toBeVisible();
   await expect(title).toHaveAccessibleDescription(REQUIRED);
 
-  await expect(title).toHaveAttribute('maxlength', '120');
+  // Escribir 121 caracteres: el campo no recorta y se muestra el error.
   await title.fill(LONG_TITLE);
-  expect((await title.inputValue()).length).toBeLessThanOrEqual(120);
-  await forceValue(title, LONG_TITLE);
+  await expect(title).toHaveValue(LONG_TITLE);
+  await dialog.getByRole('button', { name: 'Añadir' }).click();
+  await expect(dialog).toBeVisible();
+  await expect(title).toHaveAccessibleDescription(TOO_LONG);
+
+  // Pegar 150 caracteres con Ctrl+V: tampoco recorta ni crea.
+  await title.fill('');
+  await paste(page, title, PASTED_TITLE);
+  await expect(title).toHaveValue(PASTED_TITLE);
   await dialog.getByRole('button', { name: 'Añadir' }).click();
   await expect(dialog).toBeVisible();
   await expect(title).toHaveAccessibleDescription(TOO_LONG);
@@ -95,20 +104,27 @@ test('AC-011: editar con título no válido no modifica la tarjeta', async ({ pa
   await column.getByRole('button', { name: 'Login' }).click();
   const dialog = page.getByRole('dialog', { name: 'Editar tarjeta' });
   const title = dialog.getByLabel('Título');
-  await expect(title).toHaveAttribute('maxlength', '120');
 
   for (const [value, message] of [
     ['', REQUIRED],
     ['   ', REQUIRED],
     [LONG_TITLE, TOO_LONG],
   ] as const) {
-    await forceValue(title, value);
+    await title.fill(value);
+    await expect(title).toHaveValue(value);
     await dialog.getByLabel('Prioridad').selectOption({ label: 'Alta' });
     await dialog.getByRole('button', { name: 'Guardar cambios' }).click();
     await expect(dialog).toBeVisible();
     await expect(title).toHaveAttribute('aria-invalid', 'true');
     await expect(title).toHaveAccessibleDescription(message);
   }
+
+  // Pegar 150 caracteres con Ctrl+V: el campo no recorta y no se guarda.
+  await paste(page, title, PASTED_TITLE);
+  await expect(title).toHaveValue(PASTED_TITLE);
+  await dialog.getByRole('button', { name: 'Guardar cambios' }).click();
+  await expect(dialog).toBeVisible();
+  await expect(title).toHaveAccessibleDescription(TOO_LONG);
 
   await dialog.getByRole('button', { name: 'Cancelar' }).click();
   await expect(dialog).toBeHidden();

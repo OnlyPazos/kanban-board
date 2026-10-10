@@ -146,7 +146,7 @@ interface Card {
 - Notas de implementación:
   - Validación de dominio `validateCardTitle(title)`: rechaza vacío o solo espacios (tras `trim`) y más de 120 caracteres.
   - Se aplica al crear y al editar. El error aparece junto al campo título; no se crea ni se modifica nada.
-- Historial QA: []
+- Historial QA: [2026-10-10 FAIL — AC-011 (commit a38a55d). check 0 errores (1 warning conocido del design-system); build OK; test 86/86; test:e2e 15/15. Vacío y solo espacios OK al crear y al editar (error junto al campo con aria-invalid/aria-describedby, nada guardado, igual tras recargar, claro y oscuro). DEFECTO: con más de 120 caracteres el usuario nunca ve el error, porque el `maxlength=120` del campo título recorta en silencio. Lo reproduce un script propio de QA (preview en puerto 4187, ya parado): pegar 150 caracteres con Ctrl+V y pulsar "Añadir" CREA una tarjeta con título de 120 sin mostrar error; pegar 150 en "Editar tarjeta" y pulsar "Guardar cambios" MODIFICA la tarjeta sin mostrar error. AC-011 exige que la tarjeta no se cree ni se modifique y que se muestre el error junto al campo; a diferencia de AC-004, no admite que "el campo no admita más". El error de 121 caracteres solo aparece si se salta `maxlength` desde el DOM, como hace el e2e del builder. Reglas base de stack OK (solo --ds-*, componentes de design-system, sin dependencias nuevas, tests unitarios/componentes/e2e)]
 
 ## WI-AC-014
 - Contexto: tablero

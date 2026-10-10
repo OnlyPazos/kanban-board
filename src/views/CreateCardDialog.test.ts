@@ -34,9 +34,9 @@ describe('CreateCardDialog', () => {
     expect(oncreate).not.toHaveBeenCalled();
   });
 
-  it('el campo título no admite más de 120 caracteres', () => {
+  it('el campo título no recorta el texto (sin maxlength) para que se valide completo', () => {
     render(CreateCardDialog, { open: true, status: 'sin-empezar', oncreate: vi.fn() });
-    expect(screen.getByLabelText(/^Título/)).toHaveAttribute('maxlength', '120');
+    expect(screen.getByLabelText(/^Título/)).not.toHaveAttribute('maxlength');
   });
 
   it('con más de 120 caracteres muestra el error junto al campo y no crea', async () => {
