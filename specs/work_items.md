@@ -358,7 +358,7 @@ interface Card {
 - Acceptance Checks: AC-040
 - Depende de: [WI-AC-031, WI-AC-003]
 - Rama sugerida: feature/wi-ac-040-copy-name-truncation
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Función pura de dominio `copyName(name)` (D-013): si `name + " (copia)"` cabe en 80 caracteres, lo devuelve; si no, devuelve `name.slice(0, 80 - " (copia)".length) + " (copia)"`. El nombre ya viene validado, sin espacios exteriores.
   - "Importar como copia" de WI-AC-031 usa `copyName`. El resultado debe pasar `validateProjectName`, para que el proyecto copiado se pueda editar y guardar sin cambiar el nombre.
