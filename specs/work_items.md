@@ -214,12 +214,13 @@ interface Card {
 - Acceptance Checks: AC-021, AC-022, AC-023
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-021-archive-cards
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Acción "Archivar" en la tarjeta, sin confirmación: pone `archived` a `true`. El tablero y los recuentos solo muestran tarjetas no archivadas.
   - Vista "Tarjetas archivadas" del proyecto con "Restaurar" (pone `archived` a `false` y conserva el resto de campos) y "Borrar definitivamente" (con confirmación; elimina el registro de IndexedDB).
   - El tablero no ofrece borrado para tarjetas activas.
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-021, AC-022, AC-023, commit 52178f0). check 0 errores (1 warning conocido del design-system); build OK; test 131/131; test:e2e 29/29; drag-and-drop + archive-cards con --repeat-each=10 → 70/70 (sin empeorar la intermitencia de AC-017 teclado). Verificación independiente (vite preview en el puerto 4327, scripts fuera del repo) con los proyectos A y B, y una tarjeta "Login" en los dos. AC-021: "Archivar" (con ratón, Enter y Espacio) quita la tarjeta sin abrir ningún diálogo; en IndexedDB archived=true y el resto de campos idénticos; sigue fuera tras recargar; la lista muestra A con 1/1/0/0, sin la archivada; la vista de archivadas de A muestra solo esa "Login" (no la de B) con tipo, prioridad, descripción, estado, creación y última modificación; la de B está vacía. AC-022: Restaurar → desaparece de archivadas y vuelve a "En curso"; el registro en IndexedDB es idéntico al original (también updatedAt); persiste tras recargar. AC-023: Borrar definitivamente pide confirmación; Cancelar y Escape no borran (siguen en la vista y en IndexedDB); Confirmar elimina el registro, no reaparece tras recargar y el resto de tarjetas no cambia; ni el tablero ni el diálogo de edición tienen botón de borrar. A 375 px la vista de archivadas no desborda (scrollWidth 375). Sin errores de consola. Reglas base OK (solo variables --ds-* existentes, componentes del design-system, idb vía Repository, borrado y proyecto en una sola transacción, sin dependencias nuevas, tests unitarios y e2e). Juicio sobre lo declarado: (1) no cambiar el updatedAt de la tarjeta encaja con "Restaurar… en el mismo estado en que se archivó"; tocar el del proyecto no lo prohíbe ningún AC → aceptable. (2) Botón "Archivar" sin el título: la spec solo exige aria-label en botones de solo icono, y el li tiene aria-label con el título → aceptable. (3) Card readonly recorta la descripción a 3 líneas (con 5 líneas, scrollHeight 112 frente a clientHeight 67). El texto completo está en el DOM y es la regla del Card en la spec, igual que en el tablero → aceptable, aunque desde archivadas no se puede leer entera sin restaurarla. Observaciones (no bloquean): tras archivar desde el teclado el foco se va a <body>; no hay forma de leer la descripción completa de una tarjeta archivada (posible aclaración para spec-writer).
 
 ## WI-AC-024
 - Contexto: archivo
