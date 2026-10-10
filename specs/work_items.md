@@ -129,13 +129,13 @@ interface Card {
 - Acceptance Checks: AC-012, AC-013
 - Depende de: [WI-AC-010]
 - Rama sugerida: feature/wi-ac-012-edit-card
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Diálogo o panel de edición con título, tipo, estado, descripción (textarea multilínea) y prioridad (Alta, Media, Baja o Sin prioridad). Las fechas de creación y modificación se muestran en solo lectura.
   - Si cambia el estado, la tarjeta pasa a la columna correspondiente. Al guardar se actualizan el `updatedAt` de la tarjeta y del proyecto, y `createdAt` no se toca.
   - La tarjeta del tablero es el componente `Card`, y el editor usa `Dialog` con `Input`, `Select` y `Textarea`.
   - Etiqueta de tipo en la tarjeta: `Badge` con el nombre del tipo y el tono de `CARD_TYPE_TONE` (D-016). Prioridad: `Badge` con el tono de `PRIORITY_TONE` cuando no es `null`; sin prioridad no se muestra badge.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-012, AC-013 (commit ce02f60). check 0 errores (1 warning conocido del design-system); build OK; test 75/75; test:e2e 13/13 en 4 ejecuciones seguidas (el ERR_CONNECTION_REFUSED intermitente del builder no se reprodujo); e2e independiente de QA (script propio en scratchpad, preview en puerto 4191, ya parado), en modo claro y oscuro: editar título, tipo, estado (En curso → Finalizado), descripción de 3 líneas y prioridad → la tarjeta pasa a "Finalizado" con los nuevos valores, igual tras recargar; IndexedDB con todos los campos, createdAt igual, updatedAt de tarjeta y proyecto avanzan; 5 controles editables, fechas solo lectura; Cancelar no guarda; "Sin prioridad" → priority null y solo el badge de tipo; Badge de tipo con texto y 4 colores distintos que coinciden con los tokens tag.*; prioridad Alta/Media/Baja → danger/warning/neutral; sin errores de consola. Reglas base de stack OK (solo variables --ds-*, componentes Badge/Button/Card/Dialog/Input/Select/Textarea de design-system, CARD_TYPE_TONE/PRIORITY_TONE definidos una sola vez en domain, sin dependencias nuevas, tarjeta y updatedAt del proyecto guardados juntos, tests unitarios/componentes/e2e)]
 
 ## WI-AC-011
 - Contexto: tablero
