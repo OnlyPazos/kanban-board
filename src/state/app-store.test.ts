@@ -687,4 +687,59 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
     expect(store.projects).toEqual([project]);
     expect(store.cards).toEqual([]);
   });
+
+  describe('saveError (AC-035)', () => {
+    it('un fallo de escritura activa saveError y la siguiente escritura confirmada lo limpia', async () => {
+      const quota = new DOMException('Cuota excedida', 'QuotaExceededError');
+      let failing = true;
+      const repo = createIdbRepository(freshName());
+      const store = new AppStore({
+        ...repo,
+        saveProject: async (project) => {
+          if (failing) throw quota;
+          await repo.saveProject(project);
+        },
+      });
+      await store.hydrate();
+      expect(store.saveError).toBeNull();
+
+      await expect(store.createProject({ name: 'Mi app' })).rejects.toBe(quota);
+      expect(store.saveError).toEqual({ error: quota });
+      // No se muestra como guardado.
+      expect(store.projects).toEqual([]);
+
+      failing = false;
+      await store.createProject({ name: 'Mi app' });
+      expect(store.saveError).toBeNull();
+    });
+
+    it('cualquier escritura fallida (tarjeta, filtro, import) activa saveError', async () => {
+      const fail = async () => {
+        throw new Error('transacción abortada');
+      };
+      const repo = createIdbRepository(freshName());
+      const project = createProject({ name: 'Mi app' });
+      await repo.saveProject(project);
+      const store = new AppStore({
+        ...repo,
+        saveCard: fail,
+        saveTypeFilter: fail,
+        replaceAll: fail,
+      });
+      await store.hydrate();
+
+      await expect(store.createCard(project.id, 'A', 'sin-empezar')).rejects.toThrow();
+      expect(store.saveError).not.toBeNull();
+      expect(store.cards).toEqual([]);
+
+      store.saveError = null;
+      await expect(store.setTypeFilter(project.id, ['arreglo'])).rejects.toThrow();
+      expect(store.saveError).not.toBeNull();
+
+      store.saveError = null;
+      await expect(store.replaceAll([], [])).rejects.toThrow();
+      expect(store.saveError).not.toBeNull();
+      expect(store.projects).toEqual([project]);
+    });
+  });
 });

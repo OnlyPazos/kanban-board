@@ -37,6 +37,46 @@ export interface Repository {
   saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
 }
 
+/** Métodos de `Repository` que escriben en el almacenamiento. */
+export const WRITE_METHODS = [
+  'saveProject',
+  'saveCard',
+  'deleteCard',
+  'deleteProject',
+  'replaceAll',
+  'importProject',
+  'saveTypeFilter',
+] as const satisfies readonly (keyof Repository)[];
+
+export interface WriteObserver {
+  /** Una escritura ha fallado (`QuotaExceededError`, transacción abortada…). */
+  onWriteError(error: unknown): void;
+  /** Una escritura se ha confirmado. */
+  onWriteSuccess(): void;
+}
+
+/**
+ * Envuelve `repository` para que cada escritura avise a `observer` de su
+ * resultado (AC-035). El error se sigue propagando a quien llamó, para que
+ * nunca se trate como guardado; las lecturas no se tocan.
+ */
+export function observeWrites(repository: Repository, observer: WriteObserver): Repository {
+  const observed: Repository = { ...repository };
+  for (const method of WRITE_METHODS) {
+    const write = repository[method] as (...args: unknown[]) => Promise<void>;
+    (observed[method] as (...args: unknown[]) => Promise<void>) = async (...args) => {
+      try {
+        await write.apply(repository, args);
+      } catch (error) {
+        observer.onWriteError(error);
+        throw error;
+      }
+      observer.onWriteSuccess();
+    };
+  }
+  return observed;
+}
+
 const TYPE_FILTER_PREFIX = 'filter:';
 
 /** Clave en el store `prefs` del filtro por tipo de un proyecto. */
