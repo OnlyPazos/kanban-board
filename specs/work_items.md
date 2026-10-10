@@ -66,14 +66,15 @@ interface Card {
 - Acceptance Checks: AC-002, AC-036
 - Depende de: [WI-AC-001]
 - Rama sugerida: feature/wi-ac-002-create-project-persistence
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - Capa de persistencia sobre IndexedDB con `idb`: base de datos `kanban-board`, object stores `projects` (key `id`), `cards` (key `id`, índice `projectId`) y `prefs` (para el filtro de WI-AC-018).
   - Repositorio/servicio de dominio que encapsule la lectura y escritura; la UI no accede a IndexedDB directamente. Cada mutación se persiste inmediatamente (sin botón "Guardar").
   - Store de estado en memoria (runes) hidratado desde IndexedDB al arrancar.
   - Formulario "Crear proyecto": nombre + descripción. Validación completa en WI-AC-003; aquí basta con un caso válido.
   - Tests: unitarios del repositorio (con `fake-indexeddb`) y e2e "crear proyecto → recargar → sigue visible con nombre y descripción".
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-002, AC-036, commit e18fe95). check 0 errores; build OK; test 16/16; test:e2e 2/2; check independiente de QA (claro 1280px y oscuro 375px): crear "Mi app"/"Demo" (envío con Enter) → visible → recargar → persiste; IndexedDB `kanban-board` v1 con stores projects/cards(índice projectId)/prefs; sin botón "Guardar"; sin errores de consola ni peticiones externas. Reglas base de stack OK. Observación no bloqueante: si el guardado falla, el diálogo no muestra error al usuario (promesa rechazada sin capturar).
 
 ## WI-AC-005
 - Contexto: proyectos
