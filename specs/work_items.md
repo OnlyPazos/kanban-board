@@ -66,7 +66,7 @@ interface Card {
 - Acceptance Checks: AC-002, AC-036
 - Depende de: [WI-AC-001]
 - Rama sugerida: feature/wi-ac-002-create-project-persistence
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Capa de persistencia sobre IndexedDB con `idb`: base de datos `kanban-board`, object stores `projects` (key `id`), `cards` (key `id`, índice `projectId`) y `prefs` (para el filtro de WI-AC-018).
   - Repositorio/servicio de dominio que encapsule la lectura y escritura; la UI no accede a IndexedDB directamente. Cada mutación se persiste inmediatamente (sin botón "Guardar").
