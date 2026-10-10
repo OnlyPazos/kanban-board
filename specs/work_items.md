@@ -105,12 +105,12 @@ interface Card {
 - Acceptance Checks: AC-009
 - Depende de: [WI-AC-002]
 - Rama sugerida: feature/wi-ac-009-board-columns
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Navegación lista → tablero (estado de vista en memoria o hash `#/project/<id>`; no hace falta router externo).
   - Tablero con exactamente 4 columnas en el orden: Sin empezar, En curso, En pausa, Finalizado. El orden sale de una constante única del dominio.
   - Cabecera con el nombre del proyecto y un enlace para volver a la lista.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-009 y parte "tablero" de AC-005 (commit 2f25bf1). check 0 errores (1 warning conocido del design-system); build OK; test 49/49; test:e2e 10/10; e2e independiente de QA (puerto 4199): abrir por título, por clic en la tarjeta y con Enter → exactamente 4 regiones/h2 en orden Sin empezar, En curso, En pausa, Finalizado, visibles y ordenadas de izquierda a derecha; también tras recargar, deep link y en un segundo proyecto; nombre editado desde la lista y desde la cabecera del tablero visible en el tablero en vivo y tras recargar, lista con nombre y descripción nuevos, homónimo intacto; id inexistente → "Proyecto no encontrado"; sin errores de consola ni peticiones externas. Reglas base de stack OK (solo variables --ds-* existentes, sin dependencias nuevas, orden desde CARD_STATUSES)]
 
 ## WI-AC-010
 - Contexto: tablero
