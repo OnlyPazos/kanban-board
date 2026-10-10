@@ -109,17 +109,29 @@ export function exportFileName(now: Date = new Date(), projectName?: string): st
 export const COPY_SUFFIX = ' (copia)';
 
 /**
+ * Nombre de un proyecto importado como copia (D-013, AC-040): `<name> (copia)`
+ * si cabe en `PROJECT_NAME_MAX_LENGTH`; si no, se recorta el nombre original
+ * para que el total tenga exactamente ese máximo y termine en " (copia)".
+ * `name` ya viene validado (sin espacios exteriores).
+ */
+export function copyName(name: string): string {
+  const full = `${name}${COPY_SUFFIX}`;
+  if (full.length <= PROJECT_NAME_MAX_LENGTH) return full;
+  return `${name.slice(0, PROJECT_NAME_MAX_LENGTH - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
+}
+
+/**
  * "Importar como copia" (AC-032): el proyecto y todas sus tarjetas con ids
  * nuevos (las tarjetas apuntan al nuevo `projectId`) y el nombre
- * `<original> (copia)`. El resto de campos se conserva tal cual.
- * El recorte del nombre a 80 caracteres va en WI-AC-040.
+ * `<original> (copia)`, recortado a 80 caracteres con `copyName` (D-013).
+ * El resto de campos se conserva tal cual.
  */
 export function copyImportedProject(
   project: Project,
   cards: readonly Card[],
   newId: () => string = () => crypto.randomUUID(),
 ): { project: Project; cards: Card[] } {
-  const copy: Project = { ...copyProject(project), id: newId(), name: `${project.name}${COPY_SUFFIX}` };
+  const copy: Project = { ...copyProject(project), id: newId(), name: copyName(project.name) };
   return {
     project: copy,
     cards: cards.map((c) => ({ ...copyCard(c), id: newId(), projectId: copy.id })),
