@@ -6,8 +6,9 @@
   import EditProjectDialog from './views/EditProjectDialog.svelte';
   import Board from './views/Board.svelte';
   import CreateCardDialog from './views/CreateCardDialog.svelte';
+  import EditCardDialog from './views/EditCardDialog.svelte';
   import { boardHref, LIST_HREF, parseRoute } from './lib/route';
-  import type { CardStatus, Project } from './domain';
+  import type { Card, CardStatus, Project } from './domain';
   import { createIdbRepository, type Repository } from './persistence/repository';
   import { AppStore } from './state/app-store.svelte';
 
@@ -21,6 +22,10 @@
   let editTarget = $state<Project | null>(null);
   let addingCard = $state(false);
   let addCardStatus = $state<CardStatus>('sin-empezar');
+  let editingCard = $state(false);
+  let editCardId = $state<string | null>(null);
+  // Siempre el valor actual del store para la tarjeta en edición.
+  const editCardTarget = $derived(store.cards.find((c) => c.id === editCardId) ?? null);
   let route = $state(parseRoute(window.location.hash));
   // Siempre el valor actual del store: tras editar, el tablero ve el nuevo nombre.
   const boardProject = $derived.by(() => {
@@ -36,6 +41,11 @@
   function startAddCard(status: CardStatus) {
     addCardStatus = status;
     addingCard = true;
+  }
+
+  function startEditCard(card: Card) {
+    editCardId = card.id;
+    editingCard = true;
   }
 
   function startEdit(project: Project) {
@@ -57,7 +67,7 @@
 <main>
   {#if route.name === 'board'}
     {#if boardProject}
-      <Board project={boardProject} cards={store.cards} onedit={startEdit} onaddcard={startAddCard} />
+      <Board project={boardProject} cards={store.cards} onedit={startEdit} onaddcard={startAddCard} oneditcard={startEditCard} />
     {:else if store.loaded}
       <section class="not-found">
         <h1 class="not-found__title">Proyecto no encontrado</h1>
@@ -82,6 +92,7 @@
     oncreate={(title, status) => store.createCard(projectId, title, status)}
   />
 {/if}
+<EditCardDialog card={editCardTarget} bind:open={editingCard} onsave={(id, edit) => store.updateCard(id, edit)} />
 <EditProjectDialog
   project={editTarget}
   bind:open={editing}

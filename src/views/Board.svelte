@@ -3,12 +3,24 @@
   valor actual del store, así que se actualiza al editarlo), enlace para
   volver a la lista y botón "Editar". Debajo, exactamente 4 columnas en el
   orden de `CARD_STATUSES` (constante única del dominio). Cada columna lista
-  sus tarjetas no archivadas (componente `Card`) y tiene el botón "Añadir
-  tarjeta", que avisa con el estado de la columna.
+  sus tarjetas no archivadas (componente `Card`, con el tipo y la prioridad
+  como `Badge` según `CARD_TYPE_TONE`/`PRIORITY_TONE`; al abrirla avisa con
+  `oneditcard`) y tiene el botón "Añadir tarjeta", que avisa con el estado de
+  la columna.
 -->
 <script lang="ts">
-  import { Button, Card } from 'design-system';
-  import { CARD_STATUS_LABELS, CARD_STATUSES, type Card as CardData, type CardStatus, type Project } from '../domain';
+  import { Badge, Button, Card } from 'design-system';
+  import {
+    CARD_STATUS_LABELS,
+    CARD_STATUSES,
+    CARD_TYPE_LABELS,
+    CARD_TYPE_TONE,
+    PRIORITY_LABELS,
+    PRIORITY_TONE,
+    type Card as CardData,
+    type CardStatus,
+    type Project,
+  } from '../domain';
   import { LIST_HREF } from '../lib/route';
 
   let {
@@ -16,12 +28,14 @@
     cards = [],
     onedit,
     onaddcard,
+    oneditcard,
   }: {
     project: Project;
     /** Tarjetas del proyecto. */
     cards?: CardData[];
     onedit?: (project: Project) => void;
     onaddcard?: (status: CardStatus) => void;
+    oneditcard?: (card: CardData) => void;
   } = $props();
 
   const cardsByStatus = $derived.by(() => {
@@ -53,7 +67,14 @@
           <ul class="board__cards">
             {#each cardsByStatus[status] as card (card.id)}
               <li data-card-id={card.id} data-type={card.type} data-priority={card.priority ?? ''}>
-                <Card title={card.title} description={card.description} />
+                <Card title={card.title} description={card.description} onopen={() => oneditcard?.(card)}>
+                  {#snippet tags()}
+                    <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
+                    {#if card.priority !== null}
+                      <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
+                    {/if}
+                  {/snippet}
+                </Card>
               </li>
             {/each}
           </ul>

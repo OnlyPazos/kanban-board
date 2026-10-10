@@ -65,4 +65,45 @@ describe('Board', () => {
     expect(screen.queryByText('Ajena')).not.toBeInTheDocument();
     expect(screen.queryByText('Vieja')).not.toBeInTheDocument();
   });
+
+  it('cada tarjeta muestra su tipo como Badge con un tono distinto por tipo, y la prioridad solo si la tiene', () => {
+    const project = createProject({ name: 'Mi app' });
+    const base = (title: string) => createCard({ projectId: project.id, title, status: 'sin-empezar' });
+    const cards = [
+      { ...base('N'), type: 'novedad' as const, priority: 'alta' as const },
+      { ...base('M'), type: 'mejora' as const, priority: 'media' as const },
+      { ...base('A'), type: 'arreglo' as const, priority: 'baja' as const },
+      { ...base('T'), type: 'tecnico' as const, priority: null },
+    ];
+    render(Board, { project, cards });
+    const item = (title: string) =>
+      screen.getByRole('heading', { level: 3, name: title }).closest('li') as HTMLElement;
+    const badges = (title: string) => [...item(title).querySelectorAll('.ds-badge')];
+
+    const expected = [
+      ['N', 'Novedad', 'feature', 'Alta', 'danger'],
+      ['M', 'Mejora', 'improvement', 'Media', 'warning'],
+      ['A', 'Arreglo', 'bugfix', 'Baja', 'neutral'],
+    ] as const;
+    for (const [title, typeLabel, typeTone, prioLabel, prioTone] of expected) {
+      const [typeBadge, prioBadge] = badges(title);
+      expect(typeBadge).toHaveTextContent(typeLabel);
+      expect(typeBadge).toHaveClass(`ds-badge--${typeTone}`);
+      expect(prioBadge).toHaveTextContent(prioLabel);
+      expect(prioBadge).toHaveClass(`ds-badge--${prioTone}`);
+    }
+    const tecnico = badges('T');
+    expect(tecnico).toHaveLength(1);
+    expect(tecnico[0]).toHaveTextContent('Técnico');
+    expect(tecnico[0]).toHaveClass('ds-badge--technical');
+  });
+
+  it('abrir una tarjeta avisa con esa tarjeta', async () => {
+    const oneditcard = vi.fn();
+    const project = createProject({ name: 'Mi app' });
+    const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+    render(Board, { project, cards: [card], oneditcard });
+    await fireEvent.click(screen.getByRole('button', { name: 'Login' }));
+    expect(oneditcard).toHaveBeenCalledExactlyOnceWith(card);
+  });
 });

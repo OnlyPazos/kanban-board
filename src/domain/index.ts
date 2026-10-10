@@ -11,8 +11,10 @@ export {
 } from './project';
 export {
   createCard,
+  editCard,
   InvalidCardTitleError,
   touchProject,
   validateNewCardTitle,
+  type CardEdit,
   type NewCardInput,
 } from './card';

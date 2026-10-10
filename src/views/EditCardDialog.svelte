@@ -1,0 +1,152 @@
+<!--
+  Diálogo "Editar tarjeta": título, tipo, estado, descripción (multilínea) y
+  prioridad (Alta, Media, Baja o Sin prioridad) de la tarjeta indicada. Al
+  abrirse parte de sus valores actuales. Las fechas de creación y de última
+  modificación se muestran en solo lectura. Validación mínima del título
+  (`validateNewCardTitle`); la completa llega en WI-AC-011.
+-->
+<script lang="ts">
+  import { Button, Dialog, Input, Select, Textarea } from 'design-system';
+  import {
+    CARD_STATUS_LABELS,
+    CARD_STATUSES,
+    CARD_TYPE_LABELS,
+    CARD_TYPES,
+    NO_PRIORITY_LABEL,
+    PRIORITIES,
+    PRIORITY_LABELS,
+    validateNewCardTitle,
+    type Card,
+    type CardEdit,
+    type CardStatus,
+    type CardType,
+    type Priority,
+  } from '../domain';
+
+  let {
+    card,
+    open = $bindable(false),
+    onsave,
+  }: {
+    card: Card | null;
+    open?: boolean;
+    onsave: (id: string, edit: CardEdit) => Promise<unknown> | void;
+  } = $props();
+
+  /** Valor del selector para "Sin prioridad" (`priority: null`). */
+  const NO_PRIORITY = '';
+
+  const typeOptions = CARD_TYPES.map((value) => ({ value, label: CARD_TYPE_LABELS[value] }));
+  const statusOptions = CARD_STATUSES.map((value) => ({ value, label: CARD_STATUS_LABELS[value] }));
+  const priorityOptions = [
+    ...PRIORITIES.map((value) => ({ value, label: PRIORITY_LABELS[value] })),
+    { value: NO_PRIORITY, label: NO_PRIORITY_LABEL },
+  ];
+
+  const dateFormat = new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+
+  const formId = $props.id();
+  let title = $state('');
+  let type = $state<string>('novedad');
+  let status = $state<string>('sin-empezar');
+  let description = $state('');
+  let priority = $state<string>(NO_PRIORITY);
+  let saving = $state(false);
+  let titleError = $state<string | null>(null);
+
+  // Carga los valores de la tarjeta cada vez que se abre el diálogo.
+  $effect.pre(() => {
+    if (open && card) {
+      title = card.title;
+      type = card.type;
+      status = card.status;
+      description = card.description;
+      priority = card.priority ?? NO_PRIORITY;
+      saving = false;
+      titleError = null;
+    }
+  });
+
+  async function submit(event: SubmitEvent) {
+    event.preventDefault();
+    if (!card || saving) return;
+    titleError = validateNewCardTitle(title);
+    if (titleError) return;
+    saving = true;
+    try {
+      await onsave(card.id, {
+        title,
+        type: type as CardType,
+        status: status as CardStatus,
+        description,
+        priority: priority === NO_PRIORITY ? null : (priority as Exclude<Priority, null>),
+      });
+      open = false;
+    } finally {
+      saving = false;
+    }
+  }
+</script>
+
+<Dialog bind:open title="Editar tarjeta">
+  <form id={formId} class="edit-card" novalidate onsubmit={submit}>
+    <Input label="Título" bind:value={title} error={titleError ?? undefined} required autocomplete="off" />
+    <Select label="Tipo" bind:value={type} options={typeOptions} />
+    <Select label="Estado" bind:value={status} options={statusOptions} />
+    <Textarea label="Descripción" bind:value={description} rows={5} />
+    <Select label="Prioridad" bind:value={priority} options={priorityOptions} />
+    {#if card}
+      <dl class="edit-card__dates">
+        <div class="edit-card__date">
+          <dt>Creada</dt>
+          <dd><time datetime={card.createdAt} data-testid="card-created-at">{dateFormat.format(new Date(card.createdAt))}</time></dd>
+        </div>
+        <div class="edit-card__date">
+          <dt>Última modificación</dt>
+          <dd><time datetime={card.updatedAt} data-testid="card-updated-at">{dateFormat.format(new Date(card.updatedAt))}</time></dd>
+        </div>
+      </dl>
+    {/if}
+  </form>
+
+  {#snippet actions()}
+    <Button variant="secondary" onclick={() => (open = false)}>Cancelar</Button>
+    <Button type="submit" form={formId} loading={saving}>Guardar cambios</Button>
+  {/snippet}
+</Dialog>
+
+<style>
+  .edit-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-4);
+  }
+
+  .edit-card__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-spacing-2) var(--ds-spacing-5);
+    margin: 0;
+    color: var(--ds-color-text-secondary);
+    font-size: var(--ds-font-caption-size);
+    line-height: var(--ds-font-caption-line-height);
+    letter-spacing: var(--ds-font-caption-letter-spacing);
+  }
+
+  .edit-card__date {
+    display: flex;
+    gap: var(--ds-spacing-1);
+  }
+
+  .edit-card__date dt {
+    font-weight: var(--ds-font-label-weight);
+  }
+
+  .edit-card__date dt::after {
+    content: ':';
+  }
+
+  .edit-card__date dd {
+    margin: 0;
+  }
+</style>

@@ -1,5 +1,5 @@
 /** Creación de tarjetas. Funciones puras: sin dependencias de UI ni de almacenamiento. */
-import type { Card, CardStatus, Project } from './types';
+import type { Card, CardStatus, CardType, Priority, Project } from './types';
 
 /**
  * Validación mínima del título (WI-AC-010): obligatorio tras `trim`.
@@ -55,4 +55,32 @@ export function createCard(
 /** Copia del proyecto con `updatedAt` actualizado (al crear/editar sus tarjetas). */
 export function touchProject(project: Project, now: Date = new Date()): Project {
   return { ...project, updatedAt: now.toISOString() };
+}
+
+/** Campos editables de una tarjeta (WI-AC-012). Las fechas no se editan. */
+export interface CardEdit {
+  title: string;
+  type: CardType;
+  status: CardStatus;
+  description: string;
+  priority: Priority;
+}
+
+/**
+ * Aplica una edición: título recortado, `updatedAt` a `now`; `id`, `projectId`,
+ * `createdAt` y `archived` se conservan. Lanza `InvalidCardTitleError` si el
+ * título no es válido (validación mínima; la completa llega en WI-AC-011).
+ */
+export function editCard(card: Card, edit: CardEdit, now: Date = new Date()): Card {
+  const error = validateNewCardTitle(edit.title);
+  if (error) throw new InvalidCardTitleError(error);
+  return {
+    ...card,
+    title: edit.title.trim(),
+    type: edit.type,
+    status: edit.status,
+    description: edit.description,
+    priority: edit.priority,
+    updatedAt: now.toISOString(),
+  };
 }
