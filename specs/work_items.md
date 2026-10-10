@@ -310,7 +310,7 @@ interface Card {
 - Acceptance Checks: AC-034
 - Depende de: [WI-AC-001, WI-AC-031]
 - Rama sugerida: feature/wi-ac-034-import-from-empty-state
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Conectar la opción "Importar" del estado vacío (WI-AC-001) al mismo flujo de importación de WI-AC-030 y WI-AC-031, aceptando ambos valores de `kind`.
   - Con 0 proyectos no se muestra la confirmación de import completo (D-014). Esa regla se implementa y verifica en WI-AC-041; aquí basta con que no bloquee la importación.
