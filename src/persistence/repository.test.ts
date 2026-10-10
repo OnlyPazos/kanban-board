@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createProject } from '../domain';
+import { createCard, createProject } from '../domain';
 import { openKanbanDB } from './db';
 import { createIdbRepository } from './repository';
 
@@ -36,5 +36,22 @@ describe('createIdbRepository', () => {
     await repo.saveProject(project);
     await repo.saveProject({ ...project, description: 'Cambiada' });
     expect(await repo.listProjects()).toEqual([{ ...project, description: 'Cambiada' }]);
+  });
+});
+
+describe('createIdbRepository · tarjetas', () => {
+  it('saveCard guarda la tarjeta y el proyecto actualizado; se leen desde otra instancia', async () => {
+    const name = freshName();
+    const project = createProject({ name: 'Mi app' });
+    const repo = createIdbRepository(name);
+    await repo.saveProject(project);
+
+    const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+    const touched = { ...project, updatedAt: '2999-01-01T00:00:00.000Z' };
+    await repo.saveCard(card, touched);
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listCards()).toEqual([card]);
+    expect(await reloaded.listProjects()).toEqual([touched]);
   });
 });

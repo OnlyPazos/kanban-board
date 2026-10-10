@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import Board from './Board.svelte';
-import { CARD_STATUSES, createProject } from '../domain';
+import { CARD_STATUSES, createCard, createProject } from '../domain';
 
 describe('Board', () => {
   it('muestra exactamente 4 columnas en orden: Sin empezar, En curso, En pausa, Finalizado', () => {
@@ -40,5 +40,29 @@ describe('Board', () => {
     const header = screen.getByRole('heading', { level: 1 }).parentElement!;
     await fireEvent.click(within(header).getByRole('button', { name: 'Editar proyecto' }));
     expect(onedit).toHaveBeenCalledExactlyOnceWith(project);
+  });
+
+  it('cada columna tiene "Añadir tarjeta", que avisa con el estado de esa columna', async () => {
+    const onaddcard = vi.fn();
+    render(Board, { project: createProject({ name: 'Mi app' }), onaddcard });
+    const enCurso = screen.getByRole('region', { name: 'En curso' });
+    expect(screen.getAllByRole('button', { name: 'Añadir tarjeta' })).toHaveLength(4);
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    expect(onaddcard).toHaveBeenCalledExactlyOnceWith('en-curso');
+  });
+
+  it('muestra cada tarjeta del proyecto en la columna de su estado', () => {
+    const project = createProject({ name: 'Mi app' });
+    const login = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+    const ajena = createCard({ projectId: 'otro', title: 'Ajena', status: 'en-curso' });
+    const archivada = { ...createCard({ projectId: project.id, title: 'Vieja', status: 'en-curso' }), archived: true };
+    render(Board, { project, cards: [login, ajena, archivada] });
+
+    const enCurso = screen.getByRole('region', { name: 'En curso' });
+    expect(within(enCurso).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(enCurso).getByRole('heading', { level: 3, name: 'Login' })).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Sin empezar' })).queryByRole('listitem')).toBeNull();
+    expect(screen.queryByText('Ajena')).not.toBeInTheDocument();
+    expect(screen.queryByText('Vieja')).not.toBeInTheDocument();
   });
 });
