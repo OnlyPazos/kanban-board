@@ -283,7 +283,7 @@ interface Card {
 - Acceptance Checks: AC-031, AC-032
 - Depende de: [WI-AC-030]
 - Rama sugerida: feature/wi-ac-031-import-project
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Si `kind` es `project` y el id no existe, se añade el proyecto y sus tarjetas.
   - Si el id ya existe, se abre un diálogo con dos opciones:
@@ -291,7 +291,7 @@ interface Card {
     - "Importar como copia": nuevos ids para el proyecto y todas sus tarjetas (remapeando `projectId`) y nombre `<original> (copia)`.
   - Cerrar o cancelar el diálogo no hace nada.
   - Si el nombre con " (copia)" supera 80 caracteres, se recorta el nombre original para que el total quepa en 80. Este caso se implementa y verifica en WI-AC-040.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-031, AC-032 (commit ebbf7c7). check 0 errores (1 warning conocido del design-system); build OK; test 196/196; test:e2e 42/42; verificación independiente (vite preview en el puerto 4347, script fuera del repo) con "Otra" (E) y "Mi app" (A, B archivada, filtro "Arreglo"): archivo con id nuevo → se añade sin diálogo, proyecto y tarjetas (incl. archivada) idénticos al archivo, proyectos/tarjetas existentes idénticos en IndexedDB, persiste al recargar; con id existente → diálogo "Este proyecto ya existe" con "Reemplazar" e "Importar como copia"; Cancelar, Escape y × dejan IndexedDB idéntica; "Importar como copia" crea "Mi app (copia)" con ids nuevos, projectId remapeado, resto de campos igual (archivado conservado) y el existente (con tarjeta C añadida) intacto; "Reemplazar" deja proyecto y tarjetas exactamente iguales al archivo (C eliminada), no añade proyecto, resto intacto y persiste al recargar; 375 px sin desbordamiento; sin errores de consola ni peticiones externas. Juicio sobre lo declarado: (1) kind project con ≠1 proyecto → error genérico sin cambios: aceptable, los motivos detallados son AC-033/WI-AC-033. (2) Conservar `filter:<id>` al reemplazar: aceptable, la spec no la trata como dato del proyecto ni va en el export. (3) Recorte >80 con " (copia)": fuera de alcance, WI-AC-040. (4) Import sin guarda `ArchivedProjectError`: aceptable, D-007(6) limita la edición en el tablero, no reemplazar/copiar por import (cubierto por e2e con el existente archivado). Reglas base de stack OK (sin dependencias nuevas, Dialog/Button del design-system, sin CSS ni colores nuevos, escritura en una única transacción con abort y test de rollback, tests unitarios y e2e)]
 
 ## WI-AC-033
 - Contexto: intercambio
