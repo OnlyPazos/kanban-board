@@ -99,4 +99,20 @@ describe('ProjectList · archivo de proyectos (WI-AC-024)', () => {
     expect(screen.getByRole('link', { name: 'Proyectos archivados' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /borrar|eliminar/i })).not.toBeInTheDocument();
   });
+  it('"Exportar todo" aparece si hay algo que exportar y avisa al pulsarlo (AC-028)', async () => {
+    const onexportall = vi.fn();
+    render(ProjectList, { projects: [createProject({ name: 'Mi app' })], canExportAll: true, onexportall });
+    await fireEvent.click(screen.getByRole('button', { name: 'Exportar todo' }));
+    expect(onexportall).toHaveBeenCalledOnce();
+  });
+
+  it('"Exportar todo" sigue disponible con la lista activa vacía si hay proyectos archivados', () => {
+    render(ProjectList, { projects: [], canExportAll: true });
+    expect(screen.getByRole('button', { name: 'Exportar todo' })).toBeVisible();
+  });
+
+  it('sin nada que exportar no muestra "Exportar todo"', () => {
+    render(ProjectList);
+    expect(screen.queryByRole('button', { name: 'Exportar todo' })).not.toBeInTheDocument();
+  });
 });
