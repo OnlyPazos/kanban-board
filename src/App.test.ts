@@ -238,11 +238,10 @@ describe('App: "Importar" del estado vacío (AC-034)', () => {
     render(App, { repository });
     await importFromEmptyState(JSON.stringify(buildExport(source, { kind: 'full' })));
 
-    const dialog = await screen.findByRole('dialog', { name: '¿Importar y reemplazar todos tus datos?' });
-    await fireEvent.click(within(dialog).getByRole('button', { name: 'Reemplazar' }));
-
+    // Con 0 proyectos no se pide confirmación (AC-041, D-014).
     const list = screen.getByRole('region', { name: 'Proyectos' });
     expect(await within(list).findByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
     expect(within(list).getByRole('button', { name: 'Otra' })).toBeInTheDocument();
     // El archivado se importa archivado: no aparece en la lista activa.
     expect(within(list).queryByRole('button', { name: 'Vieja' })).toBeNull();

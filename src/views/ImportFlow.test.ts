@@ -80,6 +80,37 @@ describe('ImportFlow (WI-AC-030)', () => {
   });
 });
 
+describe('ImportFlow: export completo sin proyectos (WI-AC-041, AC-041)', () => {
+  it('con 0 proyectos no pide confirmación y avisa directamente con el contenido del archivo', async () => {
+    const onreplaceall = vi.fn();
+    render(ImportFlow, { projectCount: 0, onreplaceall });
+    const file = buildExport(source, { kind: 'full' });
+    await chooseFile(JSON.stringify(file));
+
+    await waitFor(() => expect(onreplaceall).toHaveBeenCalledExactlyOnceWith(file));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('con 0 proyectos, si el guardado falla, muestra un error', async () => {
+    const onreplaceall = vi.fn().mockRejectedValue(new Error('QuotaExceededError'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(ImportFlow, { projectCount: 0, onreplaceall });
+    await chooseFile(JSON.stringify(buildExport(source, { kind: 'full' })));
+
+    await screen.findByRole('dialog', { name: 'No se pudo importar el archivo' });
+    expect(screen.queryByRole('dialog', { name: '¿Importar y reemplazar todos tus datos?' })).not.toBeInTheDocument();
+  });
+
+  it('con 1 proyecto (aunque esté archivado) sí pide confirmación', async () => {
+    const onreplaceall = vi.fn();
+    render(ImportFlow, { projectCount: 1, onreplaceall });
+    await chooseFile(JSON.stringify(buildExport(source, { kind: 'full' })));
+
+    await screen.findByRole('dialog', { name: '¿Importar y reemplazar todos tus datos?' });
+    expect(onreplaceall).not.toHaveBeenCalled();
+  });
+});
+
 describe('ImportFlow: export de proyecto (WI-AC-031)', () => {
   const projectFile = () => buildExport(source, { kind: 'project', projectId: project.id });
   const conflictName = 'Este proyecto ya existe';

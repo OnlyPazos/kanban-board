@@ -124,16 +124,11 @@ test('AC-034: "Importar" del estado vacío acepta un export completo y se ven lo
   await page.goto('/');
   await importFromEmptyState(page, exports.full);
 
-  // Con 0 proyectos la confirmación no bloquea la importación (D-014 la elimina en WI-AC-041).
-  const confirm = page.getByRole('dialog', { name: '¿Importar y reemplazar todos tus datos?' });
-  const imported = projectList(page).getByRole('button', { name: 'Mi app', exact: true });
-  await expect(confirm.or(imported)).toBeVisible();
-  if (await confirm.isVisible()) await confirm.getByRole('button', { name: 'Reemplazar' }).click();
-  await expect(confirm).toBeHidden();
-
+  // Con 0 proyectos no se pide confirmación (AC-041, D-014).
   await expect(projectList(page).getByRole('button', { name: 'Mi app', exact: true })).toBeVisible();
   await expect(projectList(page).getByRole('button', { name: 'Otra', exact: true })).toBeVisible();
   await expect(page.getByText('Todavía no tienes proyectos')).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await snapshot(page)).toEqual(exports.data);
 
   await page.reload();

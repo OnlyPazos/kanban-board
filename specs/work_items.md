@@ -370,7 +370,7 @@ interface Card {
 - Acceptance Checks: AC-041
 - Depende de: [WI-AC-030]
 - Rama sugerida: feature/wi-ac-041-import-full-no-confirm-when-empty
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - En el flujo de import completo de WI-AC-030, si N (proyectos activos + archivados) es 0, no se abre la confirmación y se escribe el contenido directamente (D-014). Con N ≥ 1 se mantiene la confirmación de AC-030.
   - Test e2e: con almacenamiento limpio, importar un export completo muestra los proyectos sin ningún diálogo. Con 1 proyecto archivado y ninguno activo, sí aparece la confirmación.
