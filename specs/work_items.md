@@ -153,11 +153,12 @@ interface Card {
 - Acceptance Checks: AC-014
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-014-auto-sort
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - Función pura `sortCards(cards)`: rango de prioridad alta=0, media=1, baja=2, null=3; empate por `createdAt` ascendente. No se guarda ninguna posición manual.
   - Test unitario con el escenario exacto de AC-014 (T1 Baja, T2 sin prioridad, T3 Alta, T4 Alta → T3, T4, T1, T2).
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-014, commit 00e7e27). check 0 errores (1 warning conocido del design-system); build OK; test 90/90; test:e2e 16/16; check independiente de QA en navegador real (columna "En pausa", crear T1–T4 sin prioridad y asignar después T4=Alta, T1=Baja, T3=Alta) → T3, T4, T1, T2, y se mantiene tras recargar. Diff: función pura `sortCards` en dominio + uso en Board; sin estilos ni dependencias nuevas. Reglas base de stack OK.
 
 ## WI-AC-007
 - Contexto: proyectos

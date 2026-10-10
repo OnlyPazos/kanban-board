@@ -106,4 +106,26 @@ describe('Board', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Login' }));
     expect(oneditcard).toHaveBeenCalledExactlyOnceWith(card);
   });
+  it('AC-014: cada columna muestra sus tarjetas en el orden automático (prioridad y luego createdAt)', () => {
+    const project = createProject({ name: 'Mi app' });
+    const make = (title: string, priority: 'alta' | 'baja' | null, minute: number, status: 'sin-empezar' | 'en-curso' = 'sin-empezar') => ({
+      ...createCard({ projectId: project.id, title, status }, new Date(Date.UTC(2026, 9, 10, 10, minute))),
+      priority,
+    });
+    // Se pasan desordenadas a propósito.
+    const cards = [
+      make('T4', 'alta', 4),
+      make('T1', 'baja', 1),
+      make('Otra', null, 0, 'en-curso'),
+      make('T2', null, 2),
+      make('T3', 'alta', 3),
+    ];
+    render(Board, { project, cards });
+    const titles = (column: string) =>
+      within(screen.getByRole('region', { name: column }))
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent);
+    expect(titles('Sin empezar')).toEqual(['T3', 'T4', 'T1', 'T2']);
+    expect(titles('En curso')).toEqual(['Otra']);
+  });
 });

@@ -95,3 +95,24 @@ export function editCard(card: Card, edit: CardEdit, now: Date = new Date()): Ca
     updatedAt: now.toISOString(),
   };
 }
+
+/** Rango de cada prioridad en el orden automático (D-005): alta, media, baja y sin prioridad. */
+const PRIORITY_RANK: Record<NonNullable<Priority> | 'none', number> = { alta: 0, media: 1, baja: 2, none: 3 };
+
+function priorityRank(priority: Priority): number {
+  return PRIORITY_RANK[priority ?? 'none'];
+}
+
+/**
+ * Orden automático de las tarjetas de una columna (AC-014): por prioridad
+ * (alta, media, baja, sin prioridad) y, a igual prioridad, por `createdAt`
+ * ascendente. Devuelve una copia; no modifica el array recibido ni guarda
+ * ninguna posición manual.
+ */
+export function sortCards(cards: readonly Card[]): Card[] {
+  return [...cards].sort(
+    (a, b) =>
+      priorityRank(a.priority) - priorityRank(b.priority) ||
+      (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0),
+  );
+}
