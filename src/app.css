@@ -1,0 +1,18 @@
+/* Estilos base globales: solo variables --ds-* del sistema de diseño. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ds-color-background);
+  color: var(--ds-color-text-primary);
+  font-family: var(--ds-font-family-sans);
+  font-size: var(--ds-font-body-size);
+  font-weight: var(--ds-font-body-weight);
+  line-height: var(--ds-font-body-line-height);
+  letter-spacing: var(--ds-font-body-letter-spacing);
+}
