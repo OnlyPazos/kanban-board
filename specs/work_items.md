@@ -117,7 +117,7 @@ interface Card {
 - Acceptance Checks: AC-010
 - Depende de: [WI-AC-009]
 - Rama sugerida: feature/wi-ac-010-create-card
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Botón "Añadir tarjeta" en cada columna. La tarjeta se crea con `status` igual a la columna, `type` igual a `novedad` y `priority` igual a `null`.
   - Persistencia en el store `cards`. Actualiza el `updatedAt` del proyecto.
