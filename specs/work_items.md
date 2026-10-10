@@ -93,7 +93,7 @@ interface Card {
 - Acceptance Checks: AC-003, AC-004
 - Depende de: [WI-AC-005]
 - Rama sugerida: feature/wi-ac-003-project-name-validation
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Validación de dominio reutilizable `validateProjectName(name)`: rechaza vacío o solo espacios (tras `trim`) y más de 80 caracteres.
   - Se aplica tanto al crear como al editar. El mensaje de error aparece junto al campo nombre; no se crea ni se modifica nada.
