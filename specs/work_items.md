@@ -189,12 +189,13 @@ interface Card {
 - Acceptance Checks: AC-018, AC-019, AC-039
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-018-type-filter
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Filtro de selección múltiple por tipo (D-012). Un conjunto vacío equivale a no filtrar y se ven todas las tarjetas.
   - Un `Chip` por tipo, con el `tone` de `CARD_TYPE_TONE` y `bind:selected`, agrupados en un contenedor con `role="group"` y nombre accesible "Filtrar por tipo".
   - La selección se persiste por proyecto en el store `prefs` (clave `filter:<projectId>`, valor `CardType[]`). No forma parte del formato de export, porque la spec no lo exige.
-- Historial QA: []
+- Historial QA:
+  - 2026-10-10 — PASS (AC-018, AC-019, AC-039, commit 410153d). check 0 errores (1 warning conocido del design-system); test 116/116; test:e2e 25/25; e2e independiente de QA (vite preview en el puerto 4192, script fuera del repo). AC-018: proyecto A con Novedad, Mejora, Técnico y 2 Arreglo en las 4 columnas → "Arreglo" deja solo Arr1 y Arr2 (aria-pressed=true); al quitarlo vuelven las 5. AC-019: prefs `filter:<idA>` = ["arreglo"]; tras recargar, A sigue filtrado; B (sin filtro, con tarjetas Novedad y Arreglo) muestra todas, sin chips pulsados, también al recargar directamente en B. AC-039: Arreglo + Técnico (Técnico activado con teclado, Espacio) → Arr1, Arr2, Tec1; persiste tras recargar; al deseleccionar los dos (Enter + clic) se ven todas, prefs = [] y sigue así tras recargar. Clics rápidos seguidos → estado final correcto en memoria y tras recargar. Sin errores de consola. Reglas base OK (Chip del design-system, solo variables --ds-*, idb vía Repository, tests unitarios y e2e). Nota del builder comprobada: recargar en el mismo instante del clic pierde el cambio (15/15), con 50 ms de margen no se pierde (0/15). Una recarga humana tarda más que eso → no bloqueante. Observación no bloqueante: si el guardado del filtro falla, solo se registra en consola y el filtro sigue aplicado en memoria.
 
 ## WI-AC-020
 - Contexto: tablero
