@@ -77,6 +77,7 @@
   {:else}
     <ProjectList
       projects={store.projects}
+      cards={store.cards}
       oncreate={() => (creating = true)}
       onedit={startEdit}
       onopen={openBoard}

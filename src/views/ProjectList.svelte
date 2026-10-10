@@ -2,25 +2,38 @@
   Lista de proyectos (pantalla inicial). Sin proyectos muestra el estado
   vacío. "Importar" se conecta en WI-AC-034. Cada proyecto tiene un botón
   "Editar" que avisa con el proyecto (identificado por id); al abrir la
-  tarjeta (`onopen`) se avisa para mostrar su tablero.
+  tarjeta (`onopen`) se avisa para mostrar su tablero. Cada proyecto muestra
+  el recuento de sus tarjetas no archivadas en los 4 estados, en el orden de
+  las columnas (AC-008). El orden de `projects` lo decide el store (AC-007).
 -->
 <script lang="ts">
   import { Button, Card } from 'design-system';
-  import type { Project } from '../domain';
+  import {
+    CARD_STATUSES,
+    CARD_STATUS_LABELS,
+    countCardsByProject,
+    emptyStatusCounts,
+    type Card as KanbanCard,
+    type Project,
+  } from '../domain';
 
   let {
     projects = [],
+    cards = [],
     oncreate,
     onimport,
     onedit,
     onopen,
   }: {
     projects?: Project[];
+    cards?: KanbanCard[];
     oncreate?: () => void;
     onimport?: () => void;
     onedit?: (project: Project) => void;
     onopen?: (project: Project) => void;
   } = $props();
+
+  const countsByProject = $derived(countCardsByProject(cards));
 </script>
 
 <section class="project-list" aria-labelledby="project-list-title">
@@ -37,6 +50,7 @@
   {#if projects.length > 0}
     <ul class="project-list__items">
       {#each projects as project (project.id)}
+        {@const counts = countsByProject.get(project.id) ?? emptyStatusCounts()}
         <li>
           <Card
             title={project.name}
@@ -44,6 +58,14 @@
             onopen={onopen ? () => onopen(project) : undefined}
           >
             {#snippet footer()}
+              <dl class="status-counts">
+                {#each CARD_STATUSES as status (status)}
+                  <div class="status-counts__item" data-status={status}>
+                    <dt>{CARD_STATUS_LABELS[status]}</dt>
+                    <dd class="status-counts__value">{counts[status]}</dd>
+                  </div>
+                {/each}
+              </dl>
               <Button
                 variant="ghost"
                 size="sm"
@@ -94,6 +116,29 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .status-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-spacing-1) var(--ds-spacing-3);
+    flex: 1 1 auto;
+    margin: 0;
+  }
+
+  .status-counts__item {
+    display: flex;
+    gap: var(--ds-spacing-1);
+  }
+
+  .status-counts__item dt::after {
+    content: ':';
+  }
+
+  .status-counts__value {
+    margin: 0;
+    color: var(--ds-color-text-primary);
+    font-family: var(--ds-font-family-mono);
   }
 
   .project-list__title {

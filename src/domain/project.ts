@@ -75,3 +75,8 @@ export function editProject(project: Project, edit: ProjectEdit, now: Date = new
     updatedAt: now.toISOString(),
   };
 }
+
+/** Copia ordenada por última modificación (`updatedAt`), la más reciente primero (AC-007). */
+export function sortProjects(projects: readonly Project[]): Project[] {
+  return [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}

@@ -116,3 +116,24 @@ export function sortCards(cards: readonly Card[]): Card[] {
       (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0),
   );
 }
+
+/** Recuento por estado de las tarjetas no archivadas de cada proyecto (AC-008). */
+export type StatusCounts = Record<CardStatus, number>;
+
+export function emptyStatusCounts(): StatusCounts {
+  return { 'sin-empezar': 0, 'en-curso': 0, 'en-pausa': 0, finalizado: 0 };
+}
+
+export function countCardsByProject(cards: readonly Card[]): Map<string, StatusCounts> {
+  const counts = new Map<string, StatusCounts>();
+  for (const card of cards) {
+    if (card.archived) continue;
+    let projectCounts = counts.get(card.projectId);
+    if (!projectCounts) {
+      projectCounts = emptyStatusCounts();
+      counts.set(card.projectId, projectCounts);
+    }
+    projectCounts[card.status] += 1;
+  }
+  return counts;
+}

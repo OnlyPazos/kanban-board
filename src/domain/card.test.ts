@@ -3,6 +3,7 @@ import {
   CARD_TITLE_MAX_LENGTH,
   createCard,
   editCard,
+  countCardsByProject,
   InvalidCardTitleError,
   sortCards,
   touchProject,
@@ -137,5 +138,25 @@ describe('sortCards', () => {
     const copy = [...cards];
     expect(sortCards(cards).map((c) => c.title)).toEqual(['T3', 'T4', 'T1', 'T2']);
     expect(cards).toEqual(copy);
+  });
+});
+
+describe('countCardsByProject', () => {
+  const card = (id: string, projectId: string, status: Card['status'], archived = false): Card => ({
+    ...createCard({ projectId, title: id, status }, new Date('2026-10-10T10:00:00.000Z'), id),
+    archived,
+  });
+
+  it('cuenta por proyecto y estado solo las tarjetas no archivadas (escenario AC-008)', () => {
+    const counts = countCardsByProject([
+      card('c1', 'p1', 'sin-empezar'),
+      card('c2', 'p1', 'sin-empezar'),
+      card('c3', 'p1', 'en-curso'),
+      card('c4', 'p1', 'finalizado', true),
+      card('c5', 'p2', 'en-pausa'),
+    ]);
+    expect(counts.get('p1')).toEqual({ 'sin-empezar': 2, 'en-curso': 1, 'en-pausa': 0, finalizado: 0 });
+    expect(counts.get('p2')).toEqual({ 'sin-empezar': 0, 'en-curso': 0, 'en-pausa': 1, finalizado: 0 });
+    expect(counts.has('p3')).toBe(false);
   });
 });

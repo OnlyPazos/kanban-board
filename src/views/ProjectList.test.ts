@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import ProjectList from './ProjectList.svelte';
-import { createProject } from '../domain';
+import { createCard, createProject } from '../domain';
 
 describe('ProjectList', () => {
   it('sin proyectos muestra el estado vacío con "Crear proyecto" e "Importar"', () => {
@@ -56,5 +56,24 @@ describe('ProjectList', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Editar A' }));
     expect(onedit).toHaveBeenCalledExactlyOnceWith(a);
     expect(onopen).toHaveBeenCalledOnce();
+  });
+
+  it('muestra el recuento de tarjetas no archivadas por estado en el orden de las columnas (AC-008)', () => {
+    const a = createProject({ name: 'A' });
+    const b = createProject({ name: 'B' });
+    const cards = [
+      createCard({ projectId: a.id, title: 'T1', status: 'sin-empezar' }),
+      createCard({ projectId: a.id, title: 'T2', status: 'sin-empezar' }),
+      createCard({ projectId: a.id, title: 'T3', status: 'en-curso' }),
+      { ...createCard({ projectId: a.id, title: 'T4', status: 'en-pausa' }), archived: true },
+    ];
+    render(ProjectList, { projects: [a, b], cards });
+    const [itemA, itemB] = screen.getAllByRole('listitem');
+    const read = (item: HTMLElement) =>
+      within(item)
+        .getAllByRole('term')
+        .map((term) => `${term.textContent}=${term.nextElementSibling?.textContent}`);
+    expect(read(itemA)).toEqual(['Sin empezar=2', 'En curso=1', 'En pausa=0', 'Finalizado=0']);
+    expect(read(itemB)).toEqual(['Sin empezar=0', 'En curso=0', 'En pausa=0', 'Finalizado=0']);
   });
 });
