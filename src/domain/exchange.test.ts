@@ -3,6 +3,7 @@ import {
   archiveCard,
   archiveProject,
   buildExport,
+  copyImportedProject,
   createCard,
   createProject,
   EXPORT_FORMAT_VERSION,
@@ -130,5 +131,32 @@ describe('parseImport (validación mínima, WI-AC-030)', () => {
     for (const bad of [[], 'x', { ...file, kind: 'otro' }, { ...file, projects: {} }, { ...file, cards: [1] }]) {
       expect(parseImport(JSON.stringify(bad))).toMatchObject({ ok: false, reason: 'invalid-structure' });
     }
+  });
+});
+
+describe('copyImportedProject ("Importar como copia", AC-032)', () => {
+  it('ids nuevos para el proyecto y todas sus tarjetas, projectId remapeado y nombre "<original> (copia)"', () => {
+    const { projects, cards } = sample();
+    const project = projects[0]!;
+    const own = cards.filter((c) => c.projectId === project.id);
+    let n = 0;
+    const result = copyImportedProject(project, own, () => `nuevo-${++n}`);
+
+    expect(result.project).toEqual({ ...project, id: 'nuevo-1', name: 'Mi app (copia)' });
+    expect(result.cards).toEqual(own.map((c, i) => ({ ...c, id: `nuevo-${i + 2}`, projectId: 'nuevo-1' })));
+  });
+
+  it('conserva el estado de archivado y no modifica los originales', () => {
+    const archived = archiveProject(createProject({ name: 'Vieja' }, now, 'p-1'));
+    const card = archiveCard(createCard({ projectId: 'p-1', title: 'T', status: 'en-pausa' }, now, 'c-1'));
+    const before = structuredClone({ archived, card });
+    const result = copyImportedProject(archived, [card]);
+
+    expect(result.project.archived).toBe(true);
+    expect(result.cards[0]!.archived).toBe(true);
+    expect(result.project.id).not.toBe('p-1');
+    expect(result.cards[0]!.id).not.toBe('c-1');
+    expect(result.cards[0]!.projectId).toBe(result.project.id);
+    expect({ archived, card }).toEqual(before);
   });
 });

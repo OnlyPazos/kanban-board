@@ -6,22 +6,35 @@
   - `kind: "full"` (AC-030): confirmación "Se borrarán tus N proyectos
     actuales" (N = activos + archivados). Cancelar o cerrar no cambia nada;
     al confirmar se avisa con `onreplaceall`, que sustituye todos los datos.
-  - `kind: "project"`: se implementa en WI-AC-031.
+  - `kind: "project"` (WI-AC-031): si su `id` no existe, se añade con sus
+    tarjetas (AC-031). Si ya existe, un diálogo ofrece "Reemplazar" (sustituye
+    el existente y sus tarjetas) e "Importar como copia" (ids nuevos y nombre
+    `<original> (copia)`); cerrar o cancelar no cambia nada (AC-032). Ambos
+    casos se avisan con `onimportproject`, que escribe en una transacción.
   Validación mínima (`parseImport`); los motivos y mensajes completos van en
   WI-AC-033. Un archivo no válido no modifica nada.
 -->
 <script lang="ts">
   import { Button, Dialog } from 'design-system';
-  import { parseImport, type ExportFile } from '../domain';
+  import { copyImportedProject, parseImport, type Card, type ExportFile, type Project } from '../domain';
 
   let {
     projectCount = 0,
+    projectIds = [],
     onreplaceall,
+    onimportproject,
   }: {
     /** Proyectos actuales (activos + archivados): la N de la confirmación. */
     projectCount?: number;
+    /** `id` de los proyectos actuales (activos + archivados), para detectar si ya existe. */
+    projectIds?: readonly string[];
     /** Import completo confirmado: sustituir todos los proyectos y tarjetas. */
     onreplaceall?: (data: ExportFile) => unknown;
+    /**
+     * Import de proyecto: añadir el proyecto con sus tarjetas o, si ya existe
+     * uno con el mismo `id`, sustituirlo junto con sus tarjetas.
+     */
+    onimportproject?: (project: Project, cards: Card[]) => unknown;
   } = $props();
 
   let input: HTMLInputElement | undefined = $state();
@@ -30,6 +43,11 @@
   let pendingFull = $state<ExportFile | null>(null);
   let confirming = $state(false);
   let replacing = $state(false);
+
+  /** Proyecto del archivo cuyo `id` ya existe, pendiente de elegir qué hacer. */
+  let pendingProject = $state<{ project: Project; cards: Card[] } | null>(null);
+  let resolvingConflict = $state(false);
+  let importingProject = $state(false);
 
   let failed = $state(false);
   let failureText = $state('');
@@ -62,11 +80,43 @@
         pendingFull = result.data;
         confirming = true;
         break;
-      case 'project':
-        // Import de proyecto: WI-AC-031.
-        fail('Este tipo de archivo todavía no se puede importar.');
+      case 'project': {
+        const [project] = result.data.projects;
+        if (result.data.projects.length !== 1 || !project) {
+          fail('El archivo no es un export válido de la app.');
+          return;
+        }
+        const cards = result.data.cards;
+        if (projectIds.includes(project.id)) {
+          pendingProject = { project, cards };
+          resolvingConflict = true;
+        } else {
+          await importProject(project, cards);
+        }
         break;
+      }
     }
+  }
+
+  /** Escribe el proyecto; devuelve `true` si se guardó. */
+  async function importProject(project: Project, cards: Card[]): Promise<boolean> {
+    importingProject = true;
+    try {
+      await onimportproject?.(project, cards);
+      return true;
+    } catch (error: unknown) {
+      console.error('No se pudo importar el archivo', error);
+      fail('No se ha podido guardar el proyecto importado.');
+      return false;
+    } finally {
+      importingProject = false;
+    }
+  }
+
+  async function resolveConflict(mode: 'replace' | 'copy') {
+    if (!pendingProject || importingProject) return;
+    const { project, cards } = mode === 'replace' ? pendingProject : copyImportedProject(pendingProject.project, pendingProject.cards);
+    if (await importProject(project, cards)) resolvingConflict = false;
   }
 
   function fail(text: string) {
@@ -114,6 +164,22 @@
   {#snippet actions()}
     <Button variant="secondary" onclick={() => (confirming = false)}>Cancelar</Button>
     <Button variant="danger" loading={replacing} onclick={confirmFull}>Reemplazar</Button>
+  {/snippet}
+</Dialog>
+
+<Dialog
+  bind:open={resolvingConflict}
+  title="Este proyecto ya existe"
+  description={`«${pendingProject?.project.name ?? ''}» ya está en la app. Puedes reemplazar el proyecto existente y sus tarjetas por el del archivo, o importarlo como copia.`}
+  size="sm"
+  onclose={() => (pendingProject = null)}
+>
+  {#snippet actions()}
+    <Button variant="secondary" onclick={() => (resolvingConflict = false)}>Cancelar</Button>
+    <Button variant="secondary" disabled={importingProject} onclick={() => resolveConflict('copy')}>
+      Importar como copia
+    </Button>
+    <Button variant="danger" disabled={importingProject} onclick={() => resolveConflict('replace')}>Reemplazar</Button>
   {/snippet}
 </Dialog>
 

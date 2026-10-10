@@ -25,6 +25,13 @@ export interface Repository {
    * transacción. Las preferencias (`prefs`) no se tocan.
    */
   replaceAll(projects: readonly Project[], cards: readonly Card[]): Promise<void>;
+  /**
+   * Import de proyecto (AC-031, AC-032): borra el proyecto con el `id` de
+   * `project` y todas sus tarjetas (si existía) y escribe el proyecto y las
+   * tarjetas dados tal cual (ids, fechas y flags), en una única transacción.
+   * El resto de proyectos y tarjetas, y las preferencias (`prefs`), no se tocan.
+   */
+  importProject(project: Project, cards: readonly Card[]): Promise<void>;
   /** Filtros por tipo guardados, por `projectId` (store `prefs`, clave `filter:<projectId>`). */
   listTypeFilters(): Promise<Record<string, CardType[]>>;
   saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
@@ -100,6 +107,32 @@ export function createIdbRepository(dbName?: string): Repository {
             tx.abort();
           } catch {
             // Ya abortada (p. ej. por un error de petición).
+          }
+          throw error;
+        }
+      };
+      await Promise.all([write(), tx.done]);
+    },
+    async importProject(project, cards) {
+      const tx = (await db()).transaction(['projects', 'cards'], 'readwrite');
+      const projectStore = tx.objectStore('projects');
+      const cardStore = tx.objectStore('cards');
+      const write = async () => {
+        // Peticiones ya lanzadas: si una falla, el resto se rechaza al abortar.
+        const requests: Promise<unknown>[] = [];
+        try {
+          const oldIds = await cardStore.index('projectId').getAllKeys(project.id);
+          await Promise.all(oldIds.map((id) => cardStore.delete(id)));
+          requests.push(projectStore.put({ ...project }));
+          for (const card of cards) requests.push(cardStore.put({ ...card }));
+          await Promise.all(requests);
+        } catch (error) {
+          for (const request of requests) request.catch(() => {});
+          // Igual que en `replaceAll`: todo o nada.
+          try {
+            tx.abort();
+          } catch {
+            // Ya abortada.
           }
           throw error;
         }

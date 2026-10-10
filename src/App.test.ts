@@ -33,6 +33,11 @@ function memoryRepository(initial: Project[] = []): Repository {
       for (const p of newProjects) projects.set(p.id, { ...p });
       for (const c of newCards) cards.set(c.id, { ...c });
     },
+    importProject: async (project, newCards) => {
+      for (const card of [...cards.values()]) if (card.projectId === project.id) cards.delete(card.id);
+      projects.set(project.id, { ...project });
+      for (const c of newCards) cards.set(c.id, { ...c });
+    },
     listProjects: async () => [...projects.values()],
     saveProject: async (project) => {
       projects.set(project.id, { ...project });

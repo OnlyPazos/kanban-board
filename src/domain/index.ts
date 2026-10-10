@@ -34,6 +34,8 @@ export {
 export { matchesTypeFilter, normalizeTypeFilter, toggleTypeFilter } from './filter';
 export {
   buildExport,
+  COPY_SUFFIX,
+  copyImportedProject,
   EXPORT_FORMAT_VERSION,
   exportFileName,
   parseImport,
