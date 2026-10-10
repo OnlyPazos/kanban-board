@@ -80,4 +80,22 @@ describe('AppStore', () => {
     await expect(store.updateProject(created.id, { name: 'Otro', description: '' })).rejects.toThrow();
     expect(store.projects).toEqual([created]);
   });
+
+  it('con un nombre no válido no crea ni modifica nada, tampoco en el almacenamiento', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    await expect(store.createProject({ name: '   ' })).rejects.toThrow('El nombre es obligatorio.');
+    expect(store.projects).toEqual([]);
+
+    const created = await store.createProject({ name: 'Mi app', description: 'Demo' });
+    await expect(store.updateProject(created.id, { name: 'a'.repeat(81), description: 'X' })).rejects.toThrow(
+      'El nombre no puede superar 80 caracteres.',
+    );
+    expect(store.projects).toEqual([created]);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.projects).toEqual([created]);
+  });
 });

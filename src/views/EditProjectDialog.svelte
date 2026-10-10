@@ -1,11 +1,11 @@
 <!--
   Diálogo "Editar proyecto": nombre + descripción del proyecto indicado. Al
-  abrirse parte de los valores actuales. La validación completa del nombre
-  llega en WI-AC-003; aquí solo se exige un nombre no vacío.
+  abrirse parte de los valores actuales. Si el nombre no es válido
+  (`validateProjectName`), muestra el error junto al campo y no modifica nada.
 -->
 <script lang="ts">
   import { Button, Dialog, Input, Textarea } from 'design-system';
-  import type { Project, ProjectEdit } from '../domain';
+  import { PROJECT_NAME_MAX_LENGTH, validateProjectName, type Project, type ProjectEdit } from '../domain';
 
   let {
     project,
@@ -21,6 +21,7 @@
   let name = $state('');
   let description = $state('');
   let saving = $state(false);
+  let nameError = $state<string | null>(null);
 
   // Carga los valores del proyecto cada vez que se abre el diálogo.
   $effect.pre(() => {
@@ -28,12 +29,15 @@
       name = project.name;
       description = project.description;
       saving = false;
+      nameError = null;
     }
   });
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
-    if (!project || saving || name.trim() === '') return;
+    if (!project || saving) return;
+    nameError = validateProjectName(name);
+    if (nameError) return;
     saving = true;
     try {
       await onsave(project.id, { name, description });
@@ -45,8 +49,15 @@
 </script>
 
 <Dialog bind:open title="Editar proyecto">
-  <form id={formId} class="edit-project" onsubmit={submit}>
-    <Input label="Nombre" bind:value={name} required maxlength={80} autocomplete="off" />
+  <form id={formId} class="edit-project" novalidate onsubmit={submit}>
+    <Input
+      label="Nombre"
+      bind:value={name}
+      error={nameError ?? undefined}
+      required
+      maxlength={PROJECT_NAME_MAX_LENGTH}
+      autocomplete="off"
+    />
     <Textarea label="Descripción" bind:value={description} rows={3} />
   </form>
 

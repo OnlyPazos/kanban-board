@@ -1,10 +1,10 @@
 <!--
-  Diálogo "Crear proyecto": nombre + descripción. La validación completa del
-  nombre llega en WI-AC-003; aquí solo se exige un nombre no vacío.
+  Diálogo "Crear proyecto": nombre + descripción. Si el nombre no es válido
+  (`validateProjectName`), muestra el error junto al campo y no crea nada.
 -->
 <script lang="ts">
   import { Button, Dialog, Input, Textarea } from 'design-system';
-  import type { NewProjectInput } from '../domain';
+  import { PROJECT_NAME_MAX_LENGTH, validateProjectName, type NewProjectInput } from '../domain';
 
   let {
     open = $bindable(false),
@@ -18,16 +18,20 @@
   let name = $state('');
   let description = $state('');
   let saving = $state(false);
+  let nameError = $state<string | null>(null);
 
   function reset() {
     name = '';
     description = '';
     saving = false;
+    nameError = null;
   }
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
-    if (saving || name.trim() === '') return;
+    if (saving) return;
+    nameError = validateProjectName(name);
+    if (nameError) return;
     saving = true;
     try {
       await oncreate({ name, description });
@@ -39,8 +43,15 @@
 </script>
 
 <Dialog bind:open title="Crear proyecto" onclose={reset}>
-  <form id={formId} class="create-project" onsubmit={submit}>
-    <Input label="Nombre" bind:value={name} required maxlength={80} autocomplete="off" />
+  <form id={formId} class="create-project" novalidate onsubmit={submit}>
+    <Input
+      label="Nombre"
+      bind:value={name}
+      error={nameError ?? undefined}
+      required
+      maxlength={PROJECT_NAME_MAX_LENGTH}
+      autocomplete="off"
+    />
     <Textarea label="Descripción" bind:value={description} rows={3} />
   </form>
 
