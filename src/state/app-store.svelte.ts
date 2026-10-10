@@ -129,6 +129,20 @@ export class AppStore {
     this.cards = [...cards];
   }
 
+  /**
+   * Import de proyecto (AC-031, AC-032): añade el proyecto con sus tarjetas
+   * o, si ya existe uno con el mismo `id`, lo sustituye junto con todas sus
+   * tarjetas ("Reemplazar"). Conserva ids, fechas y flags tal cual (también
+   * si el proyecto existente o el importado están archivados: no pasa por las
+   * guardas de edición). El resto de proyectos no cambia. Se escribe en una
+   * única transacción y, solo una vez guardado, se muestra.
+   */
+  async importProject(project: Project, cards: readonly Card[]): Promise<void> {
+    await this.#repository.importProject(project, cards);
+    this.projects = sortProjects([...this.projects.filter((p) => p.id !== project.id), project]);
+    this.cards = [...this.cards.filter((c) => c.projectId !== project.id), ...cards];
+  }
+
   /** Aplica `change` al proyecto, lo guarda y lo muestra una vez guardado. */
   async #saveProjectChange(id: string, change: (project: Project) => Project): Promise<Project> {
     const current = this.projects.find((p) => p.id === id);

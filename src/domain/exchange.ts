@@ -102,6 +102,27 @@ export function exportFileName(now: Date = new Date(), projectName?: string): st
     : `kanban-${fileSafeName(projectName)}-${date}.json`;
 }
 
+/** Sufijo del nombre de un proyecto importado como copia (AC-032). */
+export const COPY_SUFFIX = ' (copia)';
+
+/**
+ * "Importar como copia" (AC-032): el proyecto y todas sus tarjetas con ids
+ * nuevos (las tarjetas apuntan al nuevo `projectId`) y el nombre
+ * `<original> (copia)`. El resto de campos se conserva tal cual.
+ * El recorte del nombre a 80 caracteres va en WI-AC-040.
+ */
+export function copyImportedProject(
+  project: Project,
+  cards: readonly Card[],
+  newId: () => string = () => crypto.randomUUID(),
+): { project: Project; cards: Card[] } {
+  const copy: Project = { ...copyProject(project), id: newId(), name: `${project.name}${COPY_SUFFIX}` };
+  return {
+    project: copy,
+    cards: cards.map((c) => ({ ...copyCard(c), id: newId(), projectId: copy.id })),
+  };
+}
+
 /** Motivo por el que un archivo no se puede importar (los mensajes en español van en la UI). */
 export type ImportFailureReason = 'invalid-json' | 'unknown-version' | 'invalid-structure';
 

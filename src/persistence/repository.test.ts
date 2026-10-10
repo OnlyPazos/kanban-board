@@ -158,3 +158,64 @@ describe('replaceAll (import completo, AC-030)', () => {
     expect(await createIdbRepository(name).listProjects()).toEqual([old]);
   });
 });
+
+describe('importProject (import de proyecto, AC-031, AC-032)', () => {
+  const byId = <T extends { id: string }>(xs: T[]) => [...xs].sort((a, b) => a.id.localeCompare(b.id));
+
+  it('id nuevo: añade el proyecto con sus tarjetas y no toca el resto', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    const other = createProject({ name: 'Otra' });
+    const otherCard = createCard({ projectId: other.id, title: 'O', status: 'en-curso' });
+    await repo.saveProject(other);
+    await repo.saveCard(otherCard, other);
+
+    const imported = { ...createProject({ name: 'Importada' }), archived: true };
+    const card = { ...createCard({ projectId: imported.id, title: 'T', status: 'finalizado' }), archived: true };
+    await repo.importProject(imported, [card]);
+
+    const reloaded = createIdbRepository(name);
+    expect(byId(await reloaded.listProjects())).toEqual(byId([other, imported]));
+    expect(byId(await reloaded.listCards())).toEqual(byId([otherCard, card]));
+  });
+
+  it('id existente: sustituye el proyecto y todas sus tarjetas (también archivadas) por los del archivo', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    const existing = { ...createProject({ name: 'Mía' }), archived: true };
+    await repo.saveProject(existing);
+    await repo.saveCard(createCard({ projectId: existing.id, title: 'Vieja', status: 'en-curso' }), existing);
+    await repo.saveCard(
+      { ...createCard({ projectId: existing.id, title: 'Vieja archivada', status: 'en-pausa' }), archived: true },
+      existing,
+    );
+
+    const replacement = { ...existing, name: 'Del archivo', archived: false };
+    const card = createCard({ projectId: existing.id, title: 'Nueva', status: 'sin-empezar' });
+    await repo.importProject(replacement, [card]);
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listProjects()).toEqual([replacement]);
+    expect(await reloaded.listCards()).toEqual([card]);
+  });
+
+  it('si la escritura falla, la transacción se revierte y no cambia nada', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    const existing = createProject({ name: 'Mía' });
+    const oldCard = createCard({ projectId: existing.id, title: 'Vieja', status: 'en-curso' });
+    await repo.saveProject(existing);
+    await repo.saveCard(oldCard, existing);
+
+    // Una tarjeta sin `id` (keyPath) hace fallar el put → se aborta la transacción.
+    const broken = {
+      ...createCard({ projectId: existing.id, title: 'Rota', status: 'en-curso' }),
+      id: undefined,
+    } as unknown as typeof oldCard;
+    await expect(repo.importProject({ ...existing, name: 'Otro' }, [broken])).rejects.toThrow();
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listProjects()).toEqual([existing]);
+    expect(await reloaded.listCards()).toEqual([oldCard]);
+  });
+});

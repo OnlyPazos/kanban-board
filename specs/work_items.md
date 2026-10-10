@@ -283,7 +283,7 @@ interface Card {
 - Acceptance Checks: AC-031, AC-032
 - Depende de: [WI-AC-030]
 - Rama sugerida: feature/wi-ac-031-import-project
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Si `kind` es `project` y el id no existe, se añade el proyecto y sus tarjetas.
   - Si el id ya existe, se abre un diálogo con dos opciones:

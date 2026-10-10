@@ -135,6 +135,8 @@
   bind:this={importFlow}
   projectCount={store.projects.length}
   onreplaceall={(data) => store.replaceAll(data.projects, data.cards)}
+  projectIds={store.projects.map((p) => p.id)}
+  onimportproject={(project, cards) => store.importProject(project, cards)}
 />
 <CreateProjectDialog bind:open={creating} oncreate={(input) => store.createProject(input)} />
 {#if boardProject && !boardProject.archived}
