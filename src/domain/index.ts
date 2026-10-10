@@ -17,6 +17,7 @@ export {
   editCard,
   emptyStatusCounts,
   InvalidCardTitleError,
+  moveCard,
   sortCards,
   touchProject,
   validateCardTitle,
