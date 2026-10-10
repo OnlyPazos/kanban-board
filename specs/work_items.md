@@ -93,12 +93,12 @@ interface Card {
 - Acceptance Checks: AC-003, AC-004
 - Depende de: [WI-AC-005]
 - Rama sugerida: feature/wi-ac-003-project-name-validation
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Validación de dominio reutilizable `validateProjectName(name)`: rechaza vacío o solo espacios (tras `trim`) y más de 80 caracteres.
   - Se aplica tanto al crear como al editar. El mensaje de error aparece junto al campo nombre; no se crea ni se modifica nada.
   - Tests unitarios de la función y e2e de crear y editar con nombre inválido.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-003 y AC-004 (commit 9d68c21). check 0 errores (1 warning conocido del design-system); build OK; test 37/37; test:e2e 8/8; e2e independiente de QA (puerto 4199): crear/editar con nombre vacío, solo espacios y 81 caracteres (maxlength retirado por DOM) → diálogo abierto, error bajo el campo con aria-invalid y aria-describedby, nada creado ni modificado en lista ni IndexedDB tras recargar; campo con maxlength=80; 80 caracteres sí se crea; sin errores de consola. Reglas base de stack OK]
 
 ## WI-AC-009
 - Contexto: tablero
