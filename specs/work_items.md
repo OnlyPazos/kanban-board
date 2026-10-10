@@ -239,7 +239,7 @@ interface Card {
 - Acceptance Checks: AC-028, AC-029
 - Depende de: [WI-AC-024]
 - Rama sugerida: feature/wi-ac-028-export
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Formato de export (contrato para todos los items de intercambio):
     ```json
@@ -250,7 +250,7 @@ interface Card {
   - Descarga mediante `Blob` + `<a download>`. Nombres sugeridos: `kanban-export-<fecha>.json` y `kanban-<nombre-proyecto>-<fecha>.json`.
   - "Exportar todo" desde la lista y "Exportar proyecto" desde el tablero.
   - Función pura `buildExport(...)` con test unitario.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-028 y AC-029 (commit 587efea). check 0 errores (1 warning conocido del design-system); build OK; test 157/157; test:e2e 34/34; e2e independiente de QA (puerto 4181): sin proyectos no hay "Exportar todo"; export completo `kanban-export-<fecha>.json` con formatVersion 1, kind "full", exportedAt ISO, solo las 5 claves del contrato, 3 proyectos (1 archivado) y 5 tarjetas (2 archivadas) idénticos a IndexedDB, sin preferencias; export de proyecto `kanban-Mi-app-v2-beta-<fecha>.json` (nombre "Mi app: v2/beta") con exactamente ese proyecto y sus tarjetas A (activa) y B (archivada); proyecto archivado exportable (C,D); con todo archivado "Exportar todo" sigue visible y exporta todo; exportar no modifica datos; 375px sin overflow; sin errores de consola ni peticiones de red. Decisiones del builder aceptadas: "Exportar todo" solo si hay algún proyecto (activo o archivado; la spec no lo exige con 0 y AC-001 fija el estado vacío), nombre de archivo saneado (Notas sugieren `kanban-<nombre-proyecto>-<fecha>.json`), `buildExport` copia solo campos del modelo (coherente con AC-043). Reglas base de stack OK]
 
 ## WI-AC-026
 - Contexto: archivo
