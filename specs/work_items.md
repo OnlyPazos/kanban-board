@@ -81,7 +81,7 @@ interface Card {
 - Acceptance Checks: AC-005, AC-006
 - Depende de: [WI-AC-002]
 - Rama sugerida: feature/wi-ac-005-edit-project
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Editar nombre y descripción de un proyecto desde la lista y desde la cabecera del tablero (el tablero existe a partir de WI-AC-009; en este item basta la lista, y WI-AC-009 debe mostrar el nombre actualizado).
   - Identidad por `id`, nunca por nombre: se permiten nombres duplicados.

@@ -33,4 +33,15 @@ describe('ProjectList', () => {
     expect(screen.getByRole('button', { name: 'Crear proyecto' })).toBeInTheDocument();
     expect(screen.queryByText('Todavía no tienes proyectos')).not.toBeInTheDocument();
   });
+
+  it('cada proyecto tiene "Editar" que avisa con ese proyecto aunque los nombres coincidan', async () => {
+    const onedit = vi.fn();
+    const a = createProject({ name: 'Duplicado' });
+    const b = createProject({ name: 'Duplicado' });
+    render(ProjectList, { projects: [a, b], onedit });
+    const buttons = screen.getAllByRole('button', { name: 'Editar Duplicado' });
+    expect(buttons).toHaveLength(2);
+    await fireEvent.click(buttons[1]);
+    expect(onedit).toHaveBeenCalledExactlyOnceWith(b);
+  });
 });
