@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import Board from './Board.svelte';
-import { CARD_STATUSES, createCard, createProject } from '../domain';
+import { CARD_STATUSES, createCard, createProject, type Card as CardData, type CardStatus, type Priority } from '../domain';
 
 describe('Board', () => {
   it('muestra exactamente 4 columnas en orden: Sin empezar, En curso, En pausa, Finalizado', () => {
@@ -127,5 +127,70 @@ describe('Board', () => {
         .map((h) => h.textContent);
     expect(titles('Sin empezar')).toEqual(['T3', 'T4', 'T1', 'T2']);
     expect(titles('En curso')).toEqual(['Otra']);
+  });
+  describe('arrastrar y soltar (WI-AC-015)', () => {
+    const project = createProject({ name: 'Mi app' });
+    const make = (title: string, status: CardStatus, priority: Priority, minute: number) => ({
+      ...createCard({ projectId: project.id, title, status }, new Date(Date.UTC(2026, 9, 10, 10, minute))),
+      priority,
+    });
+    const zone = (column: string) =>
+      within(screen.getByRole('region', { name: column })).getByRole('list', { name: column });
+    const titles = (column: string) =>
+      within(screen.getByRole('region', { name: column }))
+        .queryAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent);
+    const finalize = (column: string, items: CardData[], id: string) =>
+      fireEvent(
+        zone(column),
+        new CustomEvent('finalize', { detail: { items, info: { id, trigger: 'droppedIntoZone', source: 'pointer' } } }),
+      );
+
+    it('cada columna es una zona donde soltar, también vacía', () => {
+      render(Board, { project });
+      for (const column of ['Sin empezar', 'En curso', 'En pausa', 'Finalizado']) {
+        expect(zone(column)).toBeInTheDocument();
+      }
+    });
+
+    it('AC-015: al soltar en otra columna avisa con onmovecard y la coloca según el orden automático', async () => {
+      const onmovecard = vi.fn();
+      const alta = make('P-Alta', 'en-pausa', 'alta', 1);
+      const baja = make('P-Baja', 'en-pausa', 'baja', 2);
+      const mover = make('Mover', 'sin-empezar', 'media', 3);
+      render(Board, { project, cards: [alta, baja, mover], onmovecard });
+
+      await finalize('Sin empezar', [], mover.id);
+      await finalize('En pausa', [alta, baja, mover], mover.id);
+
+      expect(onmovecard).toHaveBeenCalledExactlyOnceWith(mover, 'en-pausa');
+      expect(titles('En pausa')).toEqual(['P-Alta', 'Mover', 'P-Baja']);
+      expect(titles('Sin empezar')).toEqual([]);
+    });
+
+    it('AC-016: al soltar en la misma columna no avisa y se re-aplica el orden automático', async () => {
+      const onmovecard = vi.fn();
+      const alta = make('T-Alta', 'sin-empezar', 'alta', 1);
+      const media = make('T-Media', 'sin-empezar', 'media', 2);
+      const baja = make('T-Baja', 'sin-empezar', 'baja', 3);
+      render(Board, { project, cards: [alta, media, baja], onmovecard });
+
+      await finalize('Sin empezar', [media, baja, alta], alta.id);
+
+      expect(onmovecard).not.toHaveBeenCalled();
+      expect(titles('Sin empezar')).toEqual(['T-Alta', 'T-Media', 'T-Baja']);
+    });
+
+    it('si guardar el movimiento falla, la tarjeta vuelve a su columna', async () => {
+      const mover = make('Mover', 'sin-empezar', null, 1);
+      render(Board, { project, cards: [mover], onmovecard: () => Promise.reject(new Error('QuotaExceededError')) });
+
+      await finalize('Sin empezar', [], mover.id);
+      await finalize('En pausa', [mover], mover.id);
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(titles('Sin empezar')).toEqual(['Mover']);
+      expect(titles('En pausa')).toEqual([]);
+    });
   });
 });

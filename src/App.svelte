@@ -67,7 +67,14 @@
 <main>
   {#if route.name === 'board'}
     {#if boardProject}
-      <Board project={boardProject} cards={store.cards} onedit={startEdit} onaddcard={startAddCard} oneditcard={startEditCard} />
+      <Board
+        project={boardProject}
+        cards={store.cards}
+        onedit={startEdit}
+        onaddcard={startAddCard}
+        oneditcard={startEditCard}
+        onmovecard={(card, status) => store.moveCard(card.id, status)}
+      />
     {:else if store.loaded}
       <section class="not-found">
         <h1 class="not-found__title">Proyecto no encontrado</h1>

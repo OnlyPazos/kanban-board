@@ -96,6 +96,14 @@ export function editCard(card: Card, edit: CardEdit, now: Date = new Date()): Ca
   };
 }
 
+/**
+ * Mueve la tarjeta a otra columna (AC-015): cambia solo `status` y
+ * `updatedAt`. No guarda ninguna posición: el orden lo da `sortCards`.
+ */
+export function moveCard(card: Card, status: CardStatus, now: Date = new Date()): Card {
+  return { ...card, status, updatedAt: now.toISOString() };
+}
+
 /** Rango de cada prioridad en el orden automático (D-005): alta, media, baja y sin prioridad. */
 const PRIORITY_RANK: Record<NonNullable<Priority> | 'none', number> = { alta: 0, media: 1, baja: 2, none: 3 };
 

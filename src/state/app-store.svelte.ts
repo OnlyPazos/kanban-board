@@ -7,6 +7,7 @@ import {
   createProject,
   editCard,
   editProject,
+  moveCard,
   sortProjects,
   touchProject,
   type Card,
@@ -104,5 +105,25 @@ export class AppStore {
     this.cards = this.cards.map((c) => (c.id === id ? updated : c));
     this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
     return updated;
+  }
+  /**
+   * Mueve la tarjeta con ese `id` a la columna `status` (arrastrar y soltar,
+   * AC-015/AC-017): la guarda junto con el `updatedAt` del proyecto y, una vez
+   * guardada, la muestra en su nueva columna. Si el estado no cambia (soltar
+   * en la misma columna, AC-016) no hay nada que guardar.
+   */
+  async moveCard(id: string, status: CardStatus): Promise<Card> {
+    const current = this.cards.find((c) => c.id === id);
+    if (!current) throw new Error(`Tarjeta no encontrada: ${id}`);
+    if (current.status === status) return current;
+    const project = this.projects.find((p) => p.id === current.projectId);
+    if (!project) throw new Error(`Proyecto no encontrado: ${current.projectId}`);
+    const now = new Date();
+    const moved = moveCard(current, status, now);
+    const touched = touchProject(project, now);
+    await this.#repository.saveCard(moved, touched);
+    this.cards = this.cards.map((c) => (c.id === id ? moved : c));
+    this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
+    return moved;
   }
 }

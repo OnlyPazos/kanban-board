@@ -5,6 +5,7 @@ import {
   editCard,
   countCardsByProject,
   InvalidCardTitleError,
+  moveCard,
   sortCards,
   touchProject,
   validateCardTitle,
@@ -106,6 +107,18 @@ describe('editCard', () => {
     const card = base();
     expect(() => editCard(card, { ...card, title }, later)).toThrow(InvalidCardTitleError);
     expect(card).toEqual(base());
+  });
+});
+
+describe('moveCard', () => {
+  it('cambia solo el estado y updatedAt; conserva el resto de campos', () => {
+    const card = createCard(
+      { projectId: 'p1', title: 'Login', status: 'sin-empezar' },
+      new Date('2026-10-10T10:00:00.000Z'),
+    );
+    const moved = moveCard(card, 'en-pausa', new Date('2026-10-10T11:00:00.000Z'));
+    expect(moved).toEqual({ ...card, status: 'en-pausa', updatedAt: '2026-10-10T11:00:00.000Z' });
+    expect(card.status).toBe('sin-empezar');
   });
 });
 

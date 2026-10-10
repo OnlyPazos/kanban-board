@@ -253,6 +253,58 @@ describe('AppStore', () => {
     expect(reloaded.projects[0].updatedAt).toBe(updated.updatedAt);
   });
 
+  it('mover una tarjeta cambia solo su estado, lo persiste y actualiza el updatedAt del proyecto (AC-015)', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const project = await store.createProject({ name: 'Mi app' });
+    const card = await store.createCard(project.id, 'Login', 'sin-empezar');
+    await new Promise((r) => setTimeout(r, 2));
+
+    const moved = await store.moveCard(card.id, 'en-pausa');
+    expect(moved).toEqual({ ...card, status: 'en-pausa', updatedAt: moved.updatedAt });
+    expect(moved.updatedAt > card.updatedAt).toBe(true);
+    expect(store.cards).toEqual([moved]);
+    expect(store.projects[0].updatedAt).toBe(moved.updatedAt);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.cards).toEqual([moved]);
+  });
+
+  it('mover una tarjeta a su misma columna no cambia ni guarda nada (AC-016)', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+    const saveCard = vi.fn(async () => {});
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listCards: async () => [card],
+      saveCard,
+    });
+    await store.hydrate();
+    await expect(store.moveCard(card.id, 'en-curso')).resolves.toEqual(card);
+    expect(saveCard).not.toHaveBeenCalled();
+    expect(store.cards).toEqual([card]);
+  });
+
+  it('si el guardado del movimiento falla, la tarjeta sigue en su columna', async () => {
+    const project = createProject({ name: 'Mi app' });
+    const card = createCard({ projectId: project.id, title: 'Login', status: 'sin-empezar' });
+    const store = new AppStore({
+      listProjects: async () => [project],
+      saveProject: async () => {},
+      listCards: async () => [card],
+      saveCard: async () => {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    await store.hydrate();
+    await expect(store.moveCard(card.id, 'en-pausa')).rejects.toThrow('QuotaExceededError');
+    expect(store.cards).toEqual([card]);
+    expect(store.projects).toEqual([project]);
+  });
+
   it('si el guardado de la edición de una tarjeta falla, se conservan los valores anteriores', async () => {
     const project = createProject({ name: 'Mi app' });
     const card = createCard({ projectId: project.id, title: 'Login', status: 'sin-empezar' });
