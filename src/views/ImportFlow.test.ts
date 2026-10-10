@@ -159,3 +159,48 @@ describe('ImportFlow: export de proyecto (WI-AC-031)', () => {
     await screen.findByRole('dialog', { name: 'No se pudo importar el archivo' });
   });
 });
+
+describe('ImportFlow: archivo no válido (WI-AC-033, AC-033)', () => {
+  const errorName = 'No se pudo importar el archivo';
+  const full = () => buildExport(source, { kind: 'full' });
+
+  it.each([
+    ['JSON no válido', '{no es json', 'El archivo no es un JSON válido.'],
+    ['versión desconocida', JSON.stringify({ ...full(), formatVersion: 2 }), 'El archivo tiene una versión de formato desconocida.'],
+    [
+      'tarjeta sin título',
+      JSON.stringify({ ...full(), cards: full().cards.map((c) => ({ ...c, title: '' })) }),
+      'La estructura del archivo no es válida: la tarjeta 1 no tiene título.',
+    ],
+    [
+      'tarjeta con estado inexistente',
+      JSON.stringify({ ...full(), cards: full().cards.map((c) => ({ ...c, status: 'bloqueada' })) }),
+      'La estructura del archivo no es válida: la tarjeta 1 tiene un estado inexistente.',
+    ],
+  ])('%s: muestra el motivo y no avisa de ningún cambio', async (_, content, message) => {
+    const onreplaceall = vi.fn();
+    const onimportproject = vi.fn();
+    render(ImportFlow, { projectCount: 1, projectIds: [], onreplaceall, onimportproject });
+    await chooseFile(content);
+
+    const dialog = await screen.findByRole('dialog', { name: errorName });
+    expect(dialog).toHaveTextContent(message);
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Aceptar' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(onreplaceall).not.toHaveBeenCalled();
+    expect(onimportproject).not.toHaveBeenCalled();
+  });
+
+  it('export de proyecto con 2 proyectos: muestra el motivo y no importa', async () => {
+    const onimportproject = vi.fn();
+    render(ImportFlow, { projectIds: [], onimportproject });
+    const file = buildExport(source, { kind: 'project', projectId: project.id });
+    await chooseFile(JSON.stringify({ ...file, projects: source.projects }));
+
+    const dialog = await screen.findByRole('dialog', { name: errorName });
+    expect(dialog).toHaveTextContent(
+      'La estructura del archivo no es válida: un export de proyecto debe contener exactamente un proyecto.',
+    );
+    expect(onimportproject).not.toHaveBeenCalled();
+  });
+});

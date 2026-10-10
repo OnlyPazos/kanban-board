@@ -38,6 +38,7 @@ export {
   copyImportedProject,
   EXPORT_FORMAT_VERSION,
   exportFileName,
+  importFailureMessage,
   parseImport,
   type ExportFile,
   type ExportKind,

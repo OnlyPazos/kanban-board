@@ -8,6 +8,7 @@ import {
   createProject,
   EXPORT_FORMAT_VERSION,
   exportFileName,
+  importFailureMessage,
   parseImport,
 } from './index';
 
@@ -158,5 +159,86 @@ describe('copyImportedProject ("Importar como copia", AC-032)', () => {
     expect(result.cards[0]!.id).not.toBe('c-1');
     expect(result.cards[0]!.projectId).toBe(result.project.id);
     expect({ archived, card }).toEqual(before);
+  });
+});
+
+describe('parseImport: validación completa (WI-AC-033, AC-033)', () => {
+  const full = () => buildExport(sample(), { kind: 'full' }, now);
+  type Tamper = (file: ReturnType<typeof full>) => unknown;
+  const withCard =
+    (patch: Record<string, unknown>): Tamper =>
+    (f) => ({ ...f, cards: f.cards.map((c, i) => (i === 1 ? { ...c, ...patch } : c)) });
+  const withProject =
+    (patch: Record<string, unknown>): Tamper =>
+    (f) => ({ ...f, projects: f.projects.map((p, i) => (i === 0 ? { ...p, ...patch } : p)) });
+  // JSON.stringify omite las claves con valor undefined: equivale a no tener el campo.
+  const without = (key: string): Record<string, unknown> => ({ [key]: undefined });
+
+  const invalid: [string, Tamper, string][] = [
+    ['tarjeta sin título', withCard(without('title')), 'la tarjeta 2 no tiene título'],
+    ['tarjeta con título vacío', withCard({ title: '   ' }), 'la tarjeta 2 no tiene título'],
+    ['tarjeta con título > 120', withCard({ title: 'x'.repeat(121) }), 'la tarjeta 2 tiene un título de más de 120 caracteres'],
+    ['tarjeta con estado inexistente', withCard({ status: 'bloqueada' }), 'la tarjeta 2 tiene un estado inexistente'],
+    ['tarjeta con tipo inexistente', withCard({ type: 'epic' }), 'la tarjeta 2 tiene un tipo inexistente'],
+    ['tarjeta con prioridad inexistente', withCard({ priority: 'urgente' }), 'la tarjeta 2 tiene una prioridad inexistente'],
+    ['tarjeta sin el campo prioridad', withCard(without('priority')), 'la tarjeta 2 tiene una prioridad inexistente'],
+    [
+      'tarjeta de un proyecto que no está',
+      withCard({ projectId: 'p-desconocido' }),
+      'la tarjeta 2 pertenece a un proyecto que no está en el archivo',
+    ],
+    ['tarjeta sin id', withCard({ id: '' }), 'la tarjeta 2 sin identificador'],
+    ['tarjeta con fecha no válida', withCard({ createdAt: 'ayer' }), 'la tarjeta 2 con una fecha de creación no válida'],
+    ['tarjeta con archived no booleano', withCard({ archived: 'no' }), 'la tarjeta 2 con un estado de archivado no válido'],
+    ['tarjeta sin descripción', withCard(without('description')), 'la tarjeta 2 con una descripción no válida'],
+    ['proyecto sin nombre', withProject(without('name')), 'el proyecto 1 no tiene nombre'],
+    ['proyecto con nombre solo espacios', withProject({ name: '  ' }), 'el proyecto 1 no tiene nombre'],
+    ['proyecto con nombre > 80', withProject({ name: 'x'.repeat(81) }), 'el proyecto 1 tiene un nombre de más de 80 caracteres'],
+    ['proyecto con fecha no válida', withProject({ updatedAt: 5 }), 'el proyecto 1 con una fecha de modificación no válida'],
+    [
+      'ids de proyecto repetidos',
+      (f) => ({ ...f, projects: [...f.projects, f.projects[0]] }),
+      'hay proyectos con el mismo identificador',
+    ],
+    ['ids de tarjeta repetidos', (f) => ({ ...f, cards: [...f.cards, f.cards[0]] }), 'hay tarjetas con el mismo identificador'],
+  ];
+
+  it.each(invalid)('%s → invalid-structure con detalle', (_, tamper, detail) => {
+    expect(parseImport(JSON.stringify(tamper(full())))).toEqual({ ok: false, reason: 'invalid-structure', detail });
+  });
+
+  it('export de proyecto con 0 o 2 proyectos → invalid-structure', () => {
+    const file = buildExport(sample(), { kind: 'project', projectId: 'p-active' }, now);
+    const detail = 'un export de proyecto debe contener exactamente un proyecto';
+    for (const projects of [[], [...file.projects, createProject({ name: 'Otra' }, now, 'p-x')]]) {
+      expect(parseImport(JSON.stringify({ ...file, projects }))).toEqual({ ok: false, reason: 'invalid-structure', detail });
+    }
+  });
+
+  it('acepta los valores límite válidos: 80 y 120 caracteres, todas las prioridades y null', () => {
+    const file = full();
+    const priorities = ['alta', 'media', 'baja', null] as const;
+    const tampered = {
+      ...file,
+      projects: file.projects.map((p, i) => (i === 0 ? { ...p, name: 'n'.repeat(80) } : p)),
+      cards: file.cards.map((c, i) => ({ ...c, title: 't'.repeat(120), priority: priorities[i % 4]! })),
+    };
+    expect(parseImport(JSON.stringify(tampered))).toEqual({ ok: true, data: tampered });
+  });
+
+  it('acepta un export completo vacío (sin proyectos ni tarjetas)', () => {
+    const file = buildExport({ projects: [], cards: [] }, { kind: 'full' }, now);
+    expect(parseImport(JSON.stringify(file))).toEqual({ ok: true, data: file });
+  });
+});
+
+describe('importFailureMessage (AC-033)', () => {
+  it('indica en español cuál de los motivos aplica', () => {
+    expect(importFailureMessage('invalid-json')).toBe('El archivo no es un JSON válido.');
+    expect(importFailureMessage('unknown-version')).toBe('El archivo tiene una versión de formato desconocida.');
+    expect(importFailureMessage('invalid-structure', 'la tarjeta 2 no tiene título')).toBe(
+      'La estructura del archivo no es válida: la tarjeta 2 no tiene título.',
+    );
+    expect(importFailureMessage('invalid-structure')).toBe('La estructura del archivo no es válida.');
   });
 });
