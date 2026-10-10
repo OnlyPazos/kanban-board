@@ -189,7 +189,7 @@ interface Card {
 - Acceptance Checks: AC-018, AC-019, AC-039
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-018-type-filter
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Filtro de selección múltiple por tipo (D-012). Un conjunto vacío equivale a no filtrar y se ven todas las tarjetas.
   - Un `Chip` por tipo, con el `tone` de `CARD_TYPE_TONE` y `bind:selected`, agrupados en un contenedor con `role="group"` y nombre accesible "Filtrar por tipo".

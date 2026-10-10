@@ -11,6 +11,7 @@ import {
   sortProjects,
   touchProject,
   type Card,
+  type CardType,
   type CardEdit,
   type CardStatus,
   type NewProjectInput,
@@ -28,6 +29,8 @@ export class AppStore {
   projects = $state<Project[]>([]);
   cards = $state<Card[]>([]);
   loaded = $state(false);
+  /** Filtro por tipo de cada proyecto, por `projectId` (AC-019). Sin entrada → sin filtro. */
+  typeFilters = $state<Record<string, CardType[]>>({});
 
   readonly #repository: Repository;
 
@@ -36,10 +39,13 @@ export class AppStore {
   }
 
   async hydrate(): Promise<void> {
-    const [stored, storedCards] = await Promise.all([
+    const [stored, storedCards, storedFilters] = await Promise.all([
       this.#repository.listProjects(),
       this.#repository.listCards(),
+      this.#repository.listTypeFilters(),
     ]);
+    // Lo elegido en memoria mientras se cargaba manda sobre lo guardado.
+    this.typeFilters = { ...storedFilters, ...this.typeFilters };
     // Conserva lo creado en memoria mientras se cargaba.
     const storedIds = new Set(stored.map((p) => p.id));
     const pending = this.projects.filter((p) => !storedIds.has(p.id));
@@ -125,5 +131,21 @@ export class AppStore {
     this.cards = this.cards.map((c) => (c.id === id ? moved : c));
     this.projects = sortProjects(this.projects.map((p) => (p.id === project.id ? touched : p)));
     return moved;
+  }
+
+  /** Tipos seleccionados en el filtro del proyecto; `[]` → sin filtro (D-012). */
+  typeFilterOf(projectId: string): CardType[] {
+    return this.typeFilters[projectId] ?? [];
+  }
+
+  /**
+   * Cambia el filtro por tipo del proyecto y lo persiste (store `prefs`,
+   * clave `filter:<projectId>`). Es una preferencia de vista: se aplica al
+   * momento y se guarda a continuación.
+   */
+  async setTypeFilter(projectId: string, types: CardType[]): Promise<void> {
+    const selection = [...types];
+    this.typeFilters = { ...this.typeFilters, [projectId]: selection };
+    await this.#repository.saveTypeFilter(projectId, selection);
   }
 }

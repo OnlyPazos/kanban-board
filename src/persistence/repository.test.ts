@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createCard, createProject } from '../domain';
 import { openKanbanDB } from './db';
-import { createIdbRepository } from './repository';
+import { createIdbRepository, typeFilterKey } from './repository';
 
 let counter = 0;
 const freshName = () => `kanban-board-test-${++counter}-${crypto.randomUUID()}`;
@@ -53,5 +53,34 @@ describe('createIdbRepository · tarjetas', () => {
     const reloaded = createIdbRepository(name);
     expect(await reloaded.listCards()).toEqual([card]);
     expect(await reloaded.listProjects()).toEqual([touched]);
+  });
+});
+
+describe('createIdbRepository · filtro por tipo', () => {
+  it('guarda el filtro por proyecto en prefs (clave filter:<projectId>) y se lee desde otra instancia', async () => {
+    const name = freshName();
+    const repo = createIdbRepository(name);
+    expect(await repo.listTypeFilters()).toEqual({});
+
+    await repo.saveTypeFilter('proyecto-a', ['arreglo', 'tecnico']);
+    await repo.saveTypeFilter('proyecto-b', []);
+
+    const reloaded = createIdbRepository(name);
+    expect(await reloaded.listTypeFilters()).toEqual({ 'proyecto-a': ['arreglo', 'tecnico'], 'proyecto-b': [] });
+
+    const db = await openKanbanDB(name);
+    expect(await db.get('prefs', typeFilterKey('proyecto-a'))).toEqual(['arreglo', 'tecnico']);
+    expect(typeFilterKey('proyecto-a')).toBe('filter:proyecto-a');
+    db.close();
+  });
+
+  it('ignora valores guardados no válidos', async () => {
+    const name = freshName();
+    const db = await openKanbanDB(name);
+    await db.put('prefs', ['arreglo', 'desconocido'], 'filter:x');
+    await db.put('prefs', 'basura', 'filter:y');
+    await db.put('prefs', ['arreglo'], 'otra-pref');
+    db.close();
+    expect(await createIdbRepository(name).listTypeFilters()).toEqual({ x: ['arreglo'], y: [] });
   });
 });
