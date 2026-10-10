@@ -176,7 +176,7 @@ interface Card {
 - Acceptance Checks: AC-015, AC-016, AC-017
 - Depende de: [WI-AC-014]
 - Rama sugerida: feature/wi-ac-015-drag-and-drop
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - `svelte-dnd-action` entre columnas. Al soltar en otra columna se cambia `status` y se persiste. Al soltar en la misma columna se descarta el orden visual y se re-aplica `sortCards`.
   - Operable con teclado (soporte nativo de `svelte-dnd-action`) y táctil.
