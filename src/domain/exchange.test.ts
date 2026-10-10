@@ -4,12 +4,14 @@ import {
   archiveProject,
   buildExport,
   copyImportedProject,
+  copyName,
   createCard,
   createProject,
   EXPORT_FORMAT_VERSION,
   exportFileName,
   importFailureMessage,
   parseImport,
+  validateProjectName,
 } from './index';
 
 const now = new Date('2026-10-10T10:00:00.000Z');
@@ -159,6 +161,38 @@ describe('copyImportedProject ("Importar como copia", AC-032)', () => {
     expect(result.cards[0]!.id).not.toBe('c-1');
     expect(result.cards[0]!.projectId).toBe(result.project.id);
     expect({ archived, card }).toEqual(before);
+  });
+});
+
+describe('copyName (D-013, AC-040)', () => {
+  it('nombre de 78 caracteres → sus primeros 72 + " (copia)", 80 en total', () => {
+    const name = 'a'.repeat(70) + 'bcdefghi';
+    expect(name).toHaveLength(78);
+    const result = copyName(name);
+    expect(result).toBe(name.slice(0, 72) + ' (copia)');
+    expect(result).toHaveLength(80);
+    expect(result.endsWith(' (copia)')).toBe(true);
+    expect(validateProjectName(result)).toBeNull();
+  });
+
+  it('nombre de 72 caracteres → sin recorte (justo 80)', () => {
+    const name = 'n'.repeat(72);
+    expect(copyName(name)).toBe(`${name} (copia)`);
+    expect(copyName(name)).toHaveLength(80);
+  });
+
+  it('nombres cortos y de 80 caracteres', () => {
+    expect(copyName('Mi app')).toBe('Mi app (copia)');
+    const max = 'x'.repeat(80);
+    expect(copyName(max)).toBe('x'.repeat(72) + ' (copia)');
+    expect(validateProjectName(copyName(max))).toBeNull();
+  });
+
+  it('copyImportedProject usa copyName con nombres largos', () => {
+    const project = createProject({ name: 'L'.repeat(78) }, now, 'p-long');
+    const result = copyImportedProject(project, [], () => 'nuevo');
+    expect(result.project.name).toBe('L'.repeat(72) + ' (copia)');
+    expect(validateProjectName(result.project.name)).toBeNull();
   });
 });
 

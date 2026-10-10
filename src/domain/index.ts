@@ -36,6 +36,7 @@ export {
   buildExport,
   COPY_SUFFIX,
   copyImportedProject,
+  copyName,
   EXPORT_FORMAT_VERSION,
   exportFileName,
   importFailureMessage,
