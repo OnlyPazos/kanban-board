@@ -14,10 +14,16 @@
   Al soltar en otra columna avisa con `onmovecard` (la app cambia `status` y
   lo persiste); al soltar en la misma se descarta el orden visual y se
   re-aplica `sortCards`. El componente `Card` refleja el arrastre con `dragging`.
+
+  Filtro por tipo (WI-AC-018, D-012): un `Chip` por tipo (tono de
+  `CARD_TYPE_TONE`) en un grupo "Filtrar por tipo", de selección múltiple.
+  Solo se ven las tarjetas de los tipos seleccionados; sin ninguno, se ven
+  todas. La selección llega en `typeFilter` y cada cambio se avisa con
+  `ontypefilterchange` (la app la recuerda por proyecto).
 -->
 <script lang="ts">
   import { tick } from 'svelte';
-  import { Badge, Button, Card } from 'design-system';
+  import { Badge, Button, Card, Chip } from 'design-system';
   import {
     dndzone,
     DRAGGED_ELEMENT_ID,
@@ -29,11 +35,15 @@
     CARD_STATUSES,
     CARD_TYPE_LABELS,
     CARD_TYPE_TONE,
+    CARD_TYPES,
+    matchesTypeFilter,
     PRIORITY_LABELS,
     PRIORITY_TONE,
     sortCards,
+    toggleTypeFilter,
     type Card as CardData,
     type CardStatus,
+    type CardType,
     type Project,
   } from '../domain';
   import { LIST_HREF } from '../lib/route';
@@ -46,6 +56,8 @@
     onaddcard,
     oneditcard,
     onmovecard,
+    typeFilter = [],
+    ontypefilterchange,
   }: {
     project: Project;
     /** Tarjetas del proyecto. */
@@ -55,7 +67,17 @@
     oneditcard?: (card: CardData) => void;
     /** Al soltar una tarjeta en otra columna. Si la promesa falla, el tablero vuelve a los datos. */
     onmovecard?: (card: CardData, status: CardStatus) => unknown;
+    /** Tipos seleccionados en el filtro; vacío → se ven todas las tarjetas. */
+    typeFilter?: CardType[];
+    /** Al cambiar la selección del filtro por tipo. */
+    ontypefilterchange?: (types: CardType[]) => unknown;
   } = $props();
+
+  function setTypeSelected(type: CardType, selected: boolean) {
+    Promise.resolve(ontypefilterchange?.(toggleTypeFilter(typeFilter, type, selected))).catch((error: unknown) => {
+      console.error('No se pudo guardar el filtro por tipo', error);
+    });
+  }
 
   /** Tarjeta tal como la maneja `svelte-dnd-action` (el hueco del arrastre lleva la marca). */
   type DndCard = CardData & { [SHADOW_ITEM_MARKER_PROPERTY_NAME]?: boolean };
@@ -71,7 +93,9 @@
       CardData[]
     >;
     for (const card of cards) {
-      if (card.projectId === project.id && !card.archived) groups[card.status].push(card);
+      if (card.projectId === project.id && !card.archived && matchesTypeFilter(card, typeFilter)) {
+        groups[card.status].push(card);
+      }
     }
     for (const status of CARD_STATUSES) groups[status] = sortCards(groups[status]);
     return groups;
@@ -121,6 +145,16 @@
     <div class="board__title-row">
       <h1 class="board__title">{project.name}</h1>
       <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
+    </div>
+    <div class="board__filter" role="group" aria-label="Filtrar por tipo">
+      {#each CARD_TYPES as type (type)}
+        <Chip
+          tone={CARD_TYPE_TONE[type]}
+          bind:selected={() => typeFilter.includes(type), (selected) => setTypeSelected(type, selected)}
+        >
+          {CARD_TYPE_LABELS[type]}
+        </Chip>
+      {/each}
     </div>
   </div>
 
@@ -209,6 +243,12 @@
     font-weight: var(--ds-font-heading-weight);
     line-height: var(--ds-font-heading-line-height);
     letter-spacing: var(--ds-font-heading-letter-spacing);
+  }
+
+  .board__filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-spacing-2);
   }
 
   .board__columns {

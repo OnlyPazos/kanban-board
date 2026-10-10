@@ -25,3 +25,4 @@ export {
   type NewCardInput,
   type StatusCounts,
 } from './card';
+export { matchesTypeFilter, normalizeTypeFilter, toggleTypeFilter } from './filter';

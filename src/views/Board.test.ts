@@ -193,4 +193,67 @@ describe('Board', () => {
       expect(titles('En pausa')).toEqual([]);
     });
   });
+
+  describe('filtro por tipo', () => {
+    function fourTypes() {
+      const project = createProject({ name: 'Mi app' });
+      const cards = (['novedad', 'mejora', 'arreglo', 'tecnico'] as const).map((type) => ({
+        ...createCard({ projectId: project.id, title: `T-${type}`, status: 'sin-empezar' }),
+        type,
+      }));
+      return { project, cards };
+    }
+
+    const visibleTitles = () =>
+      screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent?.trim());
+
+    it('muestra un Chip por tipo dentro del grupo "Filtrar por tipo", sin seleccionar', () => {
+      const { project, cards } = fourTypes();
+      render(Board, { project, cards });
+      const group = screen.getByRole('group', { name: 'Filtrar por tipo' });
+      const chips = within(group).getAllByRole('button');
+      expect(chips.map((c) => c.textContent?.replace('✓', '').trim())).toEqual([
+        'Novedad',
+        'Mejora',
+        'Arreglo',
+        'Técnico',
+      ]);
+      for (const chip of chips) expect(chip).toHaveAttribute('aria-pressed', 'false');
+      expect(visibleTitles()).toHaveLength(4);
+    });
+
+    it('con "Arreglo" seleccionado solo se ven las tarjetas de tipo Arreglo (AC-018)', () => {
+      const { project, cards } = fourTypes();
+      render(Board, { project, cards, typeFilter: ['arreglo'] });
+      const group = screen.getByRole('group', { name: 'Filtrar por tipo' });
+      expect(within(group).getByRole('button', { name: /Arreglo/ })).toHaveAttribute('aria-pressed', 'true');
+      expect(visibleTitles()).toEqual(['T-arreglo']);
+    });
+
+    it('con "Arreglo" y "Técnico" solo se ven esos dos tipos (AC-039)', () => {
+      const { project, cards } = fourTypes();
+      render(Board, { project, cards, typeFilter: ['arreglo', 'tecnico'] });
+      expect(visibleTitles().sort()).toEqual(['T-arreglo', 'T-tecnico']);
+    });
+
+    it('pulsar un Chip avisa con la nueva selección y al quitarla vuelven todas', async () => {
+      const { project, cards } = fourTypes();
+      const ontypefilterchange = vi.fn();
+      const { rerender } = render(Board, { project, cards, ontypefilterchange });
+      const group = screen.getByRole('group', { name: 'Filtrar por tipo' });
+
+      await fireEvent.click(within(group).getByRole('button', { name: /Técnico/ }));
+      expect(ontypefilterchange).toHaveBeenLastCalledWith(['tecnico']);
+      await rerender({ typeFilter: ['tecnico'] });
+      await fireEvent.click(within(group).getByRole('button', { name: /Arreglo/ }));
+      expect(ontypefilterchange).toHaveBeenLastCalledWith(['arreglo', 'tecnico']);
+      await rerender({ typeFilter: ['arreglo', 'tecnico'] });
+      expect(visibleTitles().sort()).toEqual(['T-arreglo', 'T-tecnico']);
+
+      await fireEvent.click(within(group).getByRole('button', { name: /Arreglo/ }));
+      expect(ontypefilterchange).toHaveBeenLastCalledWith(['tecnico']);
+      await rerender({ typeFilter: [] });
+      expect(visibleTitles()).toHaveLength(4);
+    });
+  });
 });

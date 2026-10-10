@@ -74,6 +74,8 @@
         onaddcard={startAddCard}
         oneditcard={startEditCard}
         onmovecard={(card, status) => store.moveCard(card.id, status)}
+        typeFilter={store.typeFilterOf(boardProject.id)}
+        ontypefilterchange={(types) => store.setTypeFilter(boardProject.id, types)}
       />
     {:else if store.loaded}
       <section class="not-found">

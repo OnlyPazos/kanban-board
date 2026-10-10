@@ -3,7 +3,7 @@
  * store trabajan contra la interfaz `Repository`, nunca contra `idb`.
  */
 import type { IDBPDatabase } from 'idb';
-import type { Card, Project } from '../domain';
+import { normalizeTypeFilter, type Card, type CardType, type Project } from '../domain';
 import { openKanbanDB, type KanbanDB } from './db';
 
 export interface Repository {
@@ -12,6 +12,16 @@ export interface Repository {
   listCards(): Promise<Card[]>;
   /** Guarda la tarjeta y su proyecto (con `updatedAt` ya actualizado) en una sola transacción. */
   saveCard(card: Card, project: Project): Promise<void>;
+  /** Filtros por tipo guardados, por `projectId` (store `prefs`, clave `filter:<projectId>`). */
+  listTypeFilters(): Promise<Record<string, CardType[]>>;
+  saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
+}
+
+const TYPE_FILTER_PREFIX = 'filter:';
+
+/** Clave en el store `prefs` del filtro por tipo de un proyecto. */
+export function typeFilterKey(projectId: string): string {
+  return `${TYPE_FILTER_PREFIX}${projectId}`;
 }
 
 export function createIdbRepository(dbName?: string): Repository {
@@ -36,6 +46,20 @@ export function createIdbRepository(dbName?: string): Repository {
         tx.objectStore('projects').put({ ...project }),
         tx.done,
       ]);
+    },
+    async listTypeFilters() {
+      const tx = (await db()).transaction('prefs');
+      const filters: Record<string, CardType[]> = {};
+      for await (const cursor of tx.store) {
+        const key = String(cursor.key);
+        if (key.startsWith(TYPE_FILTER_PREFIX)) {
+          filters[key.slice(TYPE_FILTER_PREFIX.length)] = normalizeTypeFilter(cursor.value);
+        }
+      }
+      return filters;
+    },
+    async saveTypeFilter(projectId, types) {
+      await (await db()).put('prefs', [...types], typeFilterKey(projectId));
     },
   };
 }

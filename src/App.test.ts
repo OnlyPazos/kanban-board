@@ -1,13 +1,18 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import App from './App.svelte';
-import { createProject, type Card, type Project } from './domain';
+import { createProject, type Card, type CardType, type Project } from './domain';
 import type { Repository } from './persistence/repository';
 
 function memoryRepository(initial: Project[] = []): Repository {
   const projects = new Map(initial.map((p) => [p.id, p]));
   const cards = new Map<string, Card>();
+  const typeFilters = new Map<string, CardType[]>();
   return {
+    listTypeFilters: async () => Object.fromEntries(typeFilters),
+    saveTypeFilter: async (projectId, types) => {
+      typeFilters.set(projectId, [...types]);
+    },
     listCards: async () => [...cards.values()],
     saveCard: async (card, project) => {
       cards.set(card.id, { ...card });

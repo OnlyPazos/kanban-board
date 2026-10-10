@@ -25,6 +25,8 @@ describe('AppStore', () => {
   it('si el guardado falla, el proyecto no aparece como creado', async () => {
     const store = new AppStore({
       listProjects: async () => [],
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
       listCards: async () => [],
       saveCard: async () => {},
       saveProject: async () => {
@@ -74,6 +76,8 @@ describe('AppStore', () => {
     const created = createProject({ name: 'Mi app' });
     const store = new AppStore({
       listProjects: async () => [created],
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
       listCards: async () => [],
       saveCard: async () => {},
       saveProject: async () => {
@@ -206,6 +210,8 @@ describe('AppStore', () => {
     const store = new AppStore({
       listProjects: async () => [project],
       saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
       listCards: async () => [],
       saveCard: async () => {
         throw new Error('QuotaExceededError');
@@ -279,6 +285,8 @@ describe('AppStore', () => {
     const store = new AppStore({
       listProjects: async () => [project],
       saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
       listCards: async () => [card],
       saveCard,
     });
@@ -294,6 +302,8 @@ describe('AppStore', () => {
     const store = new AppStore({
       listProjects: async () => [project],
       saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
       listCards: async () => [card],
       saveCard: async () => {
         throw new Error('QuotaExceededError');
@@ -311,6 +321,8 @@ describe('AppStore', () => {
     const store = new AppStore({
       listProjects: async () => [project],
       saveProject: async () => {},
+      listTypeFilters: async () => ({}),
+      saveTypeFilter: async () => {},
       listCards: async () => [card],
       saveCard: async () => {
         throw new Error('QuotaExceededError');
@@ -320,5 +332,27 @@ describe('AppStore', () => {
     await expect(store.updateCard(card.id, { ...card, title: 'Otro' })).rejects.toThrow('QuotaExceededError');
     expect(store.cards).toEqual([card]);
     expect(store.projects).toEqual([project]);
+  });
+
+  it('el filtro por tipo se recuerda por proyecto tras recargar (AC-019, AC-039)', async () => {
+    const dbName = freshName();
+    const store = new AppStore(createIdbRepository(dbName));
+    await store.hydrate();
+    const a = await store.createProject({ name: 'A' });
+    const b = await store.createProject({ name: 'B' });
+    expect(store.typeFilterOf(a.id)).toEqual([]);
+
+    await store.setTypeFilter(a.id, ['arreglo', 'tecnico']);
+    expect(store.typeFilterOf(a.id)).toEqual(['arreglo', 'tecnico']);
+
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.typeFilterOf(a.id)).toEqual(['arreglo', 'tecnico']);
+    expect(reloaded.typeFilterOf(b.id)).toEqual([]);
+
+    await reloaded.setTypeFilter(a.id, []);
+    const again = new AppStore(createIdbRepository(dbName));
+    await again.hydrate();
+    expect(again.typeFilterOf(a.id)).toEqual([]);
   });
 });
