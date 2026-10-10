@@ -358,12 +358,12 @@ interface Card {
 - Acceptance Checks: AC-040
 - Depende de: [WI-AC-031, WI-AC-003]
 - Rama sugerida: feature/wi-ac-040-copy-name-truncation
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Función pura de dominio `copyName(name)` (D-013): si `name + " (copia)"` cabe en 80 caracteres, lo devuelve; si no, devuelve `name.slice(0, 80 - " (copia)".length) + " (copia)"`. El nombre ya viene validado, sin espacios exteriores.
   - "Importar como copia" de WI-AC-031 usa `copyName`. El resultado debe pasar `validateProjectName`, para que el proyecto copiado se pueda editar y guardar sin cambiar el nombre.
   - Tests unitarios: nombre de 78 caracteres → primeros 72 + " (copia)", 80 en total; nombre de 72 caracteres → sin recorte. Test e2e de importar como copia con un nombre largo y después guardar la edición del proyecto sin tocar el nombre.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-040 (commit c72373b). check 0 errores (1 warning conocido del design-system); test 232/232; test:e2e 48/48 (build incluido; AC-017 de teclado pasó). Verificación independiente (vite preview en el puerto 4417, script fuera del repo) con exports reales e "Importar como copia": 78 caracteres → primeros 72 + " (copia)" (80); 72 → sin recorte (80); 73 y 80 → 72 + " (copia)"; nombre cuyo recorte deja un espacio final (71 "a" + " " + 6 "b") → "…a  (copia)" (doble espacio interno, sin espacios exteriores), pasa validateProjectName; en todos los casos sin alerta ni diálogo de error, la copia aparece en la lista, el diálogo de edición trae el nombre exacto y "Guardar cambios" sin tocar el nombre se acepta, el nombre se conserva en IndexedDB y persiste tras recargar; 375 px sin desbordamiento; sin errores de consola ni peticiones externas. Observación para spec-writer (no bloquea: la spec no define cómo se cuentan los caracteres y la app cuenta unidades UTF-16 en validateProjectName, maxlength y copyName, como prescribe la nota del WI): con un emoji en la posición del corte (71 "e" + "😀", 73 unidades) el recorte deja un surrogate suelto ("…e\ud83d (copia)"); se guarda, se edita y se lista sin error, pero el último carácter visible queda corrupto. Si se quiere contar por code points o grafemas, debe decidirse en la spec. Reglas base de stack OK (función pura en dominio, sin dependencias nuevas, sin CSS ni colores, tests unitarios y e2e)]
 
 ## WI-AC-041
 - Contexto: intercambio
