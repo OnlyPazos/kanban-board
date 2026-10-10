@@ -270,13 +270,13 @@ interface Card {
 - Acceptance Checks: AC-030
 - Depende de: [WI-AC-028]
 - Rama sugerida: feature/wi-ac-030-import-full
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - "Importar" abre un `<input type="file" accept=".json,application/json">` y la app distingue el tipo de archivo por el campo `kind`.
   - Si `kind` es `full`: confirmación "Se borrarán tus N proyectos actuales" (N = proyectos activos + archivados). Al confirmar, se vacían `projects` y `cards` y se escribe el contenido del archivo en una única transacción. Se conservan ids, fechas y flags tal cual.
   - Validación mínima en este item; la validación completa y sus mensajes van en WI-AC-033.
   - Test e2e de ida y vuelta (round-trip) según AC-030.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-030 (commit 2c3b917). check 0 errores (1 warning conocido del design-system); build OK; test 182/182; test:e2e 37/37; e2e independiente de QA (puerto 4319): con 2 activos + 1 archivado la confirmación dice "Se borrarán tus 3 proyectos actuales"; Cancelar y Escape dejan IndexedDB idéntica; Reemplazar deja projects y cards idénticos (JSON exacto, mismos campos, archivado y fechas) al export, sin el proyecto nuevo, también tras recargar; prefs filter:* conservado; N=1 en singular; JSON roto → error sin cambios; Importar del estado vacío abre el mismo flujo (texto "0 proyectos" pendiente de WI-AC-041, fuera de alcance). Reglas base de stack OK (sin dependencias nuevas, sin colores hardcodeados, escritura en una única transacción con abort explícito y test de rollback)]
 
 ## WI-AC-031
 - Contexto: intercambio
