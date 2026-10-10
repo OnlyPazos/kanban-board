@@ -50,7 +50,7 @@ interface Card {
 - Acceptance Checks: AC-001
 - Depende de: []
 - Rama sugerida: feature/wi-ac-001-scaffold-empty-state
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Andamiaje del proyecto según "Reglas base de stack": Vite + Svelte 5 (runes, SPA, sin SvelteKit) + TypeScript `strict`, Vitest + `@testing-library/svelte`, Playwright. Scripts npm para `dev`, `build`, `test` (unit) y `test:e2e`.
   - Tipos de dominio del bloque "Modelo de datos común" en un módulo `domain` sin dependencias de UI, con las etiquetas en español de tipos, estados y prioridades.
