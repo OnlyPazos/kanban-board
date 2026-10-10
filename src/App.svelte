@@ -9,6 +9,7 @@
   import ArchivedProjects from './views/ArchivedProjects.svelte';
   import CreateCardDialog from './views/CreateCardDialog.svelte';
   import EditCardDialog from './views/EditCardDialog.svelte';
+  import ImportFlow from './views/ImportFlow.svelte';
   import { boardHref, LIST_HREF, parseRoute } from './lib/route';
   import { buildExport, exportFileName, type Card, type CardStatus, type Project } from './domain';
   import { downloadJson } from './lib/download';
@@ -62,6 +63,8 @@
     const now = new Date();
     downloadJson(exportFileName(now, project.name), buildExport(store, { kind: 'project', projectId: project.id }, now));
   }
+
+  let importFlow: ImportFlow | undefined = $state();
 
   function startEdit(project: Project) {
     editTarget = project;
@@ -119,6 +122,7 @@
       projects={store.activeProjects}
       cards={store.cards}
       oncreate={() => (creating = true)}
+      onimport={() => importFlow?.start()}
       onedit={startEdit}
       onopen={openBoard}
       onarchive={(project) => store.archiveProject(project.id)}
@@ -127,6 +131,11 @@
     />
   {/if}
 </main>
+<ImportFlow
+  bind:this={importFlow}
+  projectCount={store.projects.length}
+  onreplaceall={(data) => store.replaceAll(data.projects, data.cards)}
+/>
 <CreateProjectDialog bind:open={creating} oncreate={(input) => store.createProject(input)} />
 {#if boardProject && !boardProject.archived}
   {@const projectId = boardProject.id}

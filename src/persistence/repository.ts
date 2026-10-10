@@ -19,6 +19,12 @@ export interface Repository {
    * archivadas) y su filtro por tipo guardado, en una única transacción.
    */
   deleteProject(projectId: string): Promise<void>;
+  /**
+   * Import completo (AC-030): vacía `projects` y `cards` y escribe los
+   * proyectos y tarjetas dados tal cual (ids, fechas y flags), en una única
+   * transacción. Las preferencias (`prefs`) no se tocan.
+   */
+  replaceAll(projects: readonly Project[], cards: readonly Card[]): Promise<void>;
   /** Filtros por tipo guardados, por `projectId` (store `prefs`, clave `filter:<projectId>`). */
   listTypeFilters(): Promise<Record<string, CardType[]>>;
   saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
@@ -75,6 +81,30 @@ export function createIdbRepository(dbName?: string): Repository {
         tx.objectStore('prefs').delete(typeFilterKey(projectId)),
         tx.done,
       ]);
+    },
+    async replaceAll(projects, cards) {
+      const tx = (await db()).transaction(['projects', 'cards'], 'readwrite');
+      const projectStore = tx.objectStore('projects');
+      const cardStore = tx.objectStore('cards');
+      const write = async () => {
+        try {
+          await Promise.all([projectStore.clear(), cardStore.clear()]);
+          await Promise.all([
+            ...projects.map((p) => projectStore.put({ ...p })),
+            ...cards.map((c) => cardStore.put({ ...c })),
+          ]);
+        } catch (error) {
+          // Un fallo síncrono de `put` no aborta la transacción por sí solo:
+          // se aborta para no dejar los datos a medias (todo o nada).
+          try {
+            tx.abort();
+          } catch {
+            // Ya abortada (p. ej. por un error de petición).
+          }
+          throw error;
+        }
+      };
+      await Promise.all([write(), tx.done]);
     },
     async listTypeFilters() {
       const tx = (await db()).transaction('prefs');
