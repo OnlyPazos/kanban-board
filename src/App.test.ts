@@ -72,6 +72,21 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Crear proyecto' })).toBeInTheDocument();
   });
 
+  it('AC-042: la cabecera tiene el selector "Modo de color" que aplica data-theme a <html>', async () => {
+    render(App, { repository: memoryRepository() });
+    const select = within(screen.getByRole('banner')).getByRole('combobox', { name: 'Modo de color' });
+    expect(select).toHaveValue('auto');
+    expect([...select.querySelectorAll('option')].map((o) => o.textContent)).toEqual(['Auto', 'Claro', 'Oscuro']);
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+
+    await fireEvent.change(select, { target: { value: 'dark' } });
+    await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('dark'));
+    await fireEvent.change(select, { target: { value: 'light' } });
+    await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('light'));
+    await fireEvent.change(select, { target: { value: 'auto' } });
+    await waitFor(() => expect(document.documentElement.hasAttribute('data-theme')).toBe(false));
+  });
+
   it('abrir un proyecto muestra su tablero y el enlace vuelve a la lista', async () => {
     const project = createProject({ name: 'Mi app' });
     render(App, { repository: memoryRepository([project]) });

@@ -1,6 +1,6 @@
 <!--
-  Cabecera común a todas las vistas. En WI-AC-042 alojará el selector
-  "Modo de color" (slot `actions`).
+  Cabecera común a todas las vistas. Aloja el selector "Modo de color"
+  (AC-042) en el snippet `actions`.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';

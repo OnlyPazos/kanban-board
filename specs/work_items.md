@@ -381,13 +381,13 @@ interface Card {
 - Acceptance Checks: AC-042
 - Depende de: [WI-AC-024]
 - Rama sugerida: feature/wi-ac-042-color-mode-selector
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - Selector "Modo de color" en la cabecera común (WI-AC-001), visible en la lista de proyectos, el tablero, las tarjetas archivadas y los proyectos archivados. Se usa `Select` de `design-system` con las opciones Auto, Claro y Oscuro (valores `auto`, `light`, `dark`), o un grupo de `Chip`. En ambos casos debe poder manejarse solo con el teclado y tener el nombre accesible "Modo de color".
   - Estado `colorMode: 'auto' | 'light' | 'dark'` en un store (runes), inicialmente `auto`. Un efecto aplica el modo a `<html>`: `auto` → sin atributo `data-theme`; `light` y `dark` → `data-theme="light"` o `"dark"` (D-017). El modo del sistema lo resuelven los propios tokens (`prefers-color-scheme`); la app no lo calcula.
   - En este item no se persiste la preferencia (eso va en WI-AC-043).
   - Test e2e con `page.emulateMedia({ colorScheme })`: el color de fondo calculado del `body` coincide con el valor claro u oscuro del token `background` (`#FCFBF8` / `#1C1917`). Casos: Auto con el sistema en claro y en oscuro; Oscuro con el sistema en claro; Claro con el sistema en oscuro; volver a Auto. Comprobar en las 4 vistas que el selector existe y se maneja con el teclado.
-- Historial QA: []
+- Historial QA: [2026-10-11 PASS — AC-042 (commit cade95b). check 0 errores (1 warning conocido del design-system); test 266/266; test:e2e 59/59 a la primera (build incluido; drag-and-drop.spec.ts:151 también pasó); verificación independiente (vite preview en el puerto 4392, script fuera del repo, 64/64 comprobaciones): sin preferencia muestra "Auto" con sistema claro y oscuro; `body` calculado = #FCFBF8 / #1C1917 en las 6 combinaciones modo × sistema (Auto sin `data-theme`, Claro/Oscuro con `data-theme="light"`/`"dark"`), sin recarga; Auto sigue en vivo un cambio del sistema y Claro forzado no; en las 4 vistas (lista, tablero, tarjetas archivadas, proyectos archivados) y con ambos sistemas el selector está en el banner con nombre accesible "Modo de color" y opciones Auto|Claro|Oscuro, se alcanza con Tab con foco visible y se cambia y vuelve a Auto solo con flechas; oscuro (por sistema y forzado): `color-scheme: dark`, contraste mínimo de texto 8.14, select 12.48, título de cabecera 14.52; 375 px sin desbordamiento en las 4 vistas y ambos modos (select 109×44 px, sin solapar el título); sin errores de consola. Juicio sobre lo declarado: etiqueta oculta con `hideLabel` aceptable — AC-042 y la nota del WI piden el selector con nombre accesible "Modo de color", no una etiqueta visible; `hideLabel` es el uso documentado del sistema de diseño (`.ds-visually-hidden`, sigue en `<label for>`). Observación no bloqueante: a la vista solo se lee "Auto/Claro/Oscuro" sin el texto "Modo de color". Reglas base de stack OK (sin dependencias nuevas, sin CSS ni colores nuevos, usa `Select` de design-system, store con runes, TS estricto, tests unitarios y e2e)]
 
 ## WI-AC-043
 - Contexto: apariencia
