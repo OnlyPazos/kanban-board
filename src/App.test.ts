@@ -317,4 +317,34 @@ describe('App: "Importar" del estado vacío (AC-034)', () => {
       expect(screen.queryByText('No se pudieron guardar los cambios')).toBeNull();
     });
   });
+
+  describe('sin IndexedDB (AC-037)', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('muestra un aviso permanente y permite crear proyectos en memoria', async () => {
+      vi.stubGlobal('indexedDB', undefined);
+      render(App);
+      const warning = await screen.findByRole('alert');
+      expect(warning).toHaveTextContent('Tus datos no se conservarán al cerrar');
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Crear proyecto' }));
+      const dialog = screen.getByRole('dialog', { name: 'Crear proyecto' });
+      await fireEvent.input(within(dialog).getByLabelText(/^Nombre/), { target: { value: 'Mi app' } });
+      await fireEvent.click(within(dialog).getByRole('button', { name: 'Crear' }));
+      expect(await screen.findByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+
+      // El aviso sigue visible y no hay error de guardado.
+      expect(screen.getByText('Tus datos no se conservarán al cerrar')).toBeInTheDocument();
+      expect(screen.queryByText('No se pudieron guardar los cambios')).toBeNull();
+    });
+
+    it('con IndexedDB disponible no hay aviso', async () => {
+      render(App);
+      expect(await screen.findByRole('button', { name: 'Crear proyecto' })).toBeInTheDocument();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(screen.queryByText('Tus datos no se conservarán al cerrar')).toBeNull();
+    });
+  });
 });

@@ -14,14 +14,26 @@
   import { boardHref, LIST_HREF, parseRoute } from './lib/route';
   import { buildExport, exportFileName, type Card, type CardStatus, type Project } from './domain';
   import { downloadJson } from './lib/download';
-  import { createIdbRepository, type Repository } from './persistence/repository';
+  import { createBrowserRepository, type Repository } from './persistence/repository';
   import { AppStore } from './state/app-store.svelte';
 
-  let { repository = createIdbRepository() }: { repository?: Repository } = $props();
+  let { repository }: { repository?: Repository } = $props();
 
-  // El repositorio se fija al montar la app.
-  // svelte-ignore state_referenced_locally
-  const store = new AppStore(repository);
+  /** IndexedDB no está disponible (AC-037): los datos solo viven en memoria. */
+  let storageUnavailable = $state(false);
+
+  // El repositorio se fija al montar la app. Sin uno dado, se usa IndexedDB
+  // o, si no está disponible, un repositorio en memoria (AC-037).
+  const store = new AppStore(
+    // svelte-ignore state_referenced_locally
+    repository ??
+      createBrowserRepository({
+        onUnavailable: (error) => {
+          console.warn('IndexedDB no está disponible; los datos solo se guardan en memoria', error);
+          storageUnavailable = true;
+        },
+      }),
+  );
   let creating = $state(false);
   let editing = $state(false);
   let editTarget = $state<Project | null>(null);
@@ -83,6 +95,14 @@
 </script>
 
 <AppHeader />
+{#if storageUnavailable}
+  <div class="storage-warning">
+    <Alert tone="warning" title="Tus datos no se conservarán al cerrar">
+      Este navegador no permite guardar datos. Puedes seguir trabajando, pero exporta tus datos antes de cerrar para no
+      perderlos.
+    </Alert>
+  </div>
+{/if}
 {#if store.saveError}
   <div class="save-error">
     <Alert tone="danger" title="No se pudieron guardar los cambios">
@@ -166,6 +186,7 @@
 />
 
 <style>
+  .storage-warning,
   .save-error {
     padding: var(--ds-spacing-3) var(--ds-spacing-4) 0;
   }
