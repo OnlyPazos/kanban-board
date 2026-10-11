@@ -334,12 +334,12 @@ interface Card {
 - Acceptance Checks: AC-037
 - Depende de: [WI-AC-028]
 - Rama sugerida: feature/wi-ac-037-no-indexeddb
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Al arrancar, detectar si IndexedDB no existe o si falla al abrirse. En ese caso se usa un repositorio en memoria con la misma interfaz que el de IndexedDB.
   - Aviso permanente: "Tus datos no se conservarán al cerrar". La exportación sigue funcionando.
   - Test e2e eliminando `indexedDB` con `addInitScript`.
-- Historial QA: []
+- Historial QA: [2026-10-11 PASS — AC-037 (commit c8a9ef1). check 0 errores (1 warning conocido del design-system); test 248/248; test:e2e 52/52 (incl. los 2 nuevos de AC-037). Reproducción propia con Playwright sobre preview (puerto 4392, cerrado al terminar) en 3 escenarios: `indexedDB` eliminado, `indexedDB.open` lanzando SecurityError y apertura fallida asíncrona (VersionError, BD previa en versión 999). En los 3: aviso role=alert "Tus datos no se conservarán al cerrar" visible al arrancar y en lista, tablero, "Proyectos archivados" y "Tarjetas archivadas"; crear/editar/archivar/restaurar proyecto, crear y editar tarjetas (título y estado), filtro por tipo e import completo funcionan en memoria; "Exportar proyecto" y "Exportar todo" descargan los datos en memoria; sin aviso de error de guardado ni pageerror; tras recargar el aviso sigue y los datos no se conservan. Control: con IndexedDB disponible no hay aviso. Decisiones del builder coherentes con el texto de AC-037: Alert tone="warning" sin botón propio (AC-037 solo exige poder exportar, y los botones normales funcionan); console.warn al fallar la apertura (no visible al usuario). Reglas base OK: Alert del design-system, solo tokens --ds-*, sin dependencias nuevas, tests unitarios + componente + e2e. Observación no bloqueante: el repositorio en memoria lista en orden de inserción y el de IndexedDB por clave; no se aprecia efecto en la UI]
 
 ## WI-AC-038
 - Contexto: persistencia
