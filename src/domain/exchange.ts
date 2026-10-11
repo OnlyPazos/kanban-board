@@ -9,6 +9,7 @@
 import type { Card, Project } from './types';
 import { PROJECT_NAME_MAX_LENGTH, validateProjectName } from './project';
 import { CARD_TITLE_MAX_LENGTH, validateCardTitle } from './card';
+import { truncateToGraphemes } from './text';
 import { CARD_STATUSES, CARD_TYPES, PRIORITIES } from './labels';
 
 /** Versión actual del formato de los archivos exportados. */
@@ -109,21 +110,27 @@ export function exportFileName(now: Date = new Date(), projectName?: string): st
 export const COPY_SUFFIX = ' (copia)';
 
 /**
- * Nombre de un proyecto importado como copia (D-013, AC-040): `<name> (copia)`
- * si cabe en `PROJECT_NAME_MAX_LENGTH`; si no, se recorta el nombre original
- * para que el total tenga exactamente ese máximo y termine en " (copia)".
- * `name` ya viene validado (sin espacios exteriores).
+ * Nombre de un proyecto importado como copia (D-013, AC-040, D-020, AC-046):
+ * `<name> (copia)` si cabe en `PROJECT_NAME_MAX_LENGTH` (unidades UTF-16); si
+ * no, se recorta el nombre original en el último límite de grafema completo
+ * (`truncateToGraphemes`) para que el total tenga como máximo ese máximo y
+ * termine en " (copia)". Si el recorte queda vacío (el primer grafema no
+ * cabe), el resultado es "(copia)", sin espacio delante. Un espacio final del
+ * recorte se conserva: queda interno ("…a  (copia)"). `name` ya viene
+ * validado (sin espacios exteriores), así que el resultado nunca los tiene.
  */
 export function copyName(name: string): string {
   const full = `${name}${COPY_SUFFIX}`;
   if (full.length <= PROJECT_NAME_MAX_LENGTH) return full;
-  return `${name.slice(0, PROJECT_NAME_MAX_LENGTH - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
+  const kept = truncateToGraphemes(name, PROJECT_NAME_MAX_LENGTH - COPY_SUFFIX.length);
+  return kept === '' ? COPY_SUFFIX.trimStart() : `${kept}${COPY_SUFFIX}`;
 }
 
 /**
  * "Importar como copia" (AC-032): el proyecto y todas sus tarjetas con ids
  * nuevos (las tarjetas apuntan al nuevo `projectId`) y el nombre
- * `<original> (copia)`, recortado a 80 caracteres con `copyName` (D-013).
+ * `<original> (copia)`, con `copyName`: como máximo 80 unidades UTF-16 y sin
+ * partir ningún grafema (D-013, D-020).
  * El resto de campos se conserva tal cual.
  */
 export function copyImportedProject(
