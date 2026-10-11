@@ -42,6 +42,10 @@ function memoryRepository(initial: Project[] = []): Repository {
     saveProject: async (project) => {
       projects.set(project.id, { ...project });
     },
+    getProject: async (id) => projects.get(id),
+    getCard: async (id) => cards.get(id),
+    listProjectCards: async (projectId) => [...cards.values()].filter((c) => c.projectId === projectId),
+    getTypeFilter: async (projectId) => typeFilters.get(projectId),
   };
 }
 

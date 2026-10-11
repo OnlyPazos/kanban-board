@@ -5,6 +5,7 @@
 import type { IDBPDatabase } from 'idb';
 import { normalizeTypeFilter, type Card, type CardType, type Project } from '../domain';
 import { openKanbanDB, type KanbanDB } from './db';
+import { changesOf, type TabSync } from './sync';
 
 export interface Repository {
   listProjects(): Promise<Project[]>;
@@ -35,6 +36,13 @@ export interface Repository {
   /** Filtros por tipo guardados, por `projectId` (store `prefs`, clave `filter:<projectId>`). */
   listTypeFilters(): Promise<Record<string, CardType[]>>;
   saveTypeFilter(projectId: string, types: CardType[]): Promise<void>;
+  /** Lecturas por entidad, para releer lo que ha cambiado otra pestaña (AC-038). */
+  getProject(id: string): Promise<Project | undefined>;
+  getCard(id: string): Promise<Card | undefined>;
+  /** Todas las tarjetas (activas y archivadas) del proyecto. */
+  listProjectCards(projectId: string): Promise<Card[]>;
+  /** Filtro por tipo guardado del proyecto, o `undefined` si no tiene. */
+  getTypeFilter(projectId: string): Promise<CardType[] | undefined>;
 }
 
 /** Métodos de `Repository` que escriben en el almacenamiento. */
@@ -75,6 +83,23 @@ export function observeWrites(repository: Repository, observer: WriteObserver): 
     };
   }
   return observed;
+}
+
+/**
+ * Envuelve `repository` para que, tras cada escritura confirmada, publique
+ * en `sync` las entidades cambiadas (AC-038). Una escritura fallida no
+ * publica nada; las lecturas no se tocan.
+ */
+export function publishWrites(repository: Repository, sync: TabSync): Repository {
+  const published: Repository = { ...repository };
+  for (const method of WRITE_METHODS) {
+    const write = repository[method] as (...args: unknown[]) => Promise<void>;
+    (published[method] as (...args: unknown[]) => Promise<void>) = async (...args) => {
+      await write.apply(repository, args);
+      sync.publish(changesOf(method, args as never));
+    };
+  }
+  return published;
 }
 
 const TYPE_FILTER_PREFIX = 'filter:';
@@ -195,6 +220,19 @@ function idbRepository(db: () => Promise<IDBPDatabase<KanbanDB>>): Repository {
     async saveTypeFilter(projectId, types) {
       await (await db()).put('prefs', [...types], typeFilterKey(projectId));
     },
+    async getProject(id) {
+      return (await db()).get('projects', id);
+    },
+    async getCard(id) {
+      return (await db()).get('cards', id);
+    },
+    async listProjectCards(projectId) {
+      return (await db()).getAllFromIndex('cards', 'projectId', projectId);
+    },
+    async getTypeFilter(projectId) {
+      const value = await (await db()).get('prefs', typeFilterKey(projectId));
+      return value === undefined ? undefined : normalizeTypeFilter(value);
+    },
   };
 }
 
@@ -251,6 +289,21 @@ export function createMemoryRepository(): Repository {
     async saveTypeFilter(projectId, types) {
       typeFilters.set(projectId, [...types]);
     },
+    async getProject(id) {
+      const project = projects.get(id);
+      return project && { ...project };
+    },
+    async getCard(id) {
+      const card = cards.get(id);
+      return card && { ...card };
+    },
+    async listProjectCards(projectId) {
+      return [...cards.values()].filter((c) => c.projectId === projectId).map((c) => ({ ...c }));
+    },
+    async getTypeFilter(projectId) {
+      const types = typeFilters.get(projectId);
+      return types && [...types];
+    },
   };
 }
 
@@ -263,6 +316,12 @@ export function createMemoryRepository(): Repository {
 export function createBrowserRepository(options: {
   dbName?: string;
   onUnavailable: (error: unknown) => void;
+  /**
+   * Canal entre pestañas (AC-038). Con IndexedDB, cada escritura confirmada
+   * se publica en él. Sin IndexedDB se cierra: los datos en memoria son de
+   * esta pestaña y no hay nada guardado que compartir ni que releer.
+   */
+  sync?: TabSync;
 }): Repository {
   let ready: Promise<Repository> | undefined;
   const open = async (): Promise<Repository> => {
@@ -271,8 +330,10 @@ export function createBrowserRepository(options: {
         throw new Error('IndexedDB no está disponible en este navegador');
       }
       const db = await openKanbanDB(options.dbName);
-      return idbRepository(async () => db);
+      const repository = idbRepository(async () => db);
+      return options.sync ? publishWrites(repository, options.sync) : repository;
     } catch (error) {
+      options.sync?.close();
       options.onUnavailable(error);
       return createMemoryRepository();
     }
@@ -290,5 +351,9 @@ export function createBrowserRepository(options: {
     importProject: async (project, cards) => (await repository()).importProject(project, cards),
     listTypeFilters: async () => (await repository()).listTypeFilters(),
     saveTypeFilter: async (projectId, types) => (await repository()).saveTypeFilter(projectId, types),
+    getProject: async (id) => (await repository()).getProject(id),
+    getCard: async (id) => (await repository()).getCard(id),
+    listProjectCards: async (projectId) => (await repository()).listProjectCards(projectId),
+    getTypeFilter: async (projectId) => (await repository()).getTypeFilter(projectId),
   };
 }

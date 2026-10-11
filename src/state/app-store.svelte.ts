@@ -23,6 +23,7 @@ import {
   type ProjectEdit,
 } from '../domain';
 import { observeWrites, type Repository } from '../persistence/repository';
+import type { SyncChange } from '../persistence/sync';
 
 /**
  * La lista `projects` se mantiene siempre ordenada por `updatedAt`
@@ -49,6 +50,8 @@ export class AppStore {
   saveError = $state<{ error: unknown } | null>(null);
 
   readonly #repository: Repository;
+  /** Cola de cambios de otras pestañas: se aplican de uno en uno y en orden. */
+  #remoteQueue: Promise<void> = Promise.resolve();
 
   constructor(repository: Repository) {
     this.#repository = observeWrites(repository, {
@@ -77,6 +80,71 @@ export class AppStore {
     const pendingCards = this.cards.filter((c) => !storedCardIds.has(c.id));
     this.cards = [...storedCards, ...pendingCards];
     this.loaded = true;
+  }
+
+  /**
+   * Aplica un cambio guardado por otra pestaña (AC-038): relee de IndexedDB
+   * la entidad indicada y la pone en memoria tal cual (último cambio gana; no
+   * se fusionan campos). Si ya no existe, la quita. No escribe nada. Los
+   * cambios se aplican en el orden en que llegan.
+   */
+  applyRemoteChange(change: SyncChange): Promise<void> {
+    const next = this.#remoteQueue.then(() => this.#applyRemoteChange(change));
+    this.#remoteQueue = next.catch((error: unknown) => {
+      console.error('No se pudo aplicar un cambio de otra pestaña', error);
+    });
+    return next;
+  }
+
+  async #applyRemoteChange(change: SyncChange): Promise<void> {
+    switch (change.entity) {
+      case 'project': {
+        const project = await this.#repository.getProject(change.id);
+        if (project) {
+          this.projects = sortProjects([...this.projects.filter((p) => p.id !== change.id), project]);
+        } else {
+          // Borrado definitivo (AC-027): con él se fueron sus tarjetas y su filtro.
+          this.projects = this.projects.filter((p) => p.id !== change.id);
+          this.cards = this.cards.filter((c) => c.projectId !== change.id);
+          if (change.id in this.typeFilters) {
+            const filters = { ...this.typeFilters };
+            delete filters[change.id];
+            this.typeFilters = filters;
+          }
+        }
+        return;
+      }
+      case 'card': {
+        const card = await this.#repository.getCard(change.id);
+        if (!card) {
+          this.cards = this.cards.filter((c) => c.id !== change.id);
+        } else if (this.cards.some((c) => c.id === change.id)) {
+          this.cards = this.cards.map((c) => (c.id === change.id ? card : c));
+        } else {
+          this.cards = [...this.cards, card];
+        }
+        return;
+      }
+      case 'projectCards': {
+        const cards = await this.#repository.listProjectCards(change.id);
+        this.cards = [...this.cards.filter((c) => c.projectId !== change.id), ...cards];
+        return;
+      }
+      case 'typeFilter': {
+        const types = await this.#repository.getTypeFilter(change.id);
+        const filters = { ...this.typeFilters };
+        if (types) filters[change.id] = types;
+        else delete filters[change.id];
+        this.typeFilters = filters;
+        return;
+      }
+      case 'all': {
+        const [projects, cards] = await Promise.all([this.#repository.listProjects(), this.#repository.listCards()]);
+        this.projects = sortProjects(projects);
+        this.cards = cards;
+        return;
+      }
+    }
   }
 
   /** Crea el proyecto, lo guarda y, una vez guardado, lo muestra. */

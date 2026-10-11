@@ -102,3 +102,19 @@ describe('EditCardDialog', () => {
     expect(onsave).not.toHaveBeenCalled();
   });
 });
+
+describe('EditCardDialog · cambios de otra pestaña (AC-038)', () => {
+  it('si la tarjeta cambia mientras el diálogo está abierto, no pisa lo que se está escribiendo', async () => {
+    const card = makeCard();
+    const onsave = vi.fn();
+    const { rerender } = render(EditCardDialog, { card, open: true, onsave });
+    const title = screen.getByLabelText(/^Título/) as HTMLInputElement;
+    await fireEvent.input(title, { target: { value: 'Título B' } });
+
+    await rerender({ card: { ...card, title: 'Título A', updatedAt: '2026-10-11T13:00:00.000Z' }, open: true, onsave });
+    expect(title.value).toBe('Título B');
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+    await waitFor(() => expect(onsave).toHaveBeenCalledWith(card.id, expect.objectContaining({ title: 'Título B' })));
+  });
+});
