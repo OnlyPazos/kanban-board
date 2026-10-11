@@ -87,6 +87,26 @@ describe('App', () => {
     await waitFor(() => expect(document.documentElement.hasAttribute('data-theme')).toBe(false));
   });
 
+  it('AC-043: el modo se recuerda en localStorage y se recupera al montar la app', async () => {
+    localStorage.setItem('kanban-board:color-mode', 'dark');
+    try {
+      const { unmount } = render(App, { repository: memoryRepository() });
+      const select = within(screen.getByRole('banner')).getByRole('combobox', { name: 'Modo de color' });
+      expect(select).toHaveValue('dark');
+      await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('dark'));
+
+      await fireEvent.change(select, { target: { value: 'light' } });
+      await waitFor(() => expect(localStorage.getItem('kanban-board:color-mode')).toBe('light'));
+      await fireEvent.change(select, { target: { value: 'auto' } });
+      await waitFor(() => expect(localStorage.getItem('kanban-board:color-mode')).toBeNull());
+      expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+      unmount();
+    } finally {
+      localStorage.clear();
+      document.documentElement.removeAttribute('data-theme');
+    }
+  });
+
   it('abrir un proyecto muestra su tablero y el enlace vuelve a la lista', async () => {
     const project = createProject({ name: 'Mi app' });
     render(App, { repository: memoryRepository([project]) });
