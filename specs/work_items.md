@@ -321,7 +321,7 @@ interface Card {
 - Acceptance Checks: AC-035
 - Depende de: [WI-AC-028]
 - Rama sugerida: feature/wi-ac-035-save-error
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - La capa de persistencia captura los errores de escritura (`QuotaExceededError` y cualquier fallo de transacción) y los expone como estado global `saveError`.
   - Aviso visible mientras haya error, con el botón "Exportar ahora", que descarga el export completo con el estado en memoria.
