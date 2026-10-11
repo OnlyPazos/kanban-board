@@ -87,6 +87,18 @@ describe('App', () => {
     await waitFor(() => expect(document.documentElement.hasAttribute('data-theme')).toBe(false));
   });
 
+  it('AC-045: la etiqueta "Modo de color" es una <label for> visible, antes del selector', () => {
+    render(App, { repository: memoryRepository() });
+    const banner = screen.getByRole('banner');
+    const select = within(banner).getByRole('combobox', { name: 'Modo de color' });
+    const label = within(banner).getByText('Modo de color', { selector: 'label' });
+    expect(label).toHaveAttribute('for', select.id);
+    expect(label).not.toHaveClass('ds-visually-hidden');
+    expect(select).not.toHaveAttribute('aria-label');
+    // La etiqueta va antes del selector en el documento (encima, en `.ds-field` en columna).
+    expect(label.compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('AC-043: el modo se recuerda en localStorage y se recupera al montar la app', async () => {
     localStorage.setItem('kanban-board:color-mode', 'dark');
     try {

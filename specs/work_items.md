@@ -427,7 +427,7 @@ interface Card {
 - Acceptance Checks: AC-045
 - Depende de: [WI-AC-042]
 - Rama sugerida: feature/wi-ac-045-visible-color-mode-label
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-019 (opción B): quitar `hideLabel` del `Select` en `src/lib/ColorModeSelect.svelte`. El `Field` del design-system renderiza entonces la `<label for>` "Modo de color" visible y **encima** del `<select>` (`.ds-field` en columna). No se modifica nada en `design-system/`. No se añade texto propio ni `aria-label`, para no duplicar el nombre accesible.
   - Revisar la maquetación de la cabecera en `src/lib/AppHeader.svelte` (`.app-header` y `.app-header__actions`, hoy con `align-items: center`): al crecer el bloque del selector, la cabecera tiene que seguir sin desbordar a 375 px. Si hace falta ajustar algo (alineación, `flex-wrap`, `min-width: 0`…), se hace solo con variables `--ds-*` existentes. Si faltara un token (p. ej. un breakpoint), no se inventa: se devuelve a `design-builder`.
