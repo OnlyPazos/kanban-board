@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { Alert, Button } from 'design-system';
   import AppHeader from './lib/AppHeader.svelte';
+  import ColorModeSelect from './lib/ColorModeSelect.svelte';
   import ProjectList from './views/ProjectList.svelte';
   import CreateProjectDialog from './views/CreateProjectDialog.svelte';
   import EditProjectDialog from './views/EditProjectDialog.svelte';
@@ -17,6 +18,7 @@
   import { createBrowserRepository, type Repository } from './persistence/repository';
   import { createTabSync } from './persistence/sync';
   import { AppStore } from './state/app-store.svelte';
+  import { applyColorMode, ColorModeStore } from './state/color-mode.svelte';
 
   let { repository }: { repository?: Repository } = $props();
 
@@ -40,6 +42,12 @@
         sync: tabSync,
       }),
   );
+  // Modo de color (AC-042, D-017): se aplica a <html> con `data-theme`.
+  const colorMode = new ColorModeStore();
+  $effect(() => {
+    applyColorMode(document.documentElement, colorMode.mode);
+  });
+
   let creating = $state(false);
   let editing = $state(false);
   let editTarget = $state<Project | null>(null);
@@ -107,7 +115,11 @@
   });
 </script>
 
-<AppHeader />
+<AppHeader>
+  {#snippet actions()}
+    <ColorModeSelect bind:mode={colorMode.mode} />
+  {/snippet}
+</AppHeader>
 {#if storageUnavailable}
   <div class="storage-warning">
     <Alert tone="warning" title="Tus datos no se conservarán al cerrar">

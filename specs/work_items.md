@@ -381,7 +381,7 @@ interface Card {
 - Acceptance Checks: AC-042
 - Depende de: [WI-AC-024]
 - Rama sugerida: feature/wi-ac-042-color-mode-selector
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Selector "Modo de color" en la cabecera común (WI-AC-001), visible en la lista de proyectos, el tablero, las tarjetas archivadas y los proyectos archivados. Se usa `Select` de `design-system` con las opciones Auto, Claro y Oscuro (valores `auto`, `light`, `dark`), o un grupo de `Chip`. En ambos casos debe poder manejarse solo con el teclado y tener el nombre accesible "Modo de color".
   - Estado `colorMode: 'auto' | 'light' | 'dark'` en un store (runes), inicialmente `auto`. Un efecto aplica el modo a `<html>`: `auto` → sin atributo `data-theme`; `light` y `dark` → `data-theme="light"` o `"dark"` (D-017). El modo del sistema lo resuelven los propios tokens (`prefers-color-scheme`); la app no lo calcula.
