@@ -5,10 +5,11 @@ import {
   createBrowserRepository,
   createIdbRepository,
   createMemoryRepository,
-  observeWrites, typeFilterKey,
+  observeWrites, publishWrites, typeFilterKey,
   WRITE_METHODS,
   type Repository,
 } from './repository';
+import type { SyncChange, TabSync } from './sync';
 
 let counter = 0;
 const freshName = () => `kanban-board-test-${++counter}-${crypto.randomUUID()}`;
@@ -381,6 +382,84 @@ describe('createBrowserRepository (AC-037)', () => {
       expect(onUnavailable.mock.calls[0][0]).toMatchObject({ name: 'SecurityError' });
     } finally {
       open.mockRestore();
+    }
+  });
+});
+
+describe('lecturas por entidad (AC-038)', () => {
+  const cases: [string, () => Repository][] = [
+    ['IndexedDB', () => createIdbRepository(freshName())],
+    ['memoria', () => createMemoryRepository()],
+  ];
+  it.each(cases)('%s: getProject, getCard, listProjectCards y getTypeFilter releen lo guardado', async (_, make) => {
+    const repo = make();
+    const project = createProject({ name: 'Mi app' });
+    const other = createProject({ name: 'Otra' });
+    const card = createCard({ projectId: project.id, title: 'A', status: 'sin-empezar' });
+    const otherCard = createCard({ projectId: other.id, title: 'B', status: 'sin-empezar' });
+    await repo.saveCard(card, project);
+    await repo.saveCard(otherCard, other);
+    await repo.saveTypeFilter(project.id, ['arreglo']);
+
+    expect(await repo.getProject(project.id)).toEqual(project);
+    expect(await repo.getProject('no-existe')).toBeUndefined();
+    expect(await repo.getCard(card.id)).toEqual(card);
+    expect(await repo.getCard('no-existe')).toBeUndefined();
+    expect(await repo.listProjectCards(project.id)).toEqual([card]);
+    expect(await repo.getTypeFilter(project.id)).toEqual(['arreglo']);
+    expect(await repo.getTypeFilter(other.id)).toBeUndefined();
+  });
+});
+
+describe('publishWrites (AC-038)', () => {
+  const fakeSync = (): TabSync & { published: SyncChange[] } => {
+    const published: SyncChange[] = [];
+    return { published, publish: (changes) => published.push(...changes), subscribe: () => () => {}, close: vi.fn() };
+  };
+
+  it('publica las entidades cambiadas solo tras una escritura confirmada', async () => {
+    const sync = fakeSync();
+    const project = createProject({ name: 'Mi app' });
+    const card = createCard({ projectId: project.id, title: 'A', status: 'sin-empezar' });
+    const repo = publishWrites(createMemoryRepository(), sync);
+    await repo.saveCard(card, project);
+    expect(sync.published).toEqual([
+      { entity: 'card', id: card.id },
+      { entity: 'project', id: project.id },
+    ]);
+
+    const failing = publishWrites(
+      {
+        ...createMemoryRepository(),
+        saveProject: async () => {
+          throw new DOMException('Cuota excedida', 'QuotaExceededError');
+        },
+      },
+      sync,
+    );
+    await expect(failing.saveProject(project)).rejects.toThrow();
+    expect(sync.published).toHaveLength(2);
+  });
+
+  it('createBrowserRepository con IndexedDB publica cada escritura', async () => {
+    const sync = fakeSync();
+    const project = createProject({ name: 'Mi app' });
+    const repo = createBrowserRepository({ dbName: freshName(), onUnavailable: vi.fn(), sync });
+    await repo.saveProject(project);
+    expect(sync.published).toEqual([{ entity: 'project', id: project.id }]);
+    expect(sync.close).not.toHaveBeenCalled();
+  });
+
+  it('createBrowserRepository sin IndexedDB cierra el canal y no publica (datos solo de esta pestaña)', async () => {
+    vi.stubGlobal('indexedDB', undefined);
+    try {
+      const sync = fakeSync();
+      const repo = createBrowserRepository({ dbName: freshName(), onUnavailable: vi.fn(), sync });
+      await repo.saveProject(createProject({ name: 'Mi app' }));
+      expect(sync.close).toHaveBeenCalledTimes(1);
+      expect(sync.published).toEqual([]);
+    } finally {
+      vi.unstubAllGlobals();
     }
   });
 });

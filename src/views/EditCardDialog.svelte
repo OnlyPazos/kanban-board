@@ -7,6 +7,7 @@
   Sin `maxlength`: AC-011 exige ver el error con más de 120 caracteres, no recortar.
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { Button, Dialog, Input, Select, Textarea } from 'design-system';
   import {
     CARD_STATUS_LABELS,
@@ -55,16 +56,24 @@
   let saving = $state(false);
   let titleError = $state<string | null>(null);
 
-  // Carga los valores de la tarjeta cada vez que se abre el diálogo.
+  // Solo cambia si es otra tarjeta, no cuando cambian sus valores.
+  const cardId = $derived(card?.id);
+
+  // Carga los valores de la tarjeta cada vez que se abre el diálogo. Si otra
+  // pestaña guarda la misma tarjeta mientras está abierto (AC-038), no se pisa
+  // lo que se está escribiendo: al guardar, gana el último cambio guardado.
   $effect.pre(() => {
-    if (open && card) {
-      title = card.title;
-      type = card.type;
-      status = card.status;
-      description = card.description;
-      priority = card.priority ?? NO_PRIORITY;
-      saving = false;
-      titleError = null;
+    if (open && cardId) {
+      untrack(() => {
+        if (!card) return;
+        title = card.title;
+        type = card.type;
+        status = card.status;
+        description = card.description;
+        priority = card.priority ?? NO_PRIORITY;
+        saving = false;
+        titleError = null;
+      });
     }
   });
 

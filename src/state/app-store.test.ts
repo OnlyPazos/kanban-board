@@ -1,9 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createIdbRepository } from '../persistence/repository';
+import { createIdbRepository, publishWrites, type Repository } from '../persistence/repository';
+import type { SyncChange, TabSync } from '../persistence/sync';
 import { AppStore } from './app-store.svelte';
 import { ArchivedProjectError, createCard, createProject } from '../domain';
 
 const freshName = () => `kanban-board-store-${crypto.randomUUID()}`;
+
+/** Lecturas por entidad (AC-038) para los repositorios falsos que no las usan. */
+const NO_ENTITY_READS = {
+  getProject: async () => undefined,
+  getCard: async () => undefined,
+  listProjectCards: async () => [],
+  getTypeFilter: async () => undefined,
+} satisfies Partial<Repository>;
 
 describe('AppStore', () => {
   it('crear un proyecto lo persiste sin acción de guardar y sobrevive a una recarga', async () => {
@@ -24,6 +33,7 @@ describe('AppStore', () => {
 
   it('si el guardado falla, el proyecto no aparece como creado', async () => {
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [],
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
@@ -79,6 +89,7 @@ describe('AppStore', () => {
   it('si el guardado de la edición falla, se conservan los valores anteriores', async () => {
     const created = createProject({ name: 'Mi app' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [created],
       listTypeFilters: async () => ({}),
       saveTypeFilter: async () => {},
@@ -216,6 +227,7 @@ describe('AppStore', () => {
   it('con título vacío o si el guardado falla, la tarjeta no se crea', async () => {
     const project = createProject({ name: 'Mi app' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -295,6 +307,7 @@ describe('AppStore', () => {
     const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
     const saveCard = vi.fn(async () => {});
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -316,6 +329,7 @@ describe('AppStore', () => {
     const project = createProject({ name: 'Mi app' });
     const card = createCard({ projectId: project.id, title: 'Login', status: 'sin-empezar' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -339,6 +353,7 @@ describe('AppStore', () => {
     const project = createProject({ name: 'Mi app' });
     const card = createCard({ projectId: project.id, title: 'Login', status: 'sin-empezar' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -404,6 +419,7 @@ describe('AppStore', () => {
     const project = createProject({ name: 'Mi app' });
     const card = { ...createCard({ projectId: project.id, title: 'Login', status: 'en-curso' }), archived: true };
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -511,6 +527,7 @@ describe('AppStore · archivo de proyectos', () => {
     const project = { ...createProject({ name: 'Mi app' }), archived: true };
     const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -601,6 +618,7 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
   it('si el import completo falla al guardar, nada cambia en memoria', async () => {
     const project = createProject({ name: 'Mi app' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -669,6 +687,7 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
   it('si el import de proyecto falla al guardar, nada cambia en memoria', async () => {
     const project = createProject({ name: 'Mi app' });
     const store = new AppStore({
+      ...NO_ENTITY_READS,
       listProjects: async () => [project],
       saveProject: async () => {},
       listTypeFilters: async () => ({}),
@@ -694,6 +713,7 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
       let failing = true;
       const repo = createIdbRepository(freshName());
       const store = new AppStore({
+        ...NO_ENTITY_READS,
         ...repo,
         saveProject: async (project) => {
           if (failing) throw quota;
@@ -721,6 +741,7 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
       const project = createProject({ name: 'Mi app' });
       await repo.saveProject(project);
       const store = new AppStore({
+        ...NO_ENTITY_READS,
         ...repo,
         saveCard: fail,
         saveTypeFilter: fail,
@@ -741,5 +762,96 @@ describe('AppStore · proyecto archivado de solo lectura (AC-026)', () => {
       expect(store.saveError).not.toBeNull();
       expect(store.projects).toEqual([project]);
     });
+  });
+});
+
+describe('AppStore · cambios de otras pestañas (AC-038)', () => {
+  /** Dos pestañas sobre la misma base de datos; lo que publica una se aplica en la otra. */
+  async function twoTabs() {
+    const dbName = freshName();
+    const changesA: SyncChange[] = [];
+    const changesB: SyncChange[] = [];
+    const sync = (into: SyncChange[]): TabSync => ({
+      publish: (changes) => into.push(...changes),
+      subscribe: () => () => {},
+      close: () => {},
+    });
+    const a = new AppStore(publishWrites(createIdbRepository(dbName), sync(changesA)));
+    const b = new AppStore(publishWrites(createIdbRepository(dbName), sync(changesB)));
+    await Promise.all([a.hydrate(), b.hydrate()]);
+    /** Entrega a `to` lo que ha publicado `from` hasta ahora. */
+    const deliver = async (from: SyncChange[], to: AppStore) => {
+      for (const change of from.splice(0)) await to.applyRemoteChange(change);
+    };
+    return { dbName, a, b, changesB, toB: () => deliver(changesA, b), toA: () => deliver(changesB, a) };
+  }
+
+  it('un proyecto y una tarjeta creados en A aparecen en B sin recargar', async () => {
+    const { a, b, toB } = await twoTabs();
+    const project = await a.createProject({ name: 'Mi app' });
+    const card = await a.createCard(project.id, 'Login', 'sin-empezar');
+    await toB();
+    expect(b.projects).toEqual(a.projects);
+    expect(b.cards).toEqual([card]);
+  });
+
+  it('si A y B editan el título de la misma tarjeta, gana el último guardado en ambas y tras recargar', async () => {
+    const { dbName, a, b, toA, toB } = await twoTabs();
+    const project = await a.createProject({ name: 'Mi app' });
+    const card = await a.createCard(project.id, 'Login', 'sin-empezar');
+    await toB();
+
+    const edit = (title: string) => ({ ...card, title });
+    await a.updateCard(card.id, edit('Título A'));
+    await b.updateCard(card.id, edit('Título B'));
+    await toB();
+    await toA();
+
+    expect(a.cards.map((c) => c.title)).toEqual(['Título B']);
+    expect(b.cards.map((c) => c.title)).toEqual(['Título B']);
+    const reloaded = new AppStore(createIdbRepository(dbName));
+    await reloaded.hydrate();
+    expect(reloaded.cards.map((c) => c.title)).toEqual(['Título B']);
+  });
+
+  it('propaga archivar, borrar definitivamente, el filtro por tipo y los imports', async () => {
+    const { a, b, toB } = await twoTabs();
+    const project = await a.createProject({ name: 'Mi app' });
+    const card = await a.createCard(project.id, 'Login', 'sin-empezar');
+    await a.setTypeFilter(project.id, ['arreglo']);
+    await toB();
+    expect(b.typeFilterOf(project.id)).toEqual(['arreglo']);
+
+    await a.archiveCard(card.id);
+    await a.deleteCard(card.id);
+    await toB();
+    expect(b.cards).toEqual([]);
+
+    const imported = createProject({ name: 'Importado' });
+    const importedCard = createCard({ projectId: imported.id, title: 'X', status: 'en-curso' });
+    await a.importProject(imported, [importedCard]);
+    await toB();
+    expect(b.projects.map((p) => p.name).sort()).toEqual(['Importado', 'Mi app']);
+    expect(b.cards).toEqual([importedCard]);
+
+    await a.archiveProject(project.id);
+    await a.deleteProject(project.id);
+    await toB();
+    expect(b.projects.map((p) => p.name)).toEqual(['Importado']);
+    expect(b.typeFilterOf(project.id)).toEqual([]);
+
+    await a.replaceAll([], []);
+    await toB();
+    expect(b.projects).toEqual([]);
+    expect(b.cards).toEqual([]);
+  });
+
+  it('aplicar un cambio remoto no escribe nada (no se vuelve a publicar)', async () => {
+    const { a, b, changesB, toB } = await twoTabs();
+    const project = await a.createProject({ name: 'Mi app' });
+    await a.createCard(project.id, 'Login', 'sin-empezar');
+    await toB();
+    expect(b.cards).toHaveLength(1);
+    expect(changesB).toEqual([]);
   });
 });

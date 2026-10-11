@@ -346,7 +346,7 @@ interface Card {
 - Acceptance Checks: AC-038
 - Depende de: [WI-AC-012]
 - Rama sugerida: feature/wi-ac-038-multi-tab-sync
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Tras cada escritura correcta, se publica `{ entity, id }` por un `BroadcastChannel('kanban-board')`. Las demás pestañas releen esa entidad de IndexedDB y actualizan su store.
   - Política "último cambio gana": la última escritura confirmada sobrescribe el registro completo. No hay fusión de campos.

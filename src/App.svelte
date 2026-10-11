@@ -15,12 +15,17 @@
   import { buildExport, exportFileName, type Card, type CardStatus, type Project } from './domain';
   import { downloadJson } from './lib/download';
   import { createBrowserRepository, type Repository } from './persistence/repository';
+  import { createTabSync } from './persistence/sync';
   import { AppStore } from './state/app-store.svelte';
 
   let { repository }: { repository?: Repository } = $props();
 
   /** IndexedDB no está disponible (AC-037): los datos solo viven en memoria. */
   let storageUnavailable = $state(false);
+
+  // Sincronización entre pestañas (AC-038): solo con el repositorio del navegador.
+  // svelte-ignore state_referenced_locally
+  const tabSync = repository ? undefined : createTabSync();
 
   // El repositorio se fija al montar la app. Sin uno dado, se usa IndexedDB
   // o, si no está disponible, un repositorio en memoria (AC-037).
@@ -32,6 +37,7 @@
           console.warn('IndexedDB no está disponible; los datos solo se guardan en memoria', error);
           storageUnavailable = true;
         },
+        sync: tabSync,
       }),
   );
   let creating = $state(false);
@@ -87,10 +93,17 @@
   onMount(() => {
     const syncRoute = () => (route = parseRoute(window.location.hash));
     window.addEventListener('hashchange', syncRoute);
+    // Cambios guardados en otras pestañas (AC-038): se releen y se muestran sin recargar.
+    tabSync?.subscribe((change) => {
+      store.applyRemoteChange(change).catch(() => {});
+    });
     store.hydrate().catch((error: unknown) => {
       console.error('No se pudieron cargar los datos guardados', error);
     });
-    return () => window.removeEventListener('hashchange', syncRoute);
+    return () => {
+      window.removeEventListener('hashchange', syncRoute);
+      tabSync?.close();
+    };
   });
 </script>
 
