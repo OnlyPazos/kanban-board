@@ -446,7 +446,7 @@ interface Card {
 - Acceptance Checks: AC-046
 - Depende de: [WI-AC-040]
 - Rama sugerida: feature/wi-ac-046-grapheme-safe-truncation
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Precisa AC-040 y D-013 según D-020: los límites se siguen contando en unidades UTF-16. No cambian `validateProjectName`, `validateCardTitle`, `PROJECT_NAME_MAX_LENGTH`, el límite de 120 ni ningún `maxlength`.
   - Nueva función pura de dominio para cualquier recorte por longitud, p. ej. `truncateToGraphemes(text, maxUnits)`. Devuelve el prefijo más largo formado por grafemas completos (`Intl.Segmenter` con `granularity: 'grapheme'`) cuya `length` (UTF-16) es ≤ `maxUnits`. Nunca parte un grafema, un par surrogate ni una secuencia ZWJ. Sin dependencias nuevas: `Intl.Segmenter` es nativo y su tipo está en el `lib` `ES2022` del `tsconfig.json`.
