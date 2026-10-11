@@ -1,8 +1,9 @@
 # Work Items
 
-Generado por `planner` a partir de `specs/project_specs.md` (AC-001 … AC-043, D-001 … D-017).
+Generado por `planner` a partir de `specs/project_specs.md` (AC-001 … AC-046, D-001 … D-020).
 Orden: por dependencias (los que no dependen de nada, primero). Cada Work Item se nombra por el primer Acceptance Check que cubre.
 Ampliación del 2026-10-10: WI-AC-040, WI-AC-041, WI-AC-042 y WI-AC-043 añadidos al final. Notas de WI-AC-001, WI-AC-012, WI-AC-018, WI-AC-031 y WI-AC-034 alineadas con D-014, D-015 y D-016 (todos seguían en `pendiente`).
+Ampliación del 2026-10-11: WI-AC-044, WI-AC-045 y WI-AC-046 añadidos al final (AC-044, AC-045, AC-046; D-018, D-019, D-020). Los Work Items integrados no cambian; solo se añade a WI-AC-040 una referencia a que AC-040 queda precisado por AC-046 (D-020), sin tocar su estado ni su historial.
 
 Sistema de diseño (D-015, D-016; aplica a todos los items con UI):
 - La UI se construye con los componentes de `design-system` (`Button`, `Input`, `Textarea`, `Select`, `Field`, `Dialog`, `Card`, `Badge`, `Chip`, `Alert`). Los estilos propios de la app solo usan variables `--ds-*`.
@@ -363,6 +364,7 @@ interface Card {
   - Función pura de dominio `copyName(name)` (D-013): si `name + " (copia)"` cabe en 80 caracteres, lo devuelve; si no, devuelve `name.slice(0, 80 - " (copia)".length) + " (copia)"`. El nombre ya viene validado, sin espacios exteriores.
   - "Importar como copia" de WI-AC-031 usa `copyName`. El resultado debe pasar `validateProjectName`, para que el proyecto copiado se pueda editar y guardar sin cambiar el nombre.
   - Tests unitarios: nombre de 78 caracteres → primeros 72 + " (copia)", 80 en total; nombre de 72 caracteres → sin recorte. Test e2e de importar como copia con un nombre largo y después guardar la edición del proyecto sin tocar el nombre.
+  - (2026-10-11) AC-040 queda precisado por AC-046 (D-020): el recorte se hace por límites de grafema y el total es como máximo 80. Se implementa y verifica en WI-AC-046.
 - Historial QA: [2026-10-10 PASS — AC-040 (commit c72373b). check 0 errores (1 warning conocido del design-system); test 232/232; test:e2e 48/48 (build incluido; AC-017 de teclado pasó). Verificación independiente (vite preview en el puerto 4417, script fuera del repo) con exports reales e "Importar como copia": 78 caracteres → primeros 72 + " (copia)" (80); 72 → sin recorte (80); 73 y 80 → 72 + " (copia)"; nombre cuyo recorte deja un espacio final (71 "a" + " " + 6 "b") → "…a  (copia)" (doble espacio interno, sin espacios exteriores), pasa validateProjectName; en todos los casos sin alerta ni diálogo de error, la copia aparece en la lista, el diálogo de edición trae el nombre exacto y "Guardar cambios" sin tocar el nombre se acepta, el nombre se conserva en IndexedDB y persiste tras recargar; 375 px sin desbordamiento; sin errores de consola ni peticiones externas. Observación para spec-writer (no bloquea: la spec no define cómo se cuentan los caracteres y la app cuenta unidades UTF-16 en validateProjectName, maxlength y copyName, como prescribe la nota del WI): con un emoji en la posición del corte (71 "e" + "😀", 73 unidades) el recorte deja un surrogate suelto ("…e\ud83d (copia)"); se guarda, se edita y se lista sin error, pero el último carácter visible queda corrupto. Si se quiere contar por code points o grafemas, debe decidirse en la spec. Reglas base de stack OK (función pura en dominio, sin dependencias nuevas, sin CSS ni colores, tests unitarios y e2e)]
 
 ## WI-AC-041
@@ -402,3 +404,68 @@ interface Card {
   - La preferencia no forma parte del export: `buildExport` (WI-AC-028) no la incluye, y ningún import la lee ni la cambia.
   - Tests: e2e de elegir Oscuro con el sistema en claro, recargar y comprobar el modo oscuro y que el selector muestra Oscuro. Unitario de que el JSON de `buildExport` (completo y de proyecto) no contiene la preferencia. E2e de importar un archivo con Oscuro activo y comprobar que sigue en Oscuro. E2e con `localStorage` bloqueado mediante `addInitScript` (que `setItem` y `getItem` lancen excepción): el selector cambia el modo, al recargar vuelve a Auto y no aparece ningún error.
 - Historial QA: [2026-10-11 PASS — AC-043 (commit a0b5213). check 0 errores (1 warning conocido del design-system); test 274/274; build OK; test:e2e 63/63 a la primera (build incluido; drag-and-drop.spec.ts:151 también pasó). Verificación independiente (vite preview en el puerto 4180, script fuera del repo): `dist/index.html` lleva el script inline síncrono antes del módulo y del CSS; con "dark" guardado y el JS de la app abortado, `<html data-theme="dark">`, `#app` vacío y `body` #1C1917 (el script inline lo aplica sin la app); `data-theme="dark"` ya presente al parsear el `<script type="module">` y el `<body>` (sin destello); valores guardados "DARK", "foo", "" y "auto" → selector Auto, sin `data-theme`, sigue al sistema y la clave queda borrada; con el getter de `window.localStorage` lanzando SecurityError (bloqueo real, además del e2e del builder sobre `Storage.prototype`): Oscuro/Claro funcionan en la sesión, al recargar vuelve a Auto sin `data-theme`, 0 alert, 0 diálogos, 0 errores ni avisos de consola. Export completo y de proyecto sin la preferencia (claves cards/exportedAt/formatVersion/kind/projects) e importar export completo, de proyecto, uno con campos de modo ajenos y uno roto no la cambia (e2e); `localStorage` solo se usa en `src/state/color-mode.svelte.ts` e `index.html`, ningún código de import/export lo toca. Juicio sobre lo declarado: (1) valor que no sea `light`/`dark` → Auto aceptable — D-017 fija "Auto" por defecto y la nota del WI solo admite esos dos valores, y el script inline hace lo mismo (sin divergencia entre pintado y app); (2) con Auto se borra la clave también al montar aceptable — la nota del WI dice "Con `auto` se elimina la clave" y solo limpia valores inválidos. Reglas base de stack OK (sin dependencias nuevas, sin CSS ni colores nuevos, try/catch en todo acceso, TS estricto, tests unitarios y e2e)]
+
+## WI-AC-044
+- Contexto: persistencia
+- Acceptance Checks: AC-044
+- Depende de: [WI-AC-035, WI-AC-043]
+- Rama sugerida: feature/wi-ac-044-no-uncaught-save-errors
+- Estado: pendiente
+- Notas de implementación:
+  - Origen (D-018): `observeWrites` (`src/persistence/repository.ts`) avisa a `saveError` y vuelve a lanzar el error. Los métodos de `AppStore` (`src/state/app-store.svelte.ts`) lo propagan sin capturarlo, y está bien que lo hagan: así la UI no indica que se guardó. El rechazo sin capturar nace en los `submit` de `src/views/CreateProjectDialog.svelte`, `EditProjectDialog.svelte`, `CreateCardDialog.svelte` y `EditCardDialog.svelte`, que usan `try { await …; open = false } finally { saving = false }` **sin `catch`**. El manejador de `onsubmit` devuelve una promesa rechazada que nadie atiende.
+  - Corrección: añadir `catch` en esos 4 `submit`. Si el guardado falla, el diálogo sigue abierto (`open` no pasa a `false`), `saving` vuelve a `false` y los valores escritos se conservan. El aviso de AC-035 ya lo pinta `App.svelte` a partir de `store.saveError`, así que no hace falta ningún mensaje nuevo en el diálogo. Se puede registrar el fallo con `console.error`, igual que hacen `Board.svelte`, `ArchivedCards.svelte`, `ArchivedProjects.svelte` y `ProjectList.svelte` (permitido por AC-044).
+  - No cambiar el contrato del store (sus métodos siguen rechazando) ni la lógica de `saveError`. No silenciar los errores con un manejador global de `unhandledrejection`: AC-044 pide tratarlos en cada flujo.
+  - El resto de flujos ya capturan el error en el código actual: archivar, restaurar y borrar proyecto (`ProjectList`, `ArchivedProjects`), archivar, restaurar y borrar tarjeta (`Board`, `ArchivedCards`), mover tarjeta (`Board.handleFinalize`), filtro por tipo (`Board.setTypeSelected`), imports (`ImportFlow`) y modo de color (`saveColorMode` con `try/catch`). Aun así, el e2e debe cubrirlos todos: lo que cuenta es la evidencia, no la lectura del código. Si alguno produce `pageerror`, se corrige en este mismo item.
+  - Test e2e nuevo (p. ej. `e2e/no-uncaught-save-errors.spec.ts`). Reutilizar el mecanismo de `e2e/save-error.spec.ts`: `addInitScript` que hace lanzar `QuotaExceededError` a las escrituras de `IDBObjectStore` (put/add/delete/clear) mientras `window.__failWrites` es `true`. Antes de cada flujo, registrar `page.on('pageerror')` y `page.on('console')`. Al final de cada flujo, comprobar que no hubo ningún `pageerror` y ningún mensaje de consola que contenga "Uncaught" (incluido "Uncaught (in promise)"). Los `console.error` y `console.warn` controlados están permitidos.
+  - Flujos que debe recorrer el e2e (lista literal de AC-044): crear, editar, archivar, restaurar y borrar definitivamente proyecto; crear, editar, archivar, restaurar y borrar definitivamente tarjeta; mover tarjeta con ratón, con táctil (viewport móvil con `hasTouch`, como en el e2e de AC-017) y con teclado; import completo (confirmado), import de proyecto nuevo, "Reemplazar" e "Importar como copia"; cambiar el filtro por tipo. En todos, además, comprobar lo visible de AC-035: aviso "No se pudieron guardar los cambios" con "Exportar ahora" y la UI sin indicar que se guardó. En crear y editar proyecto y tarjeta, comprobar también que el diálogo sigue abierto.
+  - Caso del modo de color: con `localStorage.setItem` y `removeItem` forzados a lanzar (`QuotaExceededError`) mediante `addInitScript`, cambiar el selector a Oscuro, a Claro y a Auto. No debe haber `pageerror` ni "Uncaught". Aquí no se exige el aviso de AC-035: AC-043 dice que este fallo no muestra error.
+  - Tests de componente: en los 4 diálogos, con un `oncreate`/`onsave` que rechaza, el diálogo sigue abierto, el botón deja de estar en `loading` y la promesa del submit no queda rechazada sin capturar.
+- Historial QA: []
+
+## WI-AC-045
+- Contexto: apariencia
+- Acceptance Checks: AC-045
+- Depende de: [WI-AC-042]
+- Rama sugerida: feature/wi-ac-045-visible-color-mode-label
+- Estado: pendiente
+- Notas de implementación:
+  - D-019 (opción B): quitar `hideLabel` del `Select` en `src/lib/ColorModeSelect.svelte`. El `Field` del design-system renderiza entonces la `<label for>` "Modo de color" visible y **encima** del `<select>` (`.ds-field` en columna). No se modifica nada en `design-system/`. No se añade texto propio ni `aria-label`, para no duplicar el nombre accesible.
+  - Revisar la maquetación de la cabecera en `src/lib/AppHeader.svelte` (`.app-header` y `.app-header__actions`, hoy con `align-items: center`): al crecer el bloque del selector, la cabecera tiene que seguir sin desbordar a 375 px. Si hace falta ajustar algo (alineación, `flex-wrap`, `min-width: 0`…), se hace solo con variables `--ds-*` existentes. Si faltara un token (p. ej. un breakpoint), no se inventa: se devuelve a `design-builder`.
+  - Actualizar el comentario de cabecera de `ColorModeSelect.svelte`, que hoy describe la etiqueta oculta.
+  - Test e2e, en las 4 vistas (lista de proyectos, tablero, tarjetas archivadas y proyectos archivados):
+    - El texto "Modo de color" del banner está visible (`toBeVisible`), no lleva la clase `ds-visually-hidden`, mide más de 0 y queda dentro del viewport.
+    - El `bottom` del `boundingBox` de la etiqueta es ≤ que el `top` del `<select>`.
+    - Es una `<label>` cuyo `for` apunta al `<select>`: tras hacer clic en el texto, el foco está en el selector.
+    - `getByRole('combobox', { name: 'Modo de color' })` sigue resolviendo a un único elemento y se maneja con el teclado (Tab y flechas), como en AC-042.
+    - Con un viewport de 375×667: `document.documentElement.scrollWidth` ≤ 375; la etiqueta y el selector están enteros dentro del viewport; sus rectángulos no se cruzan con los de otros elementos de la cabecera (título "Kanban de proyectos").
+  - Revisar que los e2e y tests existentes de AC-042 y AC-043 (`e2e/color-mode*.spec.ts`, `src/App.test.ts`) siguen pasando. Si alguno daba por hecho que la etiqueta estaba oculta, se ajusta.
+- Historial QA: []
+
+## WI-AC-046
+- Contexto: intercambio
+- Acceptance Checks: AC-046
+- Depende de: [WI-AC-040]
+- Rama sugerida: feature/wi-ac-046-grapheme-safe-truncation
+- Estado: pendiente
+- Notas de implementación:
+  - Precisa AC-040 y D-013 según D-020: los límites se siguen contando en unidades UTF-16. No cambian `validateProjectName`, `validateCardTitle`, `PROJECT_NAME_MAX_LENGTH`, el límite de 120 ni ningún `maxlength`.
+  - Nueva función pura de dominio para cualquier recorte por longitud, p. ej. `truncateToGraphemes(text, maxUnits)`. Devuelve el prefijo más largo formado por grafemas completos (`Intl.Segmenter` con `granularity: 'grapheme'`) cuya `length` (UTF-16) es ≤ `maxUnits`. Nunca parte un grafema, un par surrogate ni una secuencia ZWJ. Sin dependencias nuevas: `Intl.Segmenter` es nativo y su tipo está en el `lib` `ES2022` del `tsconfig.json`.
+  - `copyName(name)` en `src/domain/exchange.ts`. Hoy hace `name.slice(0, PROJECT_NAME_MAX_LENGTH - COPY_SUFFIX.length)` y puede dejar un surrogate suelto. Pasa a ser:
+    - Si `name + COPY_SUFFIX` cabe en 80 unidades → se devuelve sin cambios.
+    - Si no → `truncateToGraphemes(name, 80 - COPY_SUFFIX.length)` (72 unidades) + `COPY_SUFFIX`.
+    - Si el recorte queda vacío (el primer grafema no cabe) → `"(copia)"` sin espacio delante, es decir, `COPY_SUFFIX.trimStart()`.
+    - Si el recorte termina en un espacio, se conserva: queda un espacio interno ("…a  (copia)", ya aceptado en AC-040). No se aplica `trim` al prefijo.
+    - El resultado nunca tiene espacios exteriores y siempre pasa `validateProjectName`.
+  - Actualizar el JSDoc de `copyName` ("exactamente ese máximo" pasa a "como máximo") y el comentario de `copyImportedProject`.
+  - Tests unitarios de `copyName` con los cinco ejemplos de AC-046, comprobando el valor exacto y la `length`:
+    - (a) 71 "e" + "😀" → 71 "e" + " (copia)", 79 unidades.
+    - (b) 68 "e" + "👨‍👩‍👧" → 68 "e" + " (copia)", 76.
+    - (c) 70 "e" + "😀" + "xyz" → 70 "e" + "😀" + " (copia)", 80.
+    - (d) 78 ASCII → primeros 72 + " (copia)", 80.
+    - (e) "a" + 79 × U+0301 → "(copia)", 7.
+    - Más los casos ya existentes de AC-040 (72 caracteres sin recorte; recorte que termina en espacio).
+    - En todos, el resultado no contiene surrogates aislados y `validateProjectName(result)` es `null`.
+  - Tests unitarios de la función de recorte por separado: un grafema que no cabe se descarta entero; `maxUnits` 0; texto vacío.
+  - Comprobación de "sin surrogates aislados": `String.prototype.isWellFormed()` es ES2024 y no está en el `lib` actual (`ES2022`). En los tests, usar una expresión regular de surrogates aislados o una aserción de tipo local. No ampliar el `lib` del `tsconfig` solo para esto, salvo que no haya otra opción razonable.
+  - Test e2e (ampliar `e2e/copy-name-truncation.spec.ts`). Con exports reales de proyecto y "Importar como copia", en los cinco casos (a)–(e): la importación termina sin error; el proyecto copiado aparece en la lista con el nombre exacto; en el navegador, `name.isWellFormed()` es `true`; abrir "Editar proyecto" y "Guardar cambios" sin tocar el nombre se acepta, y el nombre se conserva en IndexedDB y tras recargar.
+- Historial QA: []

@@ -477,6 +477,8 @@ Resultado de `node design-system/scripts/check-contrast.mjs`: **los 88 pares (44
 - **Export de proyecto**: archivo JSON con un proyecto y todas sus tarjetas (activas y archivadas).
 - **Versión de formato**: número incluido en todo archivo exportado que identifica la estructura del JSON.
 - **Modo de color**: apariencia clara u oscura de la interfaz. La **preferencia de modo** puede ser `Auto` (sigue el modo del sistema operativo), `Claro` u `Oscuro`; por defecto `Auto`. Es una preferencia del navegador, no un dato de proyecto.
+- **Carácter (en límites de longitud)**: unidad con la que se cuentan los límites de nombre de proyecto (80) y título de tarjeta (120): una unidad de código UTF-16, igual que el `maxlength` nativo (`"😀".length === 2`). Ver D-020.
+- **Grafema**: lo que el usuario percibe como un solo carácter (por ejemplo "e", "😀" o la secuencia ZWJ "👨‍👩‍👧"), según `Intl.Segmenter` con `granularity: 'grapheme'`. Puede ocupar varias unidades UTF-16. Los recortes de longitud que hace la app nunca parten un grafema (D-020).
 
 ## Contextos delimitados
 - **proyectos**: crear, editar y listar proyectos; pantalla inicial y estado vacío.
@@ -607,6 +609,7 @@ El filtro por tipo admite selección múltiple. Con tarjetas de los 4 tipos, al 
 
 ### AC-040 [intercambio] [categoría: edge-case]
 Al usar "Importar como copia" con un proyecto cuyo nombre más " (copia)" supera 80 caracteres, el nombre original se recorta para que el resultado tenga exactamente 80 caracteres y termine en " (copia)". Por ejemplo, un nombre de 78 caracteres queda en sus primeros 72 + " (copia)". La importación se completa sin error y el proyecto copiado se puede editar y guardar sin cambiar su nombre. depende_de: [AC-032, AC-004]
+> Nota (2026-10-11): precisado por D-020 y AC-046. Los "caracteres" de este check son unidades UTF-16. El recorte se hace en el último límite de grafema completo, así que el resultado tiene **como máximo** 80 unidades y puede quedar por debajo si el corte cae dentro de un grafema. El ejemplo de 78 caracteres ASCII no cambia. El texto original se conserva como historial.
 
 ### AC-041 [intercambio] [categoría: edge-case]
 Si la app no tiene ningún proyecto (ni activo ni archivado), al importar un export completo no se muestra confirmación: los proyectos del archivo aparecen directamente en la lista. depende_de: [AC-030]
@@ -616,6 +619,21 @@ La cabecera de la app tiene un selector "Modo de color" con las opciones "Auto",
 
 ### AC-043 [apariencia] [categoría: edge-case]
 Tras elegir "Oscuro" y recargar la página, la interfaz sigue en modo oscuro y el selector muestra "Oscuro", aunque el sistema esté en claro. La preferencia de modo no aparece en el export completo ni en el export de proyecto, e importar cualquier archivo no la cambia. Si el navegador no permite guardar la preferencia, el selector sigue funcionando durante la sesión y al recargar vuelve a "Auto", sin mostrar ningún error. depende_de: [AC-042, AC-028, AC-029]
+
+### AC-044 [persistencia] [categoría: edge-case]
+Con el almacenamiento forzado a fallar (por ejemplo, `QuotaExceededError` en las escrituras de IndexedDB, simulable en test), ningún flujo que escribe datos produce un error no controlado. Los flujos son: crear, editar, archivar, restaurar y borrar definitivamente proyectos y tarjetas; mover una tarjeta con ratón, táctil o teclado; importar un export completo, un proyecto nuevo, "Reemplazar" e "Importar como copia"; y cambiar el filtro por tipo. Durante cada uno, Playwright no registra ningún evento `pageerror` y la consola no muestra ningún mensaje "Uncaught" ni "Uncaught (in promise)". En todos esos flujos se mantiene el comportamiento visible de AC-035: aparece el aviso de error de guardado con "Exportar ahora" y la interfaz no indica que se guardó. Al crear o editar un proyecto o una tarjeta, el diálogo sigue abierto. Si falla el guardado de la preferencia de modo de color (AC-043), tampoco hay `pageerror` ni "Uncaught". La app puede registrar el fallo a propósito con `console.error` o `console.warn`. Esos mensajes controlados están permitidos y no hacen fallar este check, que solo prohíbe los errores no controlados (`pageerror`, "Uncaught" y "Uncaught (in promise)"). depende_de: [AC-035]
+
+### AC-045 [apariencia] [categoría: functional]
+En la lista de proyectos, el tablero, la vista de proyectos archivados y la vista de tarjetas archivadas, el texto "Modo de color" se ve en la cabecera **encima** del selector de AC-042: su borde inferior queda por encima del borde superior del selector. Es la disposición de serie de `Field` y no se modifica `design-system/`. El texto no está oculto visualmente (no lleva `ds-visually-hidden`), tiene un tamaño mayor que 0 y queda dentro del viewport. Es la `<label>` asociada al `<select>`: al hacer clic en el texto, el foco pasa al selector. El selector conserva el nombre accesible "Modo de color" (`getByRole('combobox', { name: 'Modo de color' })`) y se sigue manejando solo con el teclado, como en AC-042. Con un viewport de 375 px, en esas 4 vistas, la página no se desplaza en horizontal (`document.documentElement.scrollWidth` ≤ 375), y la etiqueta y el selector se ven completos dentro del viewport sin solaparse con otros elementos de la cabecera. depende_de: [AC-042]
+
+### AC-046 [intercambio] [categoría: edge-case]
+Los límites del nombre de proyecto (80) y del título de tarjeta (120) se siguen contando en unidades UTF-16, igual que `maxlength`. La validación de AC-003, AC-004 y AC-011 no cambia, ni tampoco el `maxlength` donde lo haya. Cuando la app recorta un texto por longitud, lo corta en el último límite de grafema completo que quepa (`Intl.Segmenter` con `granularity: 'grapheme'`). Hoy el único caso es el nombre original en "Importar como copia" (AC-040), pero la regla vale para cualquier recorte. El resultado nunca contiene medio grafema, un surrogate suelto ni una secuencia ZWJ partida. Puede quedar por debajo del máximo y siempre pasa la validación del nombre. El nombre de la copia nunca tiene espacios exteriores. Si el recorte deja vacío el nombre original, porque su primer grafema no cabe, el resultado es "(copia)", sin espacio delante. Si el recorte termina en un espacio, ese espacio queda dentro del nombre (por ejemplo "…a  (copia)", ya aceptado en AC-040) y no hay que quitarlo. Ejemplos con "Importar como copia", donde quedan 72 unidades para el nombre original:
+(a) 71 "e" + "😀" (73 unidades) da 71 "e" + " (copia)", con 79 unidades: el "😀" se descarta entero.
+(b) 68 "e" + "👨‍👩‍👧" (la secuencia ocupa 8 unidades; 76 en total) da 68 "e" + " (copia)", con 76 unidades, sin ningún fragmento de la secuencia.
+(c) 70 "e" + "😀" + "xyz" (75 unidades) da 70 "e" + "😀" + " (copia)", con 80 unidades: el emoji cabe y se conserva.
+(d) Un nombre ASCII de 78 caracteres da sus primeros 72 + " (copia)", con 80 unidades, igual que en AC-040.
+(e) "a" + 79 × U+0301 (acento agudo combinante) es un solo grafema de 80 unidades y un nombre válido. Da exactamente "(copia)", con 7 unidades, sin espacio delante y sin ningún fragmento del grafema.
+En los cinco casos la importación se completa sin error. El nombre de la copia no contiene surrogates aislados (`String.prototype.isWellFormed()` devuelve `true`). El proyecto copiado aparece en la lista con ese nombre exacto y se puede editar y guardar sin cambiar el nombre. depende_de: [AC-040]
 
 ## Decisiones de diseño
 
@@ -709,6 +727,7 @@ Opciones: A) Recortar el nombre original para que el total quepa en 80; B) Permi
 Elegido: A.
 Razón: La importación nunca falla por el nombre y se respeta la regla de 80 caracteres en todos los casos.
 Prueba (AC): AC-040
+> Nota (2026-10-11): precisada por D-020. La opción A se mantiene, pero el recorte se hace en el último límite de grafema completo, no en una unidad UTF-16 cualquiera. Por eso el total es como máximo 80, no exactamente 80. El texto original se conserva como historial.
 
 ### D-014 [tema: edge-case]
 Pregunta: ¿Se pide confirmación al importar un export completo cuando no hay ningún proyecto?
@@ -738,4 +757,30 @@ Elegido: B. Por defecto "Auto". La preferencia se guarda en el navegador, separa
 Razón: El sistema de diseño ya soporta ambos modos y la opción de forzarlos, así que el coste es pequeño. Es una preferencia del dispositivo, no un dato de proyecto, y por eso no viaja en los exports.
 Prueba (AC): AC-042, AC-043
 
+### D-018 [tema: edge-case]
+Pregunta: QA observó en WI-AC-035 y WI-AC-038 que, cuando falla el guardado al crear o editar un proyecto o una tarjeta, queda un rechazo de promesa sin capturar (`pageerror` / "Uncaught (in promise)"). El aviso de AC-035 se ve bien, pero el error no aparece en la interfaz. ¿Se corrige?
+Opciones: A) Dejarlo como está, porque no lo ve el usuario; B) Corregirlo: ningún fallo de guardado, en ningún flujo de escritura, produce un error no controlado, y se mantiene el comportamiento visible de AC-035.
+Elegido: B. Todo fallo de guardado se trata de forma controlada y llega al aviso de AC-035 (con "Exportar ahora", sin indicación de éxito, y con el diálogo abierto si lo hay), sin `pageerror` ni "Uncaught" en la consola. Se permite que la app registre el fallo a propósito con `console.error` o `console.warn`: solo se prohíben los errores no controlados (`pageerror`, "Uncaught" y "Uncaught (in promise)"). Esto lo confirmó el usuario el 2026-10-11 (antes era P-2). Se registra como un AC nuevo (AC-044) y no se reescribe AC-035.
+Razón: Un rechazo sin capturar es un fallo real aunque no se vea. Ensucia la consola, enmascara otros errores en los tests e2e, y en algunos entornos puede cortar flujos posteriores. Un AC aparte deja el requisito verificable sin alterar el historial de AC-035.
+Prueba (AC): AC-044
+
+### D-019 [tema: ambiguedad]
+Pregunta: ¿La etiqueta "Modo de color" del selector de AC-042 se oculta (solo para lectores de pantalla) o se ve?
+Opciones: A) Oculta con `hideLabel` de `Select`, que es lo implementado hasta ahora (`ds-visually-hidden`); B) Visible, usando la etiqueta que ya renderiza `Select` a través de `Field`, sin `hideLabel`; C) Visible, con un texto propio de la app fuera de `Field`.
+Elegido: B. El texto "Modo de color" se ve **encima** del selector, en la cabecera de las 4 vistas, y es la `<label>` del `Field` asociada al `<select>`. Es la disposición de serie de `Field` (`.ds-field` en columna) y no se toca `design-system/`. Esto lo confirmó el usuario el 2026-10-11 (antes era P-1). El nombre accesible y el manejo con teclado no cambian, y a 375 px no hay desbordamiento horizontal.
+Razón: Según la sección "Sistema de diseño", `Select` se construye sobre `Field`, que siempre renderiza una `<label for>` y solo la oculta con `hideLabel`. Quitar `hideLabel` da una etiqueta visible sin componentes nuevos y sin duplicar el nombre accesible, cosa que sí arriesgaría la opción C.
+Prueba (AC): AC-045
+
+### D-020 [tema: edge-case]
+Pregunta: QA observó en WI-AC-040 que, si hay un emoji en la posición de corte de `copyName` (D-013), el recorte deja un surrogate suelto. ¿Cómo se cuentan los límites y cómo se recorta?
+Opciones: A) Contar y recortar en unidades UTF-16, como hasta ahora; B) Contar en code points; C) Contar en grafemas; D) Contar en unidades UTF-16 y recortar en límites de grafema.
+Elegido: D. Los límites (nombre de proyecto 80, título de tarjeta 120) se siguen contando en unidades UTF-16, igual que el `maxlength` nativo, y no cambian ni la validación ni el `maxlength`. Cuando la app recorta un texto por longitud, lo corta en el último límite de grafema completo que quepa (`Intl.Segmenter` con `granularity: 'grapheme'`). Hoy solo pasa en "Importar como copia", pero la regla vale para cualquier recorte futuro. Nunca deja medio carácter, un surrogate suelto ni una secuencia ZWJ partida. El resultado puede quedar unas unidades por debajo del máximo y siempre pasa la validación del nombre. El nombre de la copia nunca tiene espacios exteriores. Si el recorte deja vacío el nombre original, se guarda "(copia)" sin espacio delante; esto lo confirmó el usuario el 2026-10-11 (antes era P-3). Como el nombre original ya viene sin espacios exteriores, ese es el único caso en que podría aparecer uno. Si el recorte termina en un espacio, ese espacio queda en medio, entre el texto y " (copia)" (caso "…a  (copia)", verificado en AC-040), así que no es exterior y no hace falta ninguna regla más. Quitar los espacios exteriores (`trim`) no es un recorte por longitud y no se ve afectado.
+Efecto sobre decisiones y checks anteriores: precisa D-013, que mantiene la opción A ("recortar"), pero el total pasa de "exactamente 80" a "como máximo 80". Precisa también AC-040: el ejemplo ASCII de 78 caracteres sigue igual, y si el corte cae dentro de un grafema el resultado puede tener menos de 80 unidades. Los textos de D-013 y AC-040 se conservan, con una nota que remite aquí.
+Razón: Contar en UTF-16 mantiene la coherencia con `maxlength` y con la validación ya implementada y verificada, sin migrar datos. Recortar por grafemas evita que la app corrompa el texto del usuario, que es el único defecto observado. `Intl.Segmenter` es nativo del navegador y no añade dependencias.
+Prueba (AC): AC-046, AC-040
+
 ## Preguntas abiertas
+Ninguna pendiente. Resueltas el 2026-10-11:
+- **P-1 (AC-045, D-019)**: ¿la etiqueta visible va encima del selector o en la misma línea? → **Resuelta**: va encima, que es la disposición de serie de `Field`, y no se toca `design-system/`.
+- **P-2 (AC-044, D-018)**: ¿se permite registrar el fallo a propósito con `console.error` o `console.warn`? → **Resuelta**: sí. AC-044 solo prohíbe `pageerror`, "Uncaught" y "Uncaught (in promise)".
+- **P-3 (AC-046, D-020)**: ¿qué pasa si el recorte deja vacío el nombre original? → **Resuelta**: se guarda "(copia)" sin espacio delante (ejemplo (e) de AC-046). Un recorte que termina en espacio deja un espacio interno, no exterior, así que no hace falta ninguna regla más.
