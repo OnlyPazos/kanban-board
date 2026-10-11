@@ -32,6 +32,7 @@ export {
   type StatusCounts,
 } from './card';
 export { matchesTypeFilter, normalizeTypeFilter, toggleTypeFilter } from './filter';
+export { truncateToGraphemes } from './text';
 export {
   buildExport,
   COPY_SUFFIX,

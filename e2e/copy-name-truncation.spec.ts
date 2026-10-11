@@ -98,3 +98,68 @@ test('AC-040: "Importar como copia" con un nombre largo lo recorta a 80 y la cop
   expect(saved.name).toBe(expected);
   expect(saved.description).toBe('Copia editada');
 });
+
+/** `String.prototype.isWellFormed()` (ES2024) evaluado en el navegador; no está en el `lib` ES2022 de TS. */
+async function isWellFormedInBrowser(page: Page, value: string): Promise<boolean> {
+  return page.evaluate((v) => (v as unknown as { isWellFormed(): boolean }).isWellFormed(), value);
+}
+
+const e = (n: number) => 'e'.repeat(n);
+const graphemeCases: { label: string; name: string; expected: string; length: number }[] = [
+  { label: '(a) 71 "e" + "😀"', name: e(71) + '😀', expected: e(71) + ' (copia)', length: 79 },
+  { label: '(b) 68 "e" + "👨‍👩‍👧"', name: e(68) + '👨‍👩‍👧', expected: e(68) + ' (copia)', length: 76 },
+  { label: '(c) 70 "e" + "😀" + "xyz"', name: e(70) + '😀xyz', expected: e(70) + '😀 (copia)', length: 80 },
+  {
+    label: '(d) 78 ASCII',
+    name: 'a'.repeat(70) + 'bcdefghi',
+    expected: 'a'.repeat(70) + 'bc (copia)',
+    length: 80,
+  },
+  { label: '(e) "a" + 79 × U+0301', name: 'a' + '́'.repeat(79), expected: '(copia)', length: 7 },
+];
+
+for (const { label, name, expected, length } of graphemeCases) {
+  test(`AC-046 ${label}: "Importar como copia" recorta por grafemas y la copia se puede editar y guardar`, async ({
+    page,
+  }) => {
+    expect(expected).toHaveLength(length);
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto('/');
+    await createProject(page, name);
+    await openProject(page, name);
+    const file = await exportProject(page);
+    await backToList(page);
+
+    await importFile(page, file);
+    const conflict = page.getByRole('dialog', { name: 'Este proyecto ya existe' });
+    await conflict.getByRole('button', { name: 'Importar como copia' }).click();
+    await expect(conflict).toBeHidden();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(projectList(page).getByRole('button', { name: expected, exact: true })).toBeVisible();
+    await expect(projectList(page).getByRole('button', { name, exact: true })).toBeVisible();
+
+    const original = (await storedProjects(page)).find((p) => p.name === name)!;
+    const copy = (await storedProjects(page)).find((p) => p.id !== original.id)!;
+    expect(copy.name).toBe(expected);
+    expect(copy.name).toHaveLength(length);
+    expect(await isWellFormedInBrowser(page, copy.name)).toBe(true);
+
+    // Editar la copia y guardar sin tocar el nombre: se acepta y el nombre se conserva.
+    await projectList(page).getByRole('button', { name: `Editar ${expected}`, exact: true }).click();
+    const edit = page.getByRole('dialog', { name: 'Editar proyecto' });
+    await expect(edit.getByLabel('Nombre')).toHaveValue(expected);
+    await edit.getByRole('button', { name: 'Guardar cambios' }).click();
+    await expect(edit).toBeHidden();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+
+    await page.reload();
+    await expect(projectList(page).getByRole('button', { name: expected, exact: true })).toBeVisible();
+    const saved = (await storedProjects(page)).find((p) => p.id === copy.id)!;
+    expect(saved.name).toBe(expected);
+    expect(await isWellFormedInBrowser(page, saved.name)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}

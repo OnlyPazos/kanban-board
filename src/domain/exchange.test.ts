@@ -210,6 +210,43 @@ describe('copyName (D-013, AC-040)', () => {
   });
 });
 
+describe('copyName: recorte por grafemas (D-020, AC-046)', () => {
+  /** Surrogate alto sin bajo detrás, o bajo sin alto delante (equivale a `!isWellFormed()`, ES2024). */
+  const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+  const e = (n: number) => 'e'.repeat(n);
+
+  const cases: [string, string, string, number][] = [
+    ['(a) 71 "e" + "😀" → el emoji se descarta entero', e(71) + '😀', e(71) + ' (copia)', 79],
+    ['(b) 68 "e" + "👨‍👩‍👧" → la secuencia ZWJ se descarta entera', e(68) + '👨‍👩‍👧', e(68) + ' (copia)', 76],
+    ['(c) 70 "e" + "😀" + "xyz" → el emoji cabe y se conserva', e(70) + '😀xyz', e(70) + '😀 (copia)', 80],
+    ['(d) 78 ASCII → primeros 72 + " (copia)"', 'a'.repeat(70) + 'bcdefghi', 'a'.repeat(70) + 'bc (copia)', 80],
+    ['(e) "a" + 79 × U+0301 → "(copia)" sin espacio delante', 'a' + '́'.repeat(79), '(copia)', 7],
+    ['AC-040: 72 caracteres → sin recorte', 'n'.repeat(72), 'n'.repeat(72) + ' (copia)', 80],
+    ['AC-040: recorte que termina en espacio → espacio interno', 'a'.repeat(71) + ' ' + 'b'.repeat(6), 'a'.repeat(71) + '  (copia)', 80],
+  ];
+
+  it.each(cases)('%s', (_label, name, expected, length) => {
+    expect(validateProjectName(name)).toBeNull();
+    const result = copyName(name);
+    expect(result).toBe(expected);
+    expect(result).toHaveLength(length);
+    expect(LONE_SURROGATE.test(result)).toBe(false);
+    expect(result).toBe(result.trim());
+    expect(validateProjectName(result)).toBeNull();
+  });
+
+  it('las entradas de (a)–(e) tienen las longitudes de AC-046', () => {
+    expect(cases.slice(0, 5).map(([, name]) => name.length)).toEqual([73, 76, 75, 78, 80]);
+  });
+
+  it('copyImportedProject usa el recorte por grafemas', () => {
+    const project = createProject({ name: e(71) + '😀' }, now, 'p-emoji');
+    const result = copyImportedProject(project, [], () => 'nuevo');
+    expect(result.project.name).toBe(e(71) + ' (copia)');
+    expect(LONE_SURROGATE.test(result.project.name)).toBe(false);
+  });
+});
+
 describe('parseImport: validación completa (WI-AC-033, AC-033)', () => {
   const full = () => buildExport(sample(), { kind: 'full' }, now);
   type Tamper = (file: ReturnType<typeof full>) => unknown;
