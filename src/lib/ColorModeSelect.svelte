@@ -1,6 +1,9 @@
 <!--
   Selector "Modo de color" de la cabecera (AC-042, D-017). Select nativo
   del sistema de diseño: se maneja solo con el teclado.
+  La etiqueta "Modo de color" es visible y va encima del selector, que es
+  la disposición de serie de `Field` (AC-045, D-019). Es la <label for>
+  del <select>, así que también le da su nombre accesible.
 -->
 <script lang="ts">
   import { Select } from 'design-system';
@@ -13,7 +16,6 @@
 
 <Select
   label="Modo de color"
-  hideLabel
   {options}
   bind:value={
     () => mode,
