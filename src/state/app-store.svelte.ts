@@ -22,7 +22,7 @@ import {
   type Project,
   type ProjectEdit,
 } from '../domain';
-import type { Repository } from '../persistence/repository';
+import { observeWrites, type Repository } from '../persistence/repository';
 
 /**
  * La lista `projects` se mantiene siempre ordenada por `updatedAt`
@@ -41,10 +41,24 @@ export class AppStore {
   /** Proyectos de la vista global de archivados (AC-024), en el orden de `projects`. */
   archivedProjects = $derived(this.projects.filter((p) => p.archived));
 
+  /**
+   * Último fallo de escritura del almacenamiento (AC-035), o `null` si no lo
+   * hay. Se activa con cualquier escritura fallida (cuota excedida,
+   * transacción abortada…) y se limpia con la siguiente escritura confirmada.
+   */
+  saveError = $state<{ error: unknown } | null>(null);
+
   readonly #repository: Repository;
 
   constructor(repository: Repository) {
-    this.#repository = repository;
+    this.#repository = observeWrites(repository, {
+      onWriteError: (error) => {
+        this.saveError = { error };
+      },
+      onWriteSuccess: () => {
+        this.saveError = null;
+      },
+    });
   }
 
   async hydrate(): Promise<void> {

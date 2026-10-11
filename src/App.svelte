@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { Alert, Button } from 'design-system';
   import AppHeader from './lib/AppHeader.svelte';
   import ProjectList from './views/ProjectList.svelte';
   import CreateProjectDialog from './views/CreateProjectDialog.svelte';
@@ -52,7 +53,7 @@
     editingCard = true;
   }
 
-  /** Descarga el export completo (AC-028) con el estado en memoria. */
+  /** Descarga el export completo (AC-028; "Exportar ahora" de AC-035) con el estado en memoria. */
   function exportAll() {
     const now = new Date();
     downloadJson(exportFileName(now), buildExport(store, { kind: 'full' }, now));
@@ -82,6 +83,16 @@
 </script>
 
 <AppHeader />
+{#if store.saveError}
+  <div class="save-error">
+    <Alert tone="danger" title="No se pudieron guardar los cambios">
+      Tus últimos cambios no se han guardado en este navegador. Exporta tus datos para no perderlos.
+      {#snippet actions()}
+        <Button size="sm" onclick={exportAll}>Exportar ahora</Button>
+      {/snippet}
+    </Alert>
+  </div>
+{/if}
 <main>
   {#if route.name === 'archived-projects'}
     <ArchivedProjects
@@ -155,6 +166,10 @@
 />
 
 <style>
+  .save-error {
+    padding: var(--ds-spacing-3) var(--ds-spacing-4) 0;
+  }
+
   .not-found {
     display: flex;
     flex-direction: column;

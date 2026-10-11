@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createCard, createProject } from '../domain';
 import { openKanbanDB } from './db';
-import { createIdbRepository, typeFilterKey } from './repository';
+import { createIdbRepository, observeWrites, typeFilterKey, WRITE_METHODS, type Repository } from './repository';
 
 let counter = 0;
 const freshName = () => `kanban-board-test-${++counter}-${crypto.randomUUID()}`;
@@ -217,5 +217,61 @@ describe('importProject (import de proyecto, AC-031, AC-032)', () => {
     const reloaded = createIdbRepository(name);
     expect(await reloaded.listProjects()).toEqual([existing]);
     expect(await reloaded.listCards()).toEqual([oldCard]);
+  });
+});
+
+describe('observeWrites (AC-035)', () => {
+  function failingRepository(error: unknown): Repository {
+    const repo = createIdbRepository(freshName());
+    return {
+      ...repo,
+      saveProject: async () => {
+        throw error;
+      },
+    };
+  }
+
+  it('avisa del fallo de escritura y propaga el error a quien llamó', async () => {
+    const quota = new DOMException('Cuota excedida', 'QuotaExceededError');
+    const onWriteError = vi.fn();
+    const onWriteSuccess = vi.fn();
+    const repo = observeWrites(failingRepository(quota), { onWriteError, onWriteSuccess });
+
+    await expect(repo.saveProject(createProject({ name: 'Mi app' }))).rejects.toBe(quota);
+    expect(onWriteError).toHaveBeenCalledWith(quota);
+    expect(onWriteSuccess).not.toHaveBeenCalled();
+  });
+
+  it('avisa de cada escritura confirmada y no toca las lecturas', async () => {
+    const onWriteError = vi.fn();
+    const onWriteSuccess = vi.fn();
+    const repo = observeWrites(createIdbRepository(freshName()), { onWriteError, onWriteSuccess });
+    const project = createProject({ name: 'Mi app' });
+
+    await repo.saveProject(project);
+    await repo.saveCard(createCard({ projectId: project.id, title: 'A', status: 'sin-empezar' }), project);
+    await repo.saveTypeFilter(project.id, ['arreglo']);
+    expect(onWriteSuccess).toHaveBeenCalledTimes(3);
+
+    await repo.listProjects();
+    await repo.listCards();
+    await repo.listTypeFilters();
+    expect(onWriteSuccess).toHaveBeenCalledTimes(3);
+    expect(onWriteError).not.toHaveBeenCalled();
+  });
+
+  it('un fallo de transacción real (put de un valor no clonable) también se avisa', async () => {
+    const onWriteError = vi.fn();
+    const repo = observeWrites(createIdbRepository(freshName()), { onWriteError, onWriteSuccess: vi.fn() });
+    const project = { ...createProject({ name: 'Mi app' }), description: (() => {}) as unknown as string };
+
+    await expect(repo.saveProject(project)).rejects.toThrow();
+    expect(onWriteError).toHaveBeenCalledTimes(1);
+  });
+
+  it('envuelve todas las escrituras del repositorio', () => {
+    expect([...WRITE_METHODS].sort()).toEqual(
+      ['deleteCard', 'deleteProject', 'importProject', 'replaceAll', 'saveCard', 'saveProject', 'saveTypeFilter'].sort(),
+    );
   });
 });

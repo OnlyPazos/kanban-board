@@ -321,13 +321,13 @@ interface Card {
 - Acceptance Checks: AC-035
 - Depende de: [WI-AC-028]
 - Rama sugerida: feature/wi-ac-035-save-error
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - La capa de persistencia captura los errores de escritura (`QuotaExceededError` y cualquier fallo de transacción) y los expone como estado global `saveError`.
   - Aviso visible mientras haya error, con el botón "Exportar ahora", que descarga el export completo con el estado en memoria.
   - Si el guardado falla, no se muestra ninguna indicación de éxito.
   - Test unitario o de componente simulando el fallo del repositorio.
-- Historial QA: []
+- Historial QA: [2026-10-10 PASS — AC-035 (commit a9a7a07). check 0 errores (1 warning conocido del design-system); test 240/240; test:e2e 50/50 (incl. los 2 nuevos de AC-035; AC-017 teclado pasó). Reproducción propia con Playwright sobre preview (puerto 4391, cerrado al terminar), forzando QuotaExceededError en put/add/delete/clear de IDBObjectStore, en 17 flujos: crear/editar/archivar/restaurar/borrar proyecto, crear/editar/archivar/restaurar/borrar tarjeta, mover por drag-and-drop con ratón y con teclado, import completo confirmado, import de proyecto nuevo, "Reemplazar" e "Importar como copia", y filtro por tipo. En todos: aparece el aviso role=alert "No se pudieron guardar los cambios" con "Exportar ahora"; la UI no muestra el cambio (diálogos siguen abiertos, la tarjeta vuelve a su columna, la lista no cambia); "Exportar ahora" descarga kanban-export-*.json kind "full" igual al estado en memoria (sin el cambio fallido) e IndexedDB queda sin cambios. El aviso se ve detrás de los diálogos y se limpia con la siguiente escritura confirmada. Decisiones del builder coherentes con el texto de AC-035. Reglas base OK: Alert/Button del design-system, solo tokens --ds-*, sin dependencias nuevas, tests unitarios + componente + e2e. Observaciones no bloqueantes: (a) el export no incluye el cambio fallido, porque la memoria solo se actualiza tras guardar (conforme al texto "estado actual en memoria"); (b) los diálogos de crear/editar dejan un rechazo de promesa sin capturar (pageerror en consola, no visible para el usuario; patrón previo a este WI)]
 
 ## WI-AC-037
 - Contexto: persistencia

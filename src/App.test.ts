@@ -262,4 +262,59 @@ describe('App: "Importar" del estado vacío (AC-034)', () => {
     expect(await repository.listProjects()).toEqual([miApp]);
     expect(await repository.listCards()).toEqual([source.cards[0]]);
   });
+
+  describe('error de guardado (AC-035)', () => {
+    it('muestra el aviso con "Exportar ahora", que descarga el export completo con el estado en memoria', async () => {
+      const existing = createProject({ name: 'Mi app' });
+      const quota = new DOMException('Cuota excedida', 'QuotaExceededError');
+      const base = memoryRepository([existing]);
+      const repository: Repository = {
+        ...base,
+        saveProject: async () => {
+          throw quota;
+        },
+      };
+      render(App, { repository });
+      const list = screen.getByRole('region', { name: 'Proyectos' });
+      await within(list).findByRole('button', { name: 'Mi app' });
+      expect(screen.queryByText('No se pudieron guardar los cambios')).toBeNull();
+
+      // Archivar falla al guardar: el proyecto sigue en la lista activa (no se indica que se guardó).
+      await fireEvent.click(screen.getByRole('button', { name: 'Archivar Mi app' }));
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('No se pudieron guardar los cambios');
+      expect(within(list).getByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+
+      let downloaded: Blob | undefined;
+      const createObjectURL = vi.fn((blob: Blob) => {
+        downloaded = blob;
+        return 'blob:export';
+      });
+      const revokeObjectURL = vi.fn();
+      const original = { createObjectURL: URL.createObjectURL, revokeObjectURL: URL.revokeObjectURL };
+      Object.assign(URL, { createObjectURL, revokeObjectURL });
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      try {
+        await fireEvent.click(within(alert).getByRole('button', { name: 'Exportar ahora' }));
+        expect(click).toHaveBeenCalledOnce();
+        const anchor = click.mock.contexts[0] as HTMLAnchorElement;
+        expect(anchor.download).toMatch(/^kanban-export-.*\.json$/);
+        const data = JSON.parse(await (downloaded as Blob).text());
+        expect(data).toMatchObject({ kind: 'full', projects: [{ id: existing.id, name: 'Mi app', archived: false }], cards: [] });
+      } finally {
+        click.mockRestore();
+        Object.assign(URL, original);
+      }
+    });
+
+    it('sin fallos de guardado no hay aviso', async () => {
+      render(App, { repository: memoryRepository() });
+      await fireEvent.click(screen.getByRole('button', { name: 'Crear proyecto' }));
+      const dialog = screen.getByRole('dialog', { name: 'Crear proyecto' });
+      await fireEvent.input(within(dialog).getByLabelText(/^Nombre/), { target: { value: 'Mi app' } });
+      await fireEvent.click(within(dialog).getByRole('button', { name: 'Crear' }));
+      expect(await screen.findByRole('button', { name: 'Mi app' })).toBeInTheDocument();
+      expect(screen.queryByText('No se pudieron guardar los cambios')).toBeNull();
+    });
+  });
 });
