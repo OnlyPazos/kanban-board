@@ -86,8 +86,10 @@ export function typeFilterKey(projectId: string): string {
 
 export function createIdbRepository(dbName?: string): Repository {
   let dbPromise: Promise<IDBPDatabase<KanbanDB>> | undefined;
-  const db = () => (dbPromise ??= openKanbanDB(dbName));
+  return idbRepository(() => (dbPromise ??= openKanbanDB(dbName)));
+}
 
+function idbRepository(db: () => Promise<IDBPDatabase<KanbanDB>>): Repository {
   return {
     async listProjects() {
       return (await db()).getAll('projects');
@@ -193,5 +195,100 @@ export function createIdbRepository(dbName?: string): Repository {
     async saveTypeFilter(projectId, types) {
       await (await db()).put('prefs', [...types], typeFilterKey(projectId));
     },
+  };
+}
+
+/**
+ * Repositorio en memoria con la misma interfaz que el de IndexedDB (AC-037).
+ * Se usa cuando IndexedDB no está disponible: los datos se pierden al cerrar.
+ * Guarda y devuelve copias, igual que IndexedDB (que clona los valores).
+ */
+export function createMemoryRepository(): Repository {
+  const projects = new Map<string, Project>();
+  const cards = new Map<string, Card>();
+  const typeFilters = new Map<string, CardType[]>();
+  const deleteCardsOf = (projectId: string) => {
+    for (const card of [...cards.values()]) if (card.projectId === projectId) cards.delete(card.id);
+  };
+
+  return {
+    async listProjects() {
+      return [...projects.values()].map((p) => ({ ...p }));
+    },
+    async saveProject(project) {
+      projects.set(project.id, { ...project });
+    },
+    async listCards() {
+      return [...cards.values()].map((c) => ({ ...c }));
+    },
+    async saveCard(card, project) {
+      cards.set(card.id, { ...card });
+      projects.set(project.id, { ...project });
+    },
+    async deleteCard(cardId, project) {
+      cards.delete(cardId);
+      projects.set(project.id, { ...project });
+    },
+    async deleteProject(projectId) {
+      projects.delete(projectId);
+      deleteCardsOf(projectId);
+      typeFilters.delete(projectId);
+    },
+    async replaceAll(newProjects, newCards) {
+      projects.clear();
+      cards.clear();
+      for (const p of newProjects) projects.set(p.id, { ...p });
+      for (const c of newCards) cards.set(c.id, { ...c });
+    },
+    async importProject(project, newCards) {
+      deleteCardsOf(project.id);
+      projects.set(project.id, { ...project });
+      for (const c of newCards) cards.set(c.id, { ...c });
+    },
+    async listTypeFilters() {
+      return Object.fromEntries([...typeFilters].map(([id, types]) => [id, [...types]]));
+    },
+    async saveTypeFilter(projectId, types) {
+      typeFilters.set(projectId, [...types]);
+    },
+  };
+}
+
+/**
+ * Repositorio de la app en el navegador (AC-037). Al primer uso intenta abrir
+ * IndexedDB; si `indexedDB` no existe o la base de datos no se puede abrir,
+ * avisa con `onUnavailable` (una sola vez) y trabaja con un repositorio en
+ * memoria, con la misma interfaz, durante el resto de la sesión.
+ */
+export function createBrowserRepository(options: {
+  dbName?: string;
+  onUnavailable: (error: unknown) => void;
+}): Repository {
+  let ready: Promise<Repository> | undefined;
+  const open = async (): Promise<Repository> => {
+    try {
+      if (typeof indexedDB === 'undefined' || indexedDB === null) {
+        throw new Error('IndexedDB no está disponible en este navegador');
+      }
+      const db = await openKanbanDB(options.dbName);
+      return idbRepository(async () => db);
+    } catch (error) {
+      options.onUnavailable(error);
+      return createMemoryRepository();
+    }
+  };
+  const repository = () => (ready ??= open());
+
+  return {
+    listProjects: async () => (await repository()).listProjects(),
+    saveProject: async (project) => (await repository()).saveProject(project),
+    listCards: async () => (await repository()).listCards(),
+    saveCard: async (card, project) => (await repository()).saveCard(card, project),
+    deleteCard: async (cardId, project) => (await repository()).deleteCard(cardId, project),
+    deleteProject: async (projectId) => (await repository()).deleteProject(projectId),
+    replaceAll: async (projects, cards) => (await repository()).replaceAll(projects, cards),
+    importProject: async (project, cards) => (await repository()).importProject(project, cards),
+    listTypeFilters: async () => (await repository()).listTypeFilters(),
+    saveTypeFilter: async (projectId, types) => (await repository()).saveTypeFilter(projectId, types),
   };
 }

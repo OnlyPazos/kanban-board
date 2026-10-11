@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createCard, createProject } from '../domain';
 import { openKanbanDB } from './db';
-import { createIdbRepository, observeWrites, typeFilterKey, WRITE_METHODS, type Repository } from './repository';
+import {
+  createBrowserRepository,
+  createIdbRepository,
+  createMemoryRepository,
+  observeWrites, typeFilterKey,
+  WRITE_METHODS,
+  type Repository,
+} from './repository';
 
 let counter = 0;
 const freshName = () => `kanban-board-test-${++counter}-${crypto.randomUUID()}`;
@@ -273,5 +280,107 @@ describe('observeWrites (AC-035)', () => {
     expect([...WRITE_METHODS].sort()).toEqual(
       ['deleteCard', 'deleteProject', 'importProject', 'replaceAll', 'saveCard', 'saveProject', 'saveTypeFilter'].sort(),
     );
+  });
+});
+
+describe('createMemoryRepository (AC-037)', () => {
+  it('guarda y lee proyectos, tarjetas y filtros con la misma interfaz que IndexedDB', async () => {
+    const repo = createMemoryRepository();
+    const project = createProject({ name: 'Mi app' });
+    const other = createProject({ name: 'Otra' });
+    const card = createCard({ projectId: project.id, title: 'A', status: 'sin-empezar' });
+    await repo.saveProject(project);
+    await repo.saveProject(other);
+    await repo.saveCard(card, project);
+    await repo.saveTypeFilter(project.id, ['arreglo']);
+    await repo.saveProject({ ...project, description: 'Cambiada' });
+
+    expect(await repo.listProjects()).toEqual([{ ...project, description: 'Cambiada' }, other]);
+    expect(await repo.listCards()).toEqual([card]);
+    expect(await repo.listTypeFilters()).toEqual({ [project.id]: ['arreglo'] });
+
+    await repo.deleteCard(card.id, project);
+    expect(await repo.listCards()).toEqual([]);
+
+    await repo.saveCard(card, project);
+    await repo.deleteProject(project.id);
+    expect(await repo.listProjects()).toEqual([other]);
+    expect(await repo.listCards()).toEqual([]);
+    expect(await repo.listTypeFilters()).toEqual({});
+  });
+
+  it('replaceAll e importProject se comportan como en IndexedDB', async () => {
+    const repo = createMemoryRepository();
+    const old = createProject({ name: 'Vieja' });
+    await repo.saveProject(old);
+    await repo.saveTypeFilter(old.id, ['tecnico']);
+    const project = createProject({ name: 'Mi app' });
+    const card = createCard({ projectId: project.id, title: 'A', status: 'en-curso' });
+    await repo.replaceAll([project], [card]);
+    expect(await repo.listProjects()).toEqual([project]);
+    expect(await repo.listCards()).toEqual([card]);
+    expect(await repo.listTypeFilters()).toEqual({ [old.id]: ['tecnico'] });
+
+    const replacement = createCard({ projectId: project.id, title: 'B', status: 'finalizado' });
+    await repo.importProject({ ...project, name: 'Importada' }, [replacement]);
+    expect(await repo.listProjects()).toEqual([{ ...project, name: 'Importada' }]);
+    expect(await repo.listCards()).toEqual([replacement]);
+  });
+
+  it('devuelve copias: mutar lo leído no cambia lo guardado', async () => {
+    const repo = createMemoryRepository();
+    const project = createProject({ name: 'Mi app' });
+    await repo.saveProject(project);
+    const [read] = await repo.listProjects();
+    read.name = 'Mutada';
+    expect(await repo.listProjects()).toEqual([project]);
+  });
+});
+
+describe('createBrowserRepository (AC-037)', () => {
+  it('con IndexedDB disponible guarda en IndexedDB y no avisa', async () => {
+    const name = freshName();
+    const onUnavailable = vi.fn();
+    const project = createProject({ name: 'Mi app' });
+    await createBrowserRepository({ dbName: name, onUnavailable }).saveProject(project);
+
+    expect(await createIdbRepository(name).listProjects()).toEqual([project]);
+    expect(onUnavailable).not.toHaveBeenCalled();
+  });
+
+  it('sin indexedDB avisa una sola vez y sigue funcionando en memoria', async () => {
+    vi.stubGlobal('indexedDB', undefined);
+    try {
+      const onUnavailable = vi.fn();
+      const repo = createBrowserRepository({ dbName: freshName(), onUnavailable });
+      const project = createProject({ name: 'Mi app' });
+      const card = createCard({ projectId: project.id, title: 'A', status: 'sin-empezar' });
+
+      expect(await repo.listProjects()).toEqual([]);
+      await repo.saveProject(project);
+      await repo.saveCard(card, project);
+      expect(await repo.listProjects()).toEqual([project]);
+      expect(await repo.listCards()).toEqual([card]);
+      expect(onUnavailable).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('si IndexedDB falla al abrirse, avisa y usa la memoria', async () => {
+    const open = vi.spyOn(indexedDB, 'open').mockImplementation(() => {
+      throw new DOMException('Acceso denegado', 'SecurityError');
+    });
+    try {
+      const onUnavailable = vi.fn();
+      const repo = createBrowserRepository({ dbName: freshName(), onUnavailable });
+      const project = createProject({ name: 'Mi app' });
+      await repo.saveProject(project);
+      expect(await repo.listProjects()).toEqual([project]);
+      expect(onUnavailable).toHaveBeenCalledTimes(1);
+      expect(onUnavailable.mock.calls[0][0]).toMatchObject({ name: 'SecurityError' });
+    } finally {
+      open.mockRestore();
+    }
   });
 });

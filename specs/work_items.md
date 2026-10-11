@@ -334,7 +334,7 @@ interface Card {
 - Acceptance Checks: AC-037
 - Depende de: [WI-AC-028]
 - Rama sugerida: feature/wi-ac-037-no-indexeddb
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Al arrancar, detectar si IndexedDB no existe o si falla al abrirse. En ese caso se usa un repositorio en memoria con la misma interfaz que el de IndexedDB.
   - Aviso permanente: "Tus datos no se conservarán al cerrar". La exportación sigue funcionando.
