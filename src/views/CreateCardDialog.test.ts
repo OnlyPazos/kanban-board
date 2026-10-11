@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { trackUnhandledRejections } from './unhandled-rejections';
 import CreateCardDialog from './CreateCardDialog.svelte';
 
 // jsdom no implementa showModal/close de <dialog>.
@@ -51,5 +52,32 @@ describe('CreateCardDialog', () => {
     expect(title).toHaveAttribute('aria-invalid', 'true');
     expect(title).toHaveAccessibleDescription(message);
     expect(oncreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('CreateCardDialog · fallo al guardar (AC-044)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('si oncreate rechaza, el diálogo sigue abierto con lo escrito, el botón deja de cargar y no queda ningún rechazo sin capturar', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unhandled = trackUnhandledRejections();
+    const error = new DOMException('Cuota excedida', 'QuotaExceededError');
+    const oncreate = vi.fn().mockRejectedValue(error);
+    render(CreateCardDialog, { open: true, status: 'sin-empezar', oncreate });
+
+    const field = screen.getByLabelText(/^Título/) as HTMLInputElement;
+    await fireEvent.input(field, { target: { value: 'Login' } });
+    const submit = screen.getByRole('button', { name: 'Añadir' });
+    await fireEvent.click(submit);
+
+    await waitFor(() => expect(oncreate).toHaveBeenCalledOnce());
+    await waitFor(() => expect(submit).not.toHaveAttribute('aria-busy'));
+    await unhandled.flush();
+    unhandled.stop();
+
+    expect(unhandled.reasons).toEqual([]);
+    expect(screen.getByRole('dialog', { name: 'Añadir tarjeta' })).toBeInTheDocument();
+    expect(field.value).toBe('Login');
+    expect(consoleError).toHaveBeenCalledWith(expect.any(String), error);
   });
 });

@@ -92,6 +92,10 @@
         priority: priority === NO_PRIORITY ? null : (priority as Exclude<Priority, null>),
       });
       open = false;
+    } catch (error) {
+      // AC-044: el aviso de AC-035 ya lo muestra App.svelte; el diálogo sigue
+      // abierto con lo escrito y no queda ningún rechazo sin capturar.
+      console.error('No se pudo guardar la tarjeta', error);
     } finally {
       saving = false;
     }

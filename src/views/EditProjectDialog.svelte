@@ -42,6 +42,10 @@
     try {
       await onsave(project.id, { name, description });
       open = false;
+    } catch (error) {
+      // AC-044: el aviso de AC-035 ya lo muestra App.svelte; el diálogo sigue
+      // abierto con lo escrito y no queda ningún rechazo sin capturar.
+      console.error('No se pudo guardar el proyecto', error);
     } finally {
       saving = false;
     }

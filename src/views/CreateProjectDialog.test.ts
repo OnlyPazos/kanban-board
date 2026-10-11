@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { trackUnhandledRejections } from './unhandled-rejections';
 import CreateProjectDialog from './CreateProjectDialog.svelte';
 
 // jsdom no implementa showModal/close de <dialog>.
@@ -48,5 +49,32 @@ describe('CreateProjectDialog', () => {
     await fireEvent.input(name, { target: { value: 'Mi app' } });
     await fireEvent.click(screen.getByRole('button', { name: 'Crear' }));
     await waitFor(() => expect(oncreate).toHaveBeenCalledExactlyOnceWith({ name: 'Mi app', description: '' }));
+  });
+});
+
+describe('CreateProjectDialog · fallo al guardar (AC-044)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('si oncreate rechaza, el diálogo sigue abierto con lo escrito, el botón deja de cargar y no queda ningún rechazo sin capturar', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unhandled = trackUnhandledRejections();
+    const error = new DOMException('Cuota excedida', 'QuotaExceededError');
+    const oncreate = vi.fn().mockRejectedValue(error);
+    render(CreateProjectDialog, { open: true, oncreate });
+
+    const field = screen.getByLabelText(/^Nombre/) as HTMLInputElement;
+    await fireEvent.input(field, { target: { value: 'Nuevo' } });
+    const submit = screen.getByRole('button', { name: 'Crear' });
+    await fireEvent.click(submit);
+
+    await waitFor(() => expect(oncreate).toHaveBeenCalledOnce());
+    await waitFor(() => expect(submit).not.toHaveAttribute('aria-busy'));
+    await unhandled.flush();
+    unhandled.stop();
+
+    expect(unhandled.reasons).toEqual([]);
+    expect(screen.getByRole('dialog', { name: 'Crear proyecto' })).toBeInTheDocument();
+    expect(field.value).toBe('Nuevo');
+    expect(consoleError).toHaveBeenCalledWith(expect.any(String), error);
   });
 });
