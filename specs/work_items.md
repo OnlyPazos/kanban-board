@@ -394,7 +394,7 @@ interface Card {
 - Acceptance Checks: AC-043
 - Depende de: [WI-AC-042, WI-AC-028]
 - Rama sugerida: feature/wi-ac-043-color-mode-persistence
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - La preferencia se guarda en `localStorage`, clave `kanban-board:color-mode`, con valor `light` o `dark`. Con `auto` se elimina la clave. No se usa IndexedDB ni el store `prefs`, para poder aplicar el modo de forma síncrona antes de pintar.
   - Un script inline en `index.html` lee la clave y pone `data-theme` en `<html>` antes de montar la app, para evitar un destello en el modo equivocado. El store de WI-AC-042 se inicializa con el mismo valor.
