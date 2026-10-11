@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { trackUnhandledRejections } from './unhandled-rejections';
 import EditProjectDialog from './EditProjectDialog.svelte';
 import { createProject } from '../domain';
 
@@ -52,5 +53,32 @@ describe('EditProjectDialog', () => {
     expect(name).toHaveAccessibleDescription(message);
     expect(onsave).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog')).toBeVisible();
+  });
+});
+
+describe('EditProjectDialog · fallo al guardar (AC-044)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('si onsave rechaza, el diálogo sigue abierto con lo escrito, el botón deja de cargar y no queda ningún rechazo sin capturar', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unhandled = trackUnhandledRejections();
+    const error = new DOMException('Cuota excedida', 'QuotaExceededError');
+    const onsave = vi.fn().mockRejectedValue(error);
+    render(EditProjectDialog, { project: createProject({ name: 'Mi app', description: '' }), open: true, onsave });
+
+    const field = screen.getByLabelText(/^Nombre/) as HTMLInputElement;
+    await fireEvent.input(field, { target: { value: 'Mi app 2' } });
+    const submit = screen.getByRole('button', { name: 'Guardar cambios' });
+    await fireEvent.click(submit);
+
+    await waitFor(() => expect(onsave).toHaveBeenCalledOnce());
+    await waitFor(() => expect(submit).not.toHaveAttribute('aria-busy'));
+    await unhandled.flush();
+    unhandled.stop();
+
+    expect(unhandled.reasons).toEqual([]);
+    expect(screen.getByRole('dialog', { name: 'Editar proyecto' })).toBeInTheDocument();
+    expect(field.value).toBe('Mi app 2');
+    expect(consoleError).toHaveBeenCalledWith(expect.any(String), error);
   });
 });

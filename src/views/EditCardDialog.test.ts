@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { trackUnhandledRejections } from './unhandled-rejections';
 import EditCardDialog from './EditCardDialog.svelte';
 import { createCard } from '../domain';
 
@@ -116,5 +117,32 @@ describe('EditCardDialog · cambios de otra pestaña (AC-038)', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
     await waitFor(() => expect(onsave).toHaveBeenCalledWith(card.id, expect.objectContaining({ title: 'Título B' })));
+  });
+});
+
+describe('EditCardDialog · fallo al guardar (AC-044)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('si onsave rechaza, el diálogo sigue abierto con lo escrito, el botón deja de cargar y no queda ningún rechazo sin capturar', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unhandled = trackUnhandledRejections();
+    const error = new DOMException('Cuota excedida', 'QuotaExceededError');
+    const onsave = vi.fn().mockRejectedValue(error);
+    render(EditCardDialog, { card: makeCard(), open: true, onsave });
+
+    const field = screen.getByLabelText(/^Título/) as HTMLInputElement;
+    await fireEvent.input(field, { target: { value: 'Login 2' } });
+    const submit = screen.getByRole('button', { name: 'Guardar cambios' });
+    await fireEvent.click(submit);
+
+    await waitFor(() => expect(onsave).toHaveBeenCalledOnce());
+    await waitFor(() => expect(submit).not.toHaveAttribute('aria-busy'));
+    await unhandled.flush();
+    unhandled.stop();
+
+    expect(unhandled.reasons).toEqual([]);
+    expect(screen.getByRole('dialog', { name: 'Editar tarjeta' })).toBeInTheDocument();
+    expect(field.value).toBe('Login 2');
+    expect(consoleError).toHaveBeenCalledWith(expect.any(String), error);
   });
 });
