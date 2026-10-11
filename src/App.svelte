@@ -18,7 +18,7 @@
   import { createBrowserRepository, type Repository } from './persistence/repository';
   import { createTabSync } from './persistence/sync';
   import { AppStore } from './state/app-store.svelte';
-  import { applyColorMode, ColorModeStore } from './state/color-mode.svelte';
+  import { applyColorMode, ColorModeStore, loadColorMode, saveColorMode } from './state/color-mode.svelte';
 
   let { repository }: { repository?: Repository } = $props();
 
@@ -42,10 +42,12 @@
         sync: tabSync,
       }),
   );
-  // Modo de color (AC-042, D-017): se aplica a <html> con `data-theme`.
-  const colorMode = new ColorModeStore();
+  // Modo de color (AC-042, AC-043, D-017): se aplica a <html> con `data-theme`
+  // y se recuerda en `localStorage` (no en IndexedDB ni en los exports).
+  const colorMode = new ColorModeStore(loadColorMode());
   $effect(() => {
     applyColorMode(document.documentElement, colorMode.mode);
+    saveColorMode(colorMode.mode);
   });
 
   let creating = $state(false);

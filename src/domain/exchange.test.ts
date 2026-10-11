@@ -76,6 +76,20 @@ describe('buildExport', () => {
     expect(file.projects[0]).not.toBe(extra);
   });
 
+  it('el JSON del export completo y del de proyecto no contiene la preferencia de modo de color (AC-043)', () => {
+    // Preferencia "Oscuro" guardada en el navegador (D-017).
+    localStorage.setItem('kanban-board:color-mode', 'dark');
+    try {
+      for (const scope of [{ kind: 'full' }, { kind: 'project', projectId: 'p-active' }] as const) {
+        const json = JSON.stringify(buildExport(sample(), scope, now));
+        expect(json).not.toMatch(/color-?mode|theme|"dark"|"light"|"auto"/i);
+        expect(Object.keys(JSON.parse(json)).sort()).toEqual(['cards', 'exportedAt', 'formatVersion', 'kind', 'projects']);
+      }
+    } finally {
+      localStorage.removeItem('kanban-board:color-mode');
+    }
+  });
+
   it('el resultado es serializable a JSON sin pérdidas', () => {
     const file = buildExport(sample(), { kind: 'full' }, now);
     expect(JSON.parse(JSON.stringify(file))).toEqual(file);
