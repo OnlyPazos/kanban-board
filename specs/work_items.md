@@ -410,7 +410,7 @@ interface Card {
 - Acceptance Checks: AC-044
 - Depende de: [WI-AC-035, WI-AC-043]
 - Rama sugerida: feature/wi-ac-044-no-uncaught-save-errors
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - Origen (D-018): `observeWrites` (`src/persistence/repository.ts`) avisa a `saveError` y vuelve a lanzar el error. Los métodos de `AppStore` (`src/state/app-store.svelte.ts`) lo propagan sin capturarlo, y está bien que lo hagan: así la UI no indica que se guardó. El rechazo sin capturar nace en los `submit` de `src/views/CreateProjectDialog.svelte`, `EditProjectDialog.svelte`, `CreateCardDialog.svelte` y `EditCardDialog.svelte`, que usan `try { await …; open = false } finally { saving = false }` **sin `catch`**. El manejador de `onsubmit` devuelve una promesa rechazada que nadie atiende.
   - Corrección: añadir `catch` en esos 4 `submit`. Si el guardado falla, el diálogo sigue abierto (`open` no pasa a `false`), `saving` vuelve a `false` y los valores escritos se conservan. El aviso de AC-035 ya lo pinta `App.svelte` a partir de `store.saveError`, así que no hace falta ningún mensaje nuevo en el diálogo. Se puede registrar el fallo con `console.error`, igual que hacen `Board.svelte`, `ArchivedCards.svelte`, `ArchivedProjects.svelte` y `ProjectList.svelte` (permitido por AC-044).
