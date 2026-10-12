@@ -98,6 +98,9 @@
     --ds-column-tint: var(--ds-color-status-todo-tint);
     --ds-column-on-tint: var(--ds-color-status-todo-on-tint);
 
+    /* Bloque contenedor del texto oculto del contador (.ds-column__sr, que es
+       position: absolute): sin esto se escapa del overflow y ensancha la página. */
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
