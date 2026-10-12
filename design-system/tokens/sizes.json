@@ -1,11 +1,12 @@
 {
   "_meta": {
-    "description": "Dimensiones de componentes que no encajan en spacing ni typography: bordes, anillo de foco, alturas mínimas de controles, zona táctil mínima (hit-area, 44px), spinner, y medidas propias de chip, tarjeta y diálogo. Las claves terminadas en scale/lines son números sin unidad."
+    "description": "Dimensiones de componentes que no encajan en spacing ni typography: bordes, anillo de foco, alturas mínimas de controles, zona táctil mínima (hit-area, 44px), spinner, y medidas propias de tarjeta y diálogo. Las claves terminadas en scale/lines son números sin unidad. column: ancho y alto mínimo del cuerpo de la columna del tablero; icon: tamaños de los iconos Lucide (sm en badges y chips, md en botones, cabeceras y pies, lg en alerts, xl en DropPlaceholder) y su grosor de trazo; appbar: grosor de la franja inferior de la barra superior."
   },
   "border": {
     "width": {
       "default": 1,
-      "accent": 4
+      "accent": 4,
+      "dashed": 2
     }
   },
   "focus-ring": {
@@ -25,9 +26,6 @@
     "press-scale": 0.97,
     "chevron-size": 8
   },
-  "chip": {
-    "dot-size": 8
-  },
   "card": {
     "lift": 2,
     "drag-rotate": "1.5deg",
@@ -39,5 +37,21 @@
       "md": 560
     },
     "enter-scale": 0.96
+  },
+  "column": {
+    "width": 300,
+    "body-min-height": 120
+  },
+  "icon": {
+    "size": {
+      "sm": 14,
+      "md": 16,
+      "lg": 20,
+      "xl": 28
+    },
+    "stroke-width": 2
+  },
+  "appbar": {
+    "accent-width": 3
   }
 }

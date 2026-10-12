@@ -18,6 +18,9 @@
                  zona de la tarjeta (fuera de otros controles) lo dispara
     dragging     estado visual mientras se arrastra (sombra lg, giro leve)
     readonly     sin hover ni apertura (p. ej. proyecto archivado)
+    priority     high | medium | low: franja superior con priority.*.
+                 Es solo visual (CSS, sin texto): la app debe mostrar la
+                 prioridad también en texto (p. ej. un Badge).
     tags, footer snippets opcionales
   La tarjeta no implementa el arrastre: lo aporta la app (p. ej.
   svelte-dnd-action) sobre el contenedor.
@@ -31,11 +34,12 @@
     onopen?: () => void;
     dragging?: boolean;
     readonly?: boolean;
+    priority?: 'high' | 'medium' | 'low';
     tags?: Snippet;
     footer?: Snippet;
   };
 
-  let { title, description, onopen, dragging = false, readonly = false, tags, footer }: Props = $props();
+  let { title, description, onopen, dragging = false, readonly = false, priority, tags, footer }: Props = $props();
 
   const interactive = $derived(!!onopen && !readonly);
 
@@ -53,11 +57,13 @@
 
 <!-- El teclado y los lectores de pantalla usan el botón del título; el clic en
      la tarjeta es solo un atajo de ratón/táctil. -->
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 <article
   class="ds-card"
   class:ds-card--interactive={interactive}
   class:ds-card--dragging={dragging}
+  class:ds-card--accent={!!priority}
+  data-priority={priority}
   onclick={handleClick}
 >
   {#if tags}
@@ -102,6 +108,23 @@
 
   .ds-card--interactive {
     cursor: pointer;
+  }
+
+  /* ── Franja de prioridad ─────────────────────────────────── */
+  .ds-card--accent {
+    border-top-width: var(--ds-border-width-accent);
+  }
+
+  .ds-card[data-priority='high'] {
+    border-top-color: var(--ds-color-priority-high);
+  }
+
+  .ds-card[data-priority='medium'] {
+    border-top-color: var(--ds-color-priority-medium);
+  }
+
+  .ds-card[data-priority='low'] {
+    border-top-color: var(--ds-color-priority-low);
   }
 
   .ds-card--interactive:hover {

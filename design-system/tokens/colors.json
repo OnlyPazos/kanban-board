@@ -1,37 +1,41 @@
 {
   "_meta": {
-    "description": "Paleta semántica 'ámbar cálido' sobre neutros stone, con modo claro y oscuro. Cada rol es { light, dark }. Los colores apuntan a roles (background, surface.*, text.*, action.*, feedback.*, tag.*), no a tonos. Todo par texto/fondo o borde/fondo usado por un componente está en scripts/contrast-pairs.json y se valida en ambos modos.",
-    "tag": "Etiquetas de categoría para tarjetas. En la app kanban: feature = Novedad, improvement = Mejora, bugfix = Arreglo, technical = Técnico."
+    "description": "Paleta semántica 'índigo' sobre neutros fríos slate, con modo claro y oscuro. Cada rol es { light, dark }. Los colores apuntan a roles (background, surface.*, text.*, action.*, feedback.*, tag.*, status.*, priority.*, appbar.*), no a tonos. Todo par texto/fondo o borde/fondo usado por un componente está en scripts/contrast-pairs.json y se valida en ambos modos.",
+    "tag": "Etiquetas de categoría para tarjetas. En la app kanban: feature = Novedad, improvement = Mejora, bugfix = Arreglo, technical = Técnico.",
+    "status": "Color de cada columna del tablero. todo = Sin empezar, doing = En curso, paused = En pausa, done = Finalizado. accent = franja y punto; tint = fondo de cabecera; on-tint = texto de cabecera y del contador.",
+    "priority": "Franja superior de la tarjeta según prioridad. Es decorativa: la prioridad siempre se muestra también en texto.",
+    "surface.sunken": "Fondo de columnas: más hundido que la página para que las tarjetas (surface.raised) destaquen."
   },
-  "background": { "light": "#FCFBF8", "dark": "#1C1917" },
+  "background": { "light": "#F8FAFC", "dark": "#0F172A" },
   "surface": {
-    "base": { "light": "#F5F3EF", "dark": "#292524" },
-    "raised": { "light": "#FFFFFF", "dark": "#35302C" },
-    "hover": { "light": "#ECE8E1", "dark": "#44403C" },
-    "active": { "light": "#E1DCD3", "dark": "#57534E" }
+    "sunken": { "light": "#E9EEF5", "dark": "#162033" },
+    "base": { "light": "#F1F5F9", "dark": "#1E293B" },
+    "raised": { "light": "#FFFFFF", "dark": "#243147" },
+    "hover": { "light": "#E2E8F0", "dark": "#334155" },
+    "active": { "light": "#CBD5E1", "dark": "#475569" }
   },
   "text": {
-    "primary": { "light": "#1C1917", "dark": "#FAFAF9" },
-    "secondary": { "light": "#57534E", "dark": "#D6D3D1" },
-    "disabled": { "light": "#A8A29E", "dark": "#78716C" }
+    "primary": { "light": "#0F172A", "dark": "#F8FAFC" },
+    "secondary": { "light": "#475569", "dark": "#CBD5E1" },
+    "disabled": { "light": "#94A3B8", "dark": "#64748B" }
   },
   "border": {
-    "default": { "light": "#E7E5E4", "dark": "#44403C" },
-    "strong": { "light": "#78716C", "dark": "#A8A29E" }
+    "default": { "light": "#E2E8F0", "dark": "#334155" },
+    "strong": { "light": "#64748B", "dark": "#94A3B8" }
   },
   "action": {
-    "primary": { "light": "#B45309", "dark": "#F59E0B" },
-    "primary-hover": { "light": "#92400E", "dark": "#FBBF24" },
-    "primary-active": { "light": "#78350F", "dark": "#FCD34D" },
-    "on-primary": { "light": "#FFFFFF", "dark": "#1C1917" },
-    "tint": { "light": "#FEF3C7", "dark": "#451A03" },
-    "tint-active": { "light": "#FDE68A", "dark": "#78350F" },
-    "on-tint": { "light": "#92400E", "dark": "#FDE68A" }
+    "primary": { "light": "#4F46E5", "dark": "#8B93FA" },
+    "primary-hover": { "light": "#4338CA", "dark": "#A5B4FC" },
+    "primary-active": { "light": "#3730A3", "dark": "#C7D2FE" },
+    "on-primary": { "light": "#FFFFFF", "dark": "#0F172A" },
+    "tint": { "light": "#EEF2FF", "dark": "#1E1B4B" },
+    "tint-active": { "light": "#E0E7FF", "dark": "#312E81" },
+    "on-tint": { "light": "#3730A3", "dark": "#C7D2FE" }
   },
   "feedback": {
     "danger": { "light": "#B91C1C", "dark": "#F87171" },
     "danger-hover": { "light": "#991B1B", "dark": "#FCA5A5" },
-    "on-danger": { "light": "#FFFFFF", "dark": "#1C1917" },
+    "on-danger": { "light": "#FFFFFF", "dark": "#0F172A" },
     "warning": { "light": "#A16207", "dark": "#FACC15" },
     "success": { "light": "#15803D", "dark": "#4ADE80" },
     "info": { "light": "#1D4ED8", "dark": "#60A5FA" }
@@ -54,6 +58,38 @@
       "fg": { "light": "#5B21B6", "dark": "#DDD6FE" }
     }
   },
-  "focus": { "light": "#B45309", "dark": "#FBBF24" },
-  "overlay": { "light": "rgba(28, 25, 23, 0.45)", "dark": "rgba(0, 0, 0, 0.65)" }
+  "status": {
+    "todo": {
+      "accent": { "light": "#64748B", "dark": "#94A3B8" },
+      "tint": { "light": "#F1F5F9", "dark": "#1E293B" },
+      "on-tint": { "light": "#334155", "dark": "#E2E8F0" }
+    },
+    "doing": {
+      "accent": { "light": "#2563EB", "dark": "#60A5FA" },
+      "tint": { "light": "#DBEAFE", "dark": "#172554" },
+      "on-tint": { "light": "#1E40AF", "dark": "#BFDBFE" }
+    },
+    "paused": {
+      "accent": { "light": "#EA580C", "dark": "#FB923C" },
+      "tint": { "light": "#FFEDD5", "dark": "#431407" },
+      "on-tint": { "light": "#9A3412", "dark": "#FED7AA" }
+    },
+    "done": {
+      "accent": { "light": "#15803D", "dark": "#4ADE80" },
+      "tint": { "light": "#DCFCE7", "dark": "#052E16" },
+      "on-tint": { "light": "#166534", "dark": "#BBF7D0" }
+    }
+  },
+  "priority": {
+    "high": { "light": "#DC2626", "dark": "#F87171" },
+    "medium": { "light": "#EA580C", "dark": "#FB923C" },
+    "low": { "light": "#4D7C0F", "dark": "#A3E635" }
+  },
+  "appbar": {
+    "bg": { "light": "#FFFFFF", "dark": "#1E293B" },
+    "fg": { "light": "#0F172A", "dark": "#F8FAFC" },
+    "accent": { "light": "#4F46E5", "dark": "#8B93FA" }
+  },
+  "focus": { "light": "#4F46E5", "dark": "#A5B4FC" },
+  "overlay": { "light": "rgba(15, 23, 42, 0.50)", "dark": "rgba(0, 0, 0, 0.65)" }
 }

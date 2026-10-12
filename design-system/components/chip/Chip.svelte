@@ -10,23 +10,30 @@
 
   Props:
     selected  boolean, bindable                                (false)
-    tone      feature | improvement | bugfix | technical — muestra un
-              punto con el color de la categoría             (sin punto)
+    tone      feature | improvement | bugfix | technical — muestra el
+              icono de la categoría en su color             (sin icono)
+    icon      icono de @lucide/svelte que sustituye al de la categoría
     disabled  boolean
     onchange  (selected: boolean) => void
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import Check from '@lucide/svelte/icons/check';
+  import Icon, { type IconComponent } from '../icon/Icon.svelte';
+  import { CATEGORY_ICONS } from '../icon/category-icons.js';
 
   type Props = {
     selected?: boolean;
     tone?: 'feature' | 'improvement' | 'bugfix' | 'technical';
+    icon?: IconComponent;
     disabled?: boolean;
     onchange?: (selected: boolean) => void;
     children: Snippet;
   };
 
-  let { selected = $bindable(false), tone, disabled = false, onchange, children }: Props = $props();
+  let { selected = $bindable(false), tone, icon, disabled = false, onchange, children }: Props = $props();
+
+  const resolvedIcon = $derived(icon ?? (tone ? CATEGORY_ICONS[tone] : undefined));
 
   function toggle() {
     selected = !selected;
@@ -42,9 +49,9 @@
   {disabled}
   onclick={toggle}
 >
-  <span class="ds-chip__check" aria-hidden="true">✓</span>
-  {#if tone}
-    <span class="ds-chip__dot ds-chip__dot--{tone}" aria-hidden="true"></span>
+  <span class="ds-chip__check"><Icon icon={Check} size="sm" /></span>
+  {#if resolvedIcon}
+    <span class="ds-chip__icon ds-chip__icon--{tone ?? 'none'}"><Icon icon={resolvedIcon} size="sm" /></span>
   {/if}
   <span>{@render children()}</span>
 </button>
@@ -125,31 +132,32 @@
   }
 
   .ds-chip--selected .ds-chip__check {
-    display: inline;
+    display: inline-flex;
   }
 
-  /* ── Punto de categoría ─────────────────────────────────── */
-  .ds-chip__dot {
-    flex: none;
-    width: var(--ds-chip-dot-size);
-    height: var(--ds-chip-dot-size);
-    border-radius: var(--ds-radii-full);
+  /* ── Icono de categoría (en el color de su tag) ─────────── */
+  .ds-chip__icon {
+    display: inline-flex;
   }
 
-  .ds-chip__dot--feature {
-    background-color: var(--ds-color-tag-feature-fg);
+  .ds-chip__icon--feature {
+    color: var(--ds-color-tag-feature-fg);
   }
 
-  .ds-chip__dot--improvement {
-    background-color: var(--ds-color-tag-improvement-fg);
+  .ds-chip__icon--improvement {
+    color: var(--ds-color-tag-improvement-fg);
   }
 
-  .ds-chip__dot--bugfix {
-    background-color: var(--ds-color-tag-bugfix-fg);
+  .ds-chip__icon--bugfix {
+    color: var(--ds-color-tag-bugfix-fg);
   }
 
-  .ds-chip__dot--technical {
-    background-color: var(--ds-color-tag-technical-fg);
+  .ds-chip__icon--technical {
+    color: var(--ds-color-tag-technical-fg);
+  }
+
+  .ds-chip:disabled .ds-chip__icon {
+    color: inherit;
   }
 
   /* ── Disabled (exento de contraste por WCAG) ────────────── */
