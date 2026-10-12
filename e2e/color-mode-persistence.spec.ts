@@ -3,8 +3,8 @@ import { expect, test, type FileChooser, type Page } from '@playwright/test';
 // AC-043 (D-017): la preferencia de modo de color se recuerda entre sesiones
 // (localStorage), no viaja en los exports, ninguna importación la cambia y,
 // sin almacenamiento, funciona solo durante la sesión y sin errores.
-const LIGHT_BACKGROUND = 'rgb(252, 251, 248)'; // #FCFBF8
-const DARK_BACKGROUND = 'rgb(28, 25, 23)'; // #1C1917
+const LIGHT_BACKGROUND = 'rgb(248, 250, 252)'; // #F8FAFC
+const DARK_BACKGROUND = 'rgb(15, 23, 42)'; // #0F172A
 const STORAGE_KEY = 'kanban-board:color-mode';
 
 const colorModeSelect = (page: Page) => page.getByRole('banner').getByRole('combobox', { name: 'Modo de color' });

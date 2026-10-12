@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 // AC-042 (D-017): selector "Modo de color" en la cabecera con Auto / Claro / Oscuro.
 // El color de fondo del body debe ser el del token `background`.
-const LIGHT_BACKGROUND = 'rgb(252, 251, 248)'; // #FCFBF8
-const DARK_BACKGROUND = 'rgb(28, 25, 23)'; // #1C1917
+const LIGHT_BACKGROUND = 'rgb(248, 250, 252)'; // #F8FAFC
+const DARK_BACKGROUND = 'rgb(15, 23, 42)'; // #0F172A
 
 function colorModeSelect(page: Page) {
   return page.getByRole('banner').getByRole('combobox', { name: 'Modo de color' });
