@@ -72,6 +72,36 @@ export async function openProject(page: Page, name: string) {
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
 }
 
+export const column = (page: Page, name: string) => page.getByRole('region', { name, exact: true });
+
+/** Botón de crear tarjeta de una columna. */
+export const addCardButton = (page: Page, columnName: string) =>
+  column(page, columnName).getByRole('button', { name: 'Añadir tarjeta' });
+
+/** Crea una tarjeta en una columna y, si se indica, le cambia tipo y prioridad. */
+export async function addCard(
+  page: Page,
+  columnName: string,
+  title: string,
+  opts: { type?: string; priority?: string } = {},
+) {
+  await addCardButton(page, columnName).click();
+  const dialog = page.getByRole('dialog', { name: 'Añadir tarjeta' });
+  await dialog.getByLabel('Título').fill(title);
+  await dialog.getByRole('button', { name: 'Añadir' }).click();
+  await expect(dialog).toBeHidden();
+  if (opts.type || opts.priority) {
+    await column(page, columnName).getByRole('button', { name: title, exact: true }).click();
+    const edit = page.getByRole('dialog', { name: 'Editar tarjeta' });
+    if (opts.type) await edit.getByLabel('Tipo').selectOption({ label: opts.type });
+    if (opts.priority) await edit.getByLabel('Prioridad').selectOption({ label: opts.priority });
+    await edit.getByRole('button', { name: 'Guardar cambios' }).click();
+    await expect(edit).toBeHidden();
+  }
+  // Cada creación queda en un milisegundo distinto (desempate por createdAt).
+  await page.waitForTimeout(5);
+}
+
 /** Crea un proyecto y devuelve las 4 vistas con su encabezado de nivel 1. */
 export async function setupViews(page: Page, name = 'Mi app'): Promise<View[]> {
   await createProject(page, name);

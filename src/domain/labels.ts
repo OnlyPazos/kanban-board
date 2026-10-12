@@ -47,6 +47,14 @@ export const CARD_TYPE_TONE = {
   tecnico: 'technical',
 } as const satisfies Record<CardType, string>;
 
+/** `status` de la `Column` del sistema de diseño (y tokens `status.*`) para cada estado (D-023). */
+export const CARD_STATUS_DS = {
+  'sin-empezar': 'todo',
+  'en-curso': 'doing',
+  'en-pausa': 'paused',
+  finalizado: 'done',
+} as const satisfies Record<CardStatus, string>;
+
 /** Tono del Badge para cada prioridad; `null` → sin Badge. */
 export const PRIORITY_TONE = {
   alta: 'danger',
