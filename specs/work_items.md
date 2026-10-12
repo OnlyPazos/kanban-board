@@ -522,7 +522,7 @@ interface Card {
 - Acceptance Checks: AC-049
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-049-board-columns-ds
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - D-023, D-024. `src/views/Board.svelte`: cada columna pasa de `<section class="board__column">` + `<h2>` propios a `Column` del design-system, con `title={CARD_STATUS_LABELS[status]}`, `status={CARD_STATUS_DS[status]}`, `headingLevel={2}` y `count` = número de tarjetas visibles de esa columna (de `cardsByStatus`, es decir, activas y que pasan el filtro; no de `columnItems`, para que el contador no cambie con el hueco del arrastre). El texto accesible por defecto de `Column` ("N tarjeta"/"N tarjetas") es el que pide AC-049: no pasar `countLabel`.
   - Añadir `CARD_STATUS_DS` a `domain` (bloque "Sistema de diseño (2026-10-12)").
