@@ -536,7 +536,7 @@ interface Card {
 - Acceptance Checks: AC-050
 - Depende de: [WI-AC-049]
 - Rama sugerida: feature/wi-ac-050-add-card-header-button
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-025. En `Board.svelte`, quitar el botón "Añadir tarjeta" del pie de la columna y ponerlo en el snippet `actions` de `Column`: `<Button variant="ghost" size="sm" icon={Plus} aria-label={`Añadir tarjeta en ${CARD_STATUS_LABELS[status]}`} onclick={() => onaddcard?.(status)} />`.
   - Solo si el proyecto no está archivado (en solo lectura no se pasa `actions`).

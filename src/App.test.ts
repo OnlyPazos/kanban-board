@@ -166,7 +166,7 @@ describe('App', () => {
     await screen.findByRole('heading', { level: 1, name: 'Mi app' });
 
     const enCurso = screen.getByRole('region', { name: 'En curso' });
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta en En curso' }));
     const dialog = screen.getByRole('dialog', { name: 'Añadir tarjeta' });
     await fireEvent.input(within(dialog).getByLabelText(/Título/), { target: { value: 'Login' } });
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Añadir' }));
@@ -245,7 +245,7 @@ describe('App', () => {
     await screen.findByRole('heading', { level: 1, name: 'Mi app' });
 
     const enCurso = screen.getByRole('region', { name: 'En curso' });
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta en En curso' }));
     const dialog = screen.getByRole('dialog', { name: 'Añadir tarjeta' });
     await fireEvent.input(within(dialog).getByLabelText(/Título/), { target: { value: 'Login' } });
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Añadir' }));

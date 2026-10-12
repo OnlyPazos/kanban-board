@@ -7,7 +7,7 @@
   estado (`CARD_STATUS_DS`) y contador de tarjetas visibles (D-024). Cada columna lista
   sus tarjetas no archivadas en el orden automático de `sortCards` (componente `Card`, con el tipo y la prioridad
   como `Badge` según `CARD_TYPE_TONE`/`PRIORITY_TONE`; al abrirla avisa con
-  `oneditcard`) y tiene el botón "Añadir tarjeta", que avisa con el estado de
+  `oneditcard`) y en su cabecera el botón de solo icono "Añadir tarjeta en <estado>" (WI-AC-050), que avisa con el estado de
   la columna.
 
   Arrastrar y soltar (WI-AC-015, `svelte-dnd-action`): cada lista de tarjetas
@@ -40,6 +40,7 @@
 -->
 <script lang="ts">
   import { tick } from 'svelte';
+  import Plus from '@lucide/svelte/icons/plus';
   import { Alert, Badge, Button, Card, Chip, Column } from 'design-system';
   import {
     dndzone,
@@ -216,6 +217,18 @@
           headingLevel={2}
           count={cardsByStatus[status].length}
         >
+          {#snippet actions()}
+            {#if !readonly}
+              <!-- "Añadir tarjeta" en la cabecera, solo icono (WI-AC-050, D-025). -->
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={Plus}
+                aria-label={`Añadir tarjeta en ${CARD_STATUS_LABELS[status]}`}
+                onclick={() => onaddcard?.(status)}
+              />
+            {/if}
+          {/snippet}
           <ul
             class="board__cards"
             aria-label={CARD_STATUS_LABELS[status]}
@@ -264,9 +277,6 @@
               </li>
             {/each}
           </ul>
-          {#if !readonly}
-            <Button variant="ghost" size="sm" onclick={() => onaddcard?.(status)}>Añadir tarjeta</Button>
-          {/if}
         </Column>
       </div>
     {/each}
