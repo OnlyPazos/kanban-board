@@ -536,14 +536,13 @@ interface Card {
 - Acceptance Checks: AC-050
 - Depende de: [WI-AC-049]
 - Rama sugerida: feature/wi-ac-050-add-card-header-button
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - D-025. En `Board.svelte`, quitar el botón "Añadir tarjeta" del pie de la columna y ponerlo en el snippet `actions` de `Column`: `<Button variant="ghost" size="sm" icon={Plus} aria-label={`Añadir tarjeta en ${CARD_STATUS_LABELS[status]}`} onclick={() => onaddcard?.(status)} />`.
   - Solo si el proyecto no está archivado (en solo lectura no se pasa `actions`).
   - Actualizar todos los tests que buscan `getByRole('button', { name: 'Añadir tarjeta' })` (tests de componente de `Board`, e2e de crear tarjeta, validación de título, orden automático, filtro, archivado, solo lectura, import, sincronización entre pestañas, AC-044…) para que usen "Añadir tarjeta en <estado>". Ningún test debe seguir encontrando un botón con nombre exacto "Añadir tarjeta".
   - Test e2e: en cada columna existe el botón con ese nombre y `svg.lucide-plus` dentro de `aria-hidden`; se alcanza con Tab y se activa con Intro y con Espacio; abre el diálogo de creación con el estado de la columna (AC-010 con "En curso"); en un proyecto archivado no existe ningún "Añadir tarjeta en …".
-- Historial QA: []
-
+- Historial QA: [2026-10-12 PASS — AC-050 (commit d62c7a2). check 271 archivos 0 errores 0 warnings; test 297/297; test:e2e 97/97. e2e/redesign-add-card.spec.ts: en cada columna un botón "Añadir tarjeta en <estado>" en la cabecera, sin texto visible, con svg.lucide-plus en aria-hidden; ningún botón con nombre exacto "Añadir tarjeta"; se alcanza con Tab y se activa con Espacio y con Intro; crea la tarjeta en "En curso" y persiste tras recargar; en proyecto archivado no existe. Diff: Board.svelte (snippet actions de Column) y tests de componente adaptados al nuevo nombre; los e2e existentes usan coincidencia parcial dentro de la región y siguen pasando. Reglas base de stack OK]
 ## WI-AC-051
 - Contexto: tablero
 - Acceptance Checks: AC-051

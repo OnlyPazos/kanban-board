@@ -46,12 +46,12 @@ describe('Board', () => {
     expect(onedit).toHaveBeenCalledExactlyOnceWith(project);
   });
 
-  it('cada columna tiene "Añadir tarjeta", que avisa con el estado de esa columna', async () => {
+  it('cada columna tiene "Añadir tarjeta en <estado>" (solo icono), que avisa con el estado de esa columna', async () => {
     const onaddcard = vi.fn();
     render(Board, { project: createProject({ name: 'Mi app' }), onaddcard });
     const enCurso = screen.getByRole('region', { name: 'En curso' });
-    expect(screen.getAllByRole('button', { name: 'Añadir tarjeta' })).toHaveLength(4);
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    expect(screen.getAllByRole('button', { name: /^Añadir tarjeta en / })).toHaveLength(4);
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta en En curso' }));
     expect(onaddcard).toHaveBeenCalledExactlyOnceWith('en-curso');
   });
 
@@ -318,7 +318,7 @@ describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
     expect(item).toHaveTextContent('Login');
     expect(screen.getByRole('status')).toHaveTextContent(/solo lectura/i);
 
-    expect(screen.queryByRole('button', { name: 'Añadir tarjeta' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Añadir tarjeta/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Archivar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Editar proyecto' })).not.toBeInTheDocument();
     expect(within(item).queryByRole('button')).not.toBeInTheDocument();
@@ -344,7 +344,7 @@ describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
 
   it('un proyecto activo sí es editable y sus tarjetas se pueden coger', () => {
     render(Board, { project: { ...project, archived: false }, cards: [card] });
-    expect(screen.getAllByRole('button', { name: 'Añadir tarjeta' })).toHaveLength(4);
+    expect(screen.getAllByRole('button', { name: /^Añadir tarjeta en / })).toHaveLength(4);
     expect(screen.getByRole('button', { name: 'Editar proyecto' })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     const item = within(screen.getByRole('region', { name: 'En curso' })).getByRole('listitem', { name: 'Login' });
