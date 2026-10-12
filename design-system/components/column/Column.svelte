@@ -208,6 +208,10 @@
   }
 
   /* ── Cuerpo ─────────────────────────────────────────────── */
+  /* Sin overflow propio: la columna crece con sus tarjetas. Un cuerpo con
+     scroll anida un contenedor desplazable en cada columna, y las librerías
+     de arrastre (p. ej. svelte-dnd-action) acumulan bucles de autodesplazamiento
+     al recorrerlos, de modo que el tablero se desplaza sin control. */
   .ds-column__body {
     display: flex;
     flex-direction: column;
@@ -215,7 +219,6 @@
     flex: 1 1 auto;
     min-height: var(--ds-column-body-min-height);
     padding: var(--ds-spacing-3);
-    overflow-y: auto;
   }
 
   @media (prefers-reduced-motion: reduce) {
