@@ -4,6 +4,7 @@ Generado por `planner` a partir de `specs/project_specs.md` (AC-001 … AC-046, 
 Orden: por dependencias (los que no dependen de nada, primero). Cada Work Item se nombra por el primer Acceptance Check que cubre.
 Ampliación del 2026-10-10: WI-AC-040, WI-AC-041, WI-AC-042 y WI-AC-043 añadidos al final. Notas de WI-AC-001, WI-AC-012, WI-AC-018, WI-AC-031 y WI-AC-034 alineadas con D-014, D-015 y D-016 (todos seguían en `pendiente`).
 Ampliación del 2026-10-11: WI-AC-044, WI-AC-045 y WI-AC-046 añadidos al final (AC-044, AC-045, AC-046; D-018, D-019, D-020). Los Work Items integrados no cambian; solo se añade a WI-AC-040 una referencia a que AC-040 queda precisado por AC-046 (D-020), sin tocar su estado ni su historial.
+Ampliación del 2026-10-12 (rediseño visual): WI-AC-047 … WI-AC-057 añadidos al final (AC-047 … AC-057; D-021 … D-032). Los Work Items integrados no cambian. Ver el bloque "Sistema de diseño (2026-10-12)" más abajo, que amplía al anterior para estos items.
 
 Sistema de diseño (D-015, D-016; aplica a todos los items con UI):
 - La UI se construye con los componentes de `design-system` (`Button`, `Input`, `Textarea`, `Select`, `Field`, `Dialog`, `Card`, `Badge`, `Chip`, `Alert`). Los estilos propios de la app solo usan variables `--ds-*`.
@@ -13,6 +14,20 @@ Sistema de diseño (D-015, D-016; aplica a todos los items con UI):
   const CARD_TYPE_TONE = { novedad: 'feature', mejora: 'improvement', arreglo: 'bugfix', tecnico: 'technical' } as const;
   const PRIORITY_TONE = { alta: 'danger', media: 'warning', baja: 'neutral' } as const; // null → sin Badge
   ```
+
+Sistema de diseño (2026-10-12; D-021 … D-032; aplica a WI-AC-047 … WI-AC-057):
+- Nuevos componentes disponibles: `Icon`, `Column`, `DropPlaceholder`, y la constante `CATEGORY_ICONS`. `Button`, `Badge` y `Chip` aceptan `icon`; `Card` acepta `priority` (`'high' | 'medium' | 'low'`). Fuente Plus Jakarta Sans e iconos `@lucide/svelte` (importados icono a icono: `@lucide/svelte/icons/<nombre>`).
+- Correspondencias de dominio nuevas. Las de texto van en `domain` (sin dependencias de UI); las que son componentes de icono van en un módulo de la app (p. ej. `src/lib/icons.ts`), nunca en `domain`:
+  ```ts
+  // domain
+  const CARD_STATUS_DS = { 'sin-empezar': 'todo', 'en-curso': 'doing', 'en-pausa': 'paused', finalizado: 'done' } as const; // → Column status
+  const PRIORITY_DS = { alta: 'high', media: 'medium', baja: 'low' } as const;    // null → sin franja (Card priority)
+  // src/lib/icons.ts (Lucide)
+  const PRIORITY_ICON = { alta: ArrowUp, media: Equal, baja: ArrowDown };
+  const STATUS_ICON = { 'sin-empezar': CircleDashed, 'en-curso': CircleDot, 'en-pausa': CirclePause, finalizado: CircleCheck }; // los mismos que usa Column por dentro
+  ```
+- Ningún item modifica `design-system/`. Si algo no se puede hacer con lo que expone (props, tokens), se devuelve a `design-builder`; no se parchea con CSS global sobre clases `ds-*` ni con valores sueltos.
+- Los e2e y tests de componente existentes que usen selectores o nombres que cambian en un item (nombres accesibles, `data-*`, textos con "←", clases de la app) se actualizan en ese mismo item, y deben seguir pasando todos (`npm run test`, `npm run test:e2e`, `npm run check`).
 
 Modelo de datos común (referencia para todos los items, definido en WI-AC-001 / WI-AC-002):
 
@@ -469,3 +484,159 @@ interface Card {
   - Comprobación de "sin surrogates aislados": `String.prototype.isWellFormed()` es ES2024 y no está en el `lib` actual (`ES2022`). En los tests, usar una expresión regular de surrogates aislados o una aserción de tipo local. No ampliar el `lib` del `tsconfig` solo para esto, salvo que no haya otra opción razonable.
   - Test e2e (ampliar `e2e/copy-name-truncation.spec.ts`). Con exports reales de proyecto y "Importar como copia", en los cinco casos (a)–(e): la importación termina sin error; el proyecto copiado aparece en la lista con el nombre exacto; en el navegador, `name.isWellFormed()` es `true`; abrir "Editar proyecto" y "Guardar cambios" sin tocar el nombre se acepta, y el nombre se conserva en IndexedDB y tras recargar.
 - Historial QA: [2026-10-11 PASS — AC-046 (commit a072b69). check 0 errores (1 warning conocido del design-system); test 296/296; test:e2e 87/87 a la primera (build incluido; drag-and-drop.spec.ts:151 pasó). Diff contra integration/kanban-board: solo src/domain/text.ts (+test), copyName y JSDoc en exchange.ts (+tests), export en domain/index.ts y e2e/copy-name-truncation.spec.ts; sin dependencias nuevas, sin cambios en tsconfig, package.json, design-system/, project.ts, card.ts ni vistas. Afirmaciones del builder comprobadas: (1) grep de slice/substring/substr/truncat en src (sin tests): el único recorte por longitud es copyName→truncateToGraphemes (el slice de repository.ts quita un prefijo de clave, no recorta por longitud); (2) validateProjectName/validateCardTitle, PROJECT_NAME_MAX_LENGTH=80, CARD_TITLE_MAX_LENGTH=120 y los maxlength={PROJECT_NAME_MAX_LENGTH} de Crear/Editar proyecto sin cambios (maxlength=80 en el DOM; los diálogos de tarjeta siguen sin maxlength). Verificación independiente con Playwright sobre vite preview (puerto 4462, cerrado al terminar junto con sus procesos huérfanos; script fuera del repo), con export real de proyecto + "Importar como copia", contexto nuevo por caso: (a) 73u→79u, (b) 76u→76u, (c) 75u→80u con 😀 conservado, (d) 78 ASCII→primeros 72 + " (copia)" 80u, (e) a+79×U+0301→"(copia)" 7u. Casos propios: banderas 70e+🇪🇸→78u, 71e+🇪🇸→79u, 68e+🇪🇸🇫🇷→68e+🇪🇸 (copia) 80u; tono de piel 69e+👍🏽→77u, 68e+👍🏽xyz→80u con 👍🏽 entero; ZWJ con tono 66e+👩🏽‍💻→74u; emoji que termina justo en la unidad 72 (70e+😀zzzz)→80u conservado, emoji en unidades 72–73 (71e+😀b)→79u, emoji en 73–74 (72e+😀)→80u; recorte que termina en espacio 71a+" 😀b"→"…a  (copia)" 80u y 70a+" 😀"→"…a  (copia)" 79u; AC-040 72 caracteres sin recorte 80u. En los 17: nombre exacto visible en la lista, isWellFormed() true en el navegador, sin espacios exteriores, ≤80u, sin alert ni pageerror; Editar proyecto → Guardar cambios sin tocar el nombre se acepta y el nombre se conserva en IndexedDB tras recargar. Crear un proyecto de 80u con emoji (78e+😀) se acepta (validación en UTF-16 sin cambios). Reglas base de stack OK (función pura de dominio, Intl.Segmenter nativo, tests unitarios y e2e)]
+
+## WI-AC-047
+- Contexto: apariencia
+- Acceptance Checks: AC-047
+- Depende de: []
+- Rama sugerida: feature/wi-ac-047-font-icons-deps
+- Estado: pendiente
+- Notas de implementación:
+  - Base técnica del rediseño (D-021). Todos los demás items del rediseño dependen de este.
+  - Dependencias de la app con npm (no pnpm): añadir `@lucide/svelte` (la `peerDependency` del design-system, misma versión mayor `^1.55`) y `@fontsource-variable/plus-jakarta-sans`; quitar `@fontsource-variable/inter`. `@fontsource/jetbrains-mono` se queda (la lista de proyectos usa `family.mono`).
+  - `src/main.ts`: importar `@fontsource-variable/plus-jakarta-sans` en lugar de Inter, una sola vez, junto a `tokens.css`.
+  - `vite.config.ts`: `design-system/` tiene ahora su propio `node_modules` (con `svelte` y `@lucide/svelte`). Añadir `'@lucide/svelte'` a `resolve.dedupe` (ya está `'svelte'`) para que haya una sola instancia de Lucide en la app. Comprobar que Vitest también compila los componentes nuevos (`Icon`, `Column`, `DropPlaceholder`) del design-system con `inline: ['design-system']`.
+  - `npm run check` debe seguir en 0 errores con los `.svelte` nuevos del design-system (`Icon.svelte` usa `Component<any>` explícito). Si `svelte-check` o el build fallan dentro de `design-system/`, el defecto se devuelve a `design-builder` y no se parchea en la app.
+  - No hace falta tocar vistas en este item: la paleta índigo/slate y los radios nuevos llegan por tokens.
+  - Test e2e nuevo (p. ej. `e2e/redesign-theme.spec.ts`), en lista de proyectos, tablero, tarjetas archivadas y proyectos archivados:
+    - `getComputedStyle(document.body).fontFamily` empieza por `"Plus Jakarta Sans Variable"`; tras `await document.fonts.ready`, `document.fonts.check('16px "Plus Jakarta Sans Variable"')` es `true`.
+    - Con el selector en "Claro", `body` tiene `background-color` `rgb(248, 250, 252)`; en "Oscuro", `rgb(15, 23, 42)`.
+    - En la lista, el botón "Crear proyecto" tiene `background-color` `rgb(79, 70, 229)` en claro y `rgb(139, 147, 250)` en oscuro.
+  - Los e2e de AC-042 y AC-045 siguen pasando sin cambios. Revisar los que comparan colores con los valores antiguos (ámbar/stone) y actualizarlos a los tokens nuevos.
+- Historial QA: []
+
+## WI-AC-048
+- Contexto: apariencia
+- Acceptance Checks: AC-048
+- Depende de: [WI-AC-047]
+- Rama sugerida: feature/wi-ac-048-appbar-header
+- Estado: pendiente
+- Notas de implementación:
+  - D-028. `src/lib/AppHeader.svelte`: fondo `--ds-color-appbar-bg`, color `--ds-color-appbar-fg`, `box-shadow: var(--ds-shadow-sm)` y borde inferior `var(--ds-appbar-accent-width) solid var(--ds-color-appbar-accent)`.
+  - El título "Kanban de proyectos" pasa a ser un enlace `<a href={LIST_HREF}>` con `Icon` `SquareKanban` (decorativo, sin `label`) delante. Foco visible con `--ds-color-focus` como los demás enlaces. El enlace hereda el color de la barra (no `action.primary`).
+  - El selector "Modo de color" no cambia (AC-042, AC-045). Revisar que la cabecera sigue sin desbordar a 375 px con el icono añadido; ajustes solo con variables `--ds-*`.
+  - Test e2e: en las 4 vistas, en claro y oscuro: `background-color` de la cabecera `rgb(255, 255, 255)` / `rgb(30, 41, 59)`; `border-bottom` 3 px `solid` `rgb(79, 70, 229)` / `rgb(139, 147, 250)`; `box-shadow` ≠ `none`; existe `svg.lucide-square-kanban` dentro de un ancestro con `aria-hidden="true"`; `getByRole('link', { name: 'Kanban de proyectos' })` lleva a la lista desde el tablero y desde las dos vistas de archivados. El e2e de AC-045 (incluido 375 px) sigue pasando.
+- Historial QA: []
+
+## WI-AC-049
+- Contexto: tablero
+- Acceptance Checks: AC-049
+- Depende de: [WI-AC-047]
+- Rama sugerida: feature/wi-ac-049-board-columns-ds
+- Estado: pendiente
+- Notas de implementación:
+  - D-023, D-024. `src/views/Board.svelte`: cada columna pasa de `<section class="board__column">` + `<h2>` propios a `Column` del design-system, con `title={CARD_STATUS_LABELS[status]}`, `status={CARD_STATUS_DS[status]}`, `headingLevel={2}` y `count` = número de tarjetas visibles de esa columna (de `cardsByStatus`, es decir, activas y que pasan el filtro; no de `columnItems`, para que el contador no cambie con el hueco del arrastre). El texto accesible por defecto de `Column` ("N tarjeta"/"N tarjetas") es el que pide AC-049: no pasar `countLabel`.
+  - Añadir `CARD_STATUS_DS` a `domain` (bloque "Sistema de diseño (2026-10-12)").
+  - La `<ul use:dndzone>` actual va dentro del cuerpo de `Column` (snippet `children`), con su `aria-label` y toda la lógica de arrastre sin cambios. El botón "Añadir tarjeta" se queda de momento como está (lo cambia WI-AC-050). El borde de destino actual (`board-drop-target`) se queda de momento (lo cambia WI-AC-051).
+  - `Column` no acepta atributos extra (`data-*`, `class`). Si tests o estilos usan `section[data-status]` o `.board__column`, mover `data-status` a un contenedor propio de la app que envuelva a `Column` o a la `<ul>`, y actualizar esos selectores. No se modifica `design-system/`.
+  - Contenedor de columnas: `Column` tiene ancho fijo (`column.width`, `flex: 0 0`). Cambiar la rejilla actual (`grid` + `--board-column-min-width` calculado) por un contenedor flex con `overflow-x: auto`, de forma que AC-020 siga pasando (4 columnas desplazables dentro del tablero a 375 px, la página sin scroll horizontal). Mantener el hueco para el anillo de foco.
+  - Test e2e: para cada columna (`getByRole('region', { name })`), en claro y oscuro, comparar `background-color` de la cabecera y `border-top` (4 px, color) con los valores de `status.*` de la tabla "Paleta de colores"; comprobar los iconos `svg.lucide-circle-dashed|circle-dot|circle-pause|circle-check` dentro de `aria-hidden`; contador "2"/"0" con texto accesible "2 tarjetas"/"0 tarjetas" y "1 tarjeta" con 1; con filtro "Arreglo", el contador de "En curso" pasa de 3 a 1 y vuelve a 3. Actualizar los e2e existentes que dependían de la estructura antigua de columna (`board-columns`, `auto-sort`, `type-filter`, `mobile-layout`, `drag-and-drop`…).
+- Historial QA: []
+
+## WI-AC-050
+- Contexto: tablero
+- Acceptance Checks: AC-050
+- Depende de: [WI-AC-049]
+- Rama sugerida: feature/wi-ac-050-add-card-header-button
+- Estado: pendiente
+- Notas de implementación:
+  - D-025. En `Board.svelte`, quitar el botón "Añadir tarjeta" del pie de la columna y ponerlo en el snippet `actions` de `Column`: `<Button variant="ghost" size="sm" icon={Plus} aria-label={`Añadir tarjeta en ${CARD_STATUS_LABELS[status]}`} onclick={() => onaddcard?.(status)} />`.
+  - Solo si el proyecto no está archivado (en solo lectura no se pasa `actions`).
+  - Actualizar todos los tests que buscan `getByRole('button', { name: 'Añadir tarjeta' })` (tests de componente de `Board`, e2e de crear tarjeta, validación de título, orden automático, filtro, archivado, solo lectura, import, sincronización entre pestañas, AC-044…) para que usen "Añadir tarjeta en <estado>". Ningún test debe seguir encontrando un botón con nombre exacto "Añadir tarjeta".
+  - Test e2e: en cada columna existe el botón con ese nombre y `svg.lucide-plus` dentro de `aria-hidden`; se alcanza con Tab y se activa con Intro y con Espacio; abre el diálogo de creación con el estado de la columna (AC-010 con "En curso"); en un proyecto archivado no existe ningún "Añadir tarjeta en …".
+- Historial QA: []
+
+## WI-AC-051
+- Contexto: tablero
+- Acceptance Checks: AC-051
+- Depende de: [WI-AC-049]
+- Rama sugerida: feature/wi-ac-051-empty-column-drop-target
+- Estado: pendiente
+- Notas de implementación:
+  - D-023. Columna sin tarjetas visibles (`columnItems[status]` vacío): renderizar `<DropPlaceholder label="Sin tarjetas" />` dentro del cuerpo de `Column`, también en solo lectura. Debe seguir siendo posible soltar en esa columna: el placeholder no puede tapar ni sustituir la `<ul use:dndzone>` (p. ej. va dentro de la zona o justo después, con la zona conservando su alto mínimo). Comprobar que no rompe la navegación por teclado de `svelte-dnd-action`.
+  - Hueco del arrastre: el elemento sombra de `svelte-dnd-action` (`card[SHADOW_ITEM_MARKER_PROPERTY_NAME]`) se renderiza como `<DropPlaceholder active />` en lugar de `Card` con `dragging`. Ojo con `reflectDragging()`: hoy copia el `className` del `article` de la sombra a la copia que sigue al puntero. Con la sombra como `DropPlaceholder` ya no hay `article` del que copiar; en su lugar, en `transformDraggedElement`, añadir la clase `ds-card--dragging` al `article` de la copia (la copia ya conserva la clase de ámbito de Svelte del `Card` original, así que el selector con ámbito del design-system aplica). La tarjeta arrastrada debe seguir viéndose con sombra `lg` y giro.
+  - Columna destino: `dropTarget` de `Column` = la columna contiene el elemento sombra durante un arrastre (`columnItems[status].some(isShadow)`). Al soltar o cancelar no queda ninguna. Quitar la clase propia `board-drop-target` y su CSS (`dropTargetClasses`/`dropTargetStyle` vacíos), porque el destino lo pinta `Column`.
+  - El contador de `Column` sigue saliendo de `cardsByStatus` (WI-AC-049), no cambia durante el arrastre.
+  - Test e2e (ratón, en claro): columna vacía muestra "Sin tarjetas" con `svg.lucide-inbox` y borde `dashed`; con filtro que deja una columna sin tarjetas visibles, también. Durante un arrastre (`mouse.down` + `mouse.move` sin soltar) sobre otra columna: borde izquierdo/derecho/inferior de esa columna `rgb(79, 70, 229)`; existe un bloque con borde `dashed` `rgb(79, 70, 229)`, fondo `rgb(238, 242, 255)` y `svg.lucide-arrow-down-to-line`; si la columna estaba vacía, "Sin tarjetas" no está visible. Tras soltar y tras Escape: ninguna columna con borde `action.primary`, ningún hueco activo. Los e2e de AC-015, AC-016 y AC-017 (teclado y táctil) siguen pasando.
+- Historial QA: []
+
+## WI-AC-052
+- Contexto: tablero
+- Acceptance Checks: AC-052
+- Depende de: [WI-AC-047]
+- Rama sugerida: feature/wi-ac-052-priority-stripe-icons
+- Estado: pendiente
+- Notas de implementación:
+  - D-026, D-016. Añadir `PRIORITY_DS` a `domain` y `PRIORITY_ICON` a `src/lib/icons.ts` (bloque "Sistema de diseño (2026-10-12)").
+  - `Board.svelte`: pasar `priority={card.priority ? PRIORITY_DS[card.priority] : undefined}` a `Card`; el `Badge` de prioridad recibe `icon={PRIORITY_ICON[card.priority]}` sin cambiar su `tone` ni su texto. Los `Badge` de tipo y los `Chip` del filtro ya muestran sus iconos por defecto del design-system (`CATEGORY_ICONS`); no hace falta pasar `icon`.
+  - No tocar la vista de tarjetas archivadas (la cubre WI-AC-056).
+  - Test e2e, en claro y oscuro: tarjeta Alta / Media / Baja con `border-top` 4 px del color de `priority.*` (valores de AC-052); tarjeta sin prioridad con `border-top` 1 px del color `border.default` (claro `rgb(226, 232, 240)`, oscuro `rgb(51, 65, 85)`) y sin etiqueta de prioridad; iconos `svg.lucide-arrow-up|equal|arrow-down` en las etiquetas de prioridad y `sparkles|trending-up|bug|wrench` en las de tipo; en el filtro, cada chip con el icono de su tipo y el seleccionado además con `svg.lucide-check`; todos dentro de `aria-hidden`. Los e2e de AC-013, AC-014, AC-018 y AC-039 siguen pasando (sus nombres accesibles no cambian).
+- Historial QA: []
+
+## WI-AC-053
+- Contexto: tablero
+- Acceptance Checks: AC-053
+- Depende de: [WI-AC-052]
+- Rama sugerida: feature/wi-ac-053-card-footer-date-archive
+- Estado: pendiente
+- Notas de implementación:
+  - D-030, D-027. Nueva función de formato (p. ej. `formatCreatedDate(iso)` en `src/lib/`) con `Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric' })` en hora local → "Creada el 9 oct 2026". Test unitario con una fecha fija. Comprobar literalmente el caso de octubre del AC ("Creada el 9 oct 2026"); para otros meses, comparar con la salida del propio `Intl.DateTimeFormat` y no con un texto fijo, porque la abreviatura de algunos meses depende de la versión de ICU (p. ej. "sept"/"sep").
+  - Pie de cada tarjeta del tablero: `Icon` `Calendar` (`size="sm"`, decorativo) + texto "Creada el …" dentro de un `<time datetime={card.createdAt}>` (o junto a él), a la izquierda. En proyectos activos, a la derecha, el botón "Archivar" pasa a solo icono: `<Button variant="ghost" size="sm" icon={Archive} aria-label={`Archivar ${card.title}`} onclick={() => archive(card)} />`. En solo lectura, solo la fecha.
+  - Actualizar los tests que buscan el botón "Archivar" de la tarjeta por nombre exacto (archivado de tarjetas, AC-044, sincronización…) para usar "Archivar {título}". Ojo: en la lista de proyectos el botón "Archivar {nombre}" de proyecto ya usa ese patrón; los tests deben seguir distinguiendo ambos por vista.
+  - Test e2e: tarjeta creada con el reloj fijado (`page.clock`) el 9 de octubre de 2026 muestra "Creada el 9 oct 2026" con `svg.lucide-calendar` en `aria-hidden`; editar la tarjeta no cambia el texto; botón `Archivar <título>` con `svg.lucide-archive`, sin ningún botón de texto visible "Archivar" dentro de la tarjeta; pulsarlo archiva (AC-021). En un proyecto archivado, la fecha está y el botón no.
+- Historial QA: []
+
+## WI-AC-054
+- Contexto: proyectos
+- Acceptance Checks: AC-054
+- Depende de: [WI-AC-049]
+- Rama sugerida: feature/wi-ac-054-project-status-pills
+- Estado: pendiente
+- Notas de implementación:
+  - D-029. `src/views/ProjectList.svelte`: el `<dl class="status-counts">` actual se mantiene como estructura (cada estado es un par `dt`/`dd`, texto accesible), pero cada `.status-counts__item` pasa a ser una pastilla: `background: var(--ds-color-status-<x>-tint)`, `color: var(--ds-color-status-<x>-on-tint)`, `border-radius: var(--ds-radii-full)`, relleno con `--ds-spacing-*`, e `Icon` de `STATUS_ICON[status]` (`size="sm"`, decorativo) con `color: var(--ds-color-status-<x>-accent)`. La correspondencia estado → `<x>` sale de `CARD_STATUS_DS` (WI-AC-049).
+  - Los 4 estados se muestran siempre, también con 0. Se puede quitar el `':'` generado tras el `dt` si la pastilla queda más clara, mientras el nombre y el número sigan siendo texto.
+  - Estos pares (`on-tint`/`tint`, `accent`/`tint`) ya están validados en el design-system; no se crean colores nuevos.
+  - Test e2e, en claro y oscuro: con 2 tarjetas en "Sin empezar" y 1 en "En curso", hay 4 pastillas en orden con 2, 1, 0 y 0 (AC-008); cada una con el icono `svg.lucide-circle-*` de su estado en `aria-hidden` y `background-color`/`color` de `status.<x>.tint`/`.on-tint`. Actualizar `e2e/project-list-order-counts.spec.ts` si dependía del formato "Estado: N".
+- Historial QA: []
+
+## WI-AC-055
+- Contexto: apariencia
+- Acceptance Checks: AC-055
+- Depende de: [WI-AC-047]
+- Rama sugerida: feature/wi-ac-055-button-icons
+- Estado: pendiente
+- Notas de implementación:
+  - D-027, D-032. Añadir `icon` (Lucide) a los `Button` de la tabla de AC-055, sin cambiar su texto: `ProjectList.svelte` (Crear proyecto ×2 `Plus`, Importar ×2 `Upload`, Exportar todo `Download`, Editar `Pencil`, Archivar `Archive`); `Board.svelte` (Exportar proyecto `Download`, Editar proyecto `Pencil`); `ArchivedProjects.svelte` y `ArchivedCards.svelte` (Restaurar `ArchiveRestore`, Borrar definitivamente `Trash2`, también en el diálogo de confirmación); `ImportFlow.svelte` (Reemplazar ×2 `Replace`, Importar como copia `Copy`); `App.svelte` (Exportar ahora `Download`). Sin icono: Crear, Añadir, Guardar cambios, Cancelar, Aceptar.
+  - Enlaces (`<a>`, no `Button`): "Proyectos archivados" y "Tarjetas archivadas" con `Icon` `Archive`; "Volver a proyectos", "Volver a proyectos archivados" y "Volver al tablero" (en `Board.svelte`, `ArchivedCards.svelte`, `ArchivedProjects.svelte` y la página no encontrada de `App.svelte`) con `Icon` `ArrowLeft`, **quitando** la flecha de texto "←". Los enlaces con icono necesitan `display: inline-flex` + `gap` con `--ds-spacing-*`.
+  - Fuera de este item: "Añadir tarjeta" (WI-AC-050) y "Archivar" de la tarjeta (WI-AC-053). Las vistas de archivados no cambian su presentación de tarjeta aquí (WI-AC-056).
+  - Actualizar los tests que usan nombres con "←" (`← Volver a proyectos`, etc.): ahora son "Volver a proyectos", "Volver a proyectos archivados" y "Volver al tablero".
+  - Test e2e: recorrer la tabla de AC-055 comprobando en cada botón o enlace el `svg.lucide-<nombre>` indicado, dentro de `aria-hidden`, y que `getByRole(…, { name: '<texto>' })` sigue resolviendo; que los botones de diálogo sin icono no contienen `svg.lucide`; y que ningún enlace "Volver a …" contiene el carácter "←".
+- Historial QA: []
+
+## WI-AC-056
+- Contexto: archivo
+- Acceptance Checks: AC-056
+- Depende de: [WI-AC-052, WI-AC-055]
+- Rama sugerida: feature/wi-ac-056-archived-cards-presentation
+- Estado: pendiente
+- Notas de implementación:
+  - `src/views/ArchivedCards.svelte`: pasar `priority={…PRIORITY_DS…}` a `Card` y `icon={PRIORITY_ICON[…]}` al `Badge` de prioridad, igual que en el tablero (WI-AC-052). Se mantiene el pie actual (Estado, Creada, Última modificación) y los botones "Restaurar"/"Borrar definitivamente" con sus `aria-label` y los iconos de WI-AC-055.
+  - Si el marcado de etiquetas de tarjeta (tipo + prioridad) queda igual en tablero y archivadas, se puede extraer a un componente de la app (p. ej. `src/lib/CardTags.svelte`) para no duplicarlo.
+  - Test e2e: en la vista de tarjetas archivadas, tarjetas Alta/Media/Baja/sin prioridad con la franja de AC-052 (1), iconos de prioridad y tipo de AC-052 (2) y (3), estado y fechas visibles, y botones "Restaurar {título}" (`archive-restore`) y "Borrar definitivamente {título}" (`trash-2`). Los e2e de AC-021, AC-022 y AC-023 siguen pasando.
+- Historial QA: []
+
+## WI-AC-057
+- Contexto: apariencia
+- Acceptance Checks: AC-057
+- Depende de: [WI-AC-048, WI-AC-049, WI-AC-050, WI-AC-051, WI-AC-052, WI-AC-053, WI-AC-054, WI-AC-055, WI-AC-056]
+- Rama sugerida: feature/wi-ac-057-redesign-a11y-responsive
+- Estado: pendiente
+- Notas de implementación:
+  - Item de verificación transversal del rediseño; va el último porque comprueba el resultado de todos los anteriores. Solo cambia código si algún punto falla (y entonces el arreglo se limita a lo necesario, con variables `--ds-*`; si el defecto está en `design-system/`, se devuelve a `design-builder`).
+  - Test e2e (p. ej. `e2e/redesign-a11y.spec.ts`), en lista, tablero (proyecto activo y archivado), tarjetas archivadas y proyectos archivados, en claro y oscuro:
+    - (1) Todo `button` cuyo texto visible está vacío tiene nombre accesible no vacío (`getByRole('button')` + `accessibleName` o `aria-label`); todo `svg.lucide` tiene `aria-hidden="true"` o un ancestro con `aria-hidden="true"`.
+    - (2) Con 375×667: `document.documentElement.scrollWidth` ≤ 375 en las 4 vistas; en el tablero, las 4 columnas se alcanzan desplazando el contenedor de columnas (AC-020).
+    - (3) Botones "Añadir tarjeta en …" y "Archivar {título}": `elementFromPoint` en un punto a 4 px fuera de su borde visible (arriba, abajo, izquierda y derecha) devuelve el propio botón (zona ampliada a 44×44 del `::after` de `Button size="sm"`). Atención: el botón visible mide 36 px y la zona ampliada 44 px, así que "4 px fuera" cae justo en el límite de la zona. Si el punto exacto a 4,0 px no resuelve de forma estable por redondeo de subpíxeles, no se ajusta el umbral por cuenta propia: se informa a QA y se devuelve a `spec-writer` para precisar AC-057.
+    - (4) Con `reducedMotion: 'reduce'` en el contexto de Playwright, el e2e de AC-015 pasa.
+  - Ejecutar todos los tests (`npm run check`, `npm run test`, `npm run test:e2e`) como regresión completa del rediseño.
+- Historial QA: []
