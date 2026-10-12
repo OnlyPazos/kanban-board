@@ -263,7 +263,7 @@ Todos se importan desde `components/index.js`: `Alert`, `Badge`, `Button`, `Card
   - Props: `title` (obligatorio), `status`, `count`, `countLabel`, `headingLevel` (2–6, por defecto 2), `dropTarget` (por defecto `false`), y los snippets `actions` (opcional, en la cabecera) y `children` (obligatorio, cuerpo).
   - El contador se muestra solo si `count` está definido. El número lleva `aria-hidden` y va acompañado de un texto oculto: `countLabel` o, por defecto, `"{count} tarjeta"` / `"{count} tarjetas"`.
 - **Reglas de uso:**
-  - Ancho fijo `column.width`; el cuerpo tiene alto mínimo `column.body-min-height`, `gap` de `spacing.3` y `overflow-y: auto`.
+  - Ancho fijo `column.width`; el cuerpo tiene alto mínimo `column.body-min-height` y `gap` de `spacing.3`, sin `overflow` propio: la columna crece con sus tarjetas (un cuerpo con scroll hace que `svelte-dnd-action` acumule bucles de autodesplazamiento). La sección es `position: relative`, que contiene el texto oculto del contador.
   - El arrastre no está implementado: la app pone su propia lista (p. ej. `svelte-dnd-action`) dentro del cuerpo y controla `dropTarget`.
   - Las acciones de cabecera son Buttons (la demo usa `Button variant="ghost" size="sm" icon={Plus}` con `aria-label`).
 
@@ -568,7 +568,7 @@ Compilación: `npm run demo:build` en `design-system/` terminó con "✓ built" 
 - **Botones de solo icono sin etiqueta forzada:** `Button` con `icon` y sin `children` no exige `aria-label` en tipos ni en tiempo de ejecución; depende de la disciplina de quien lo use.
 - **Iconos fijos en Alert y Column:** no se pueden sustituir ni quitar por props (a diferencia de Badge, Chip y Button).
 - **Franja de prioridad con esquinas redondeadas:** `Card` aplica un `border-top` de 4px sobre un `border-radius` de 20px, así que la franja se curva y se estrecha en las esquinas hacia el borde lateral de 1px. Resultado visual no verificado en navegador.
-- **Recorte posible en el cuerpo de Column:** el cuerpo tiene `overflow-y: auto`; la elevación en hover (`card.lift`), la sombra `lg` y el giro de `dragging` pueden recortarse en los bordes del cuerpo. No verificado en navegador.
+- **Recorte en Column:** la sección tiene `overflow: hidden` (para sus esquinas redondeadas), así que la sombra `lg` y el giro de `dragging` de una tarjeta pueden recortarse en los bordes de la columna. El cuerpo ya no tiene scroll propio (corregido el 2026-10-12 en WI-AC-049). No verificado en navegador.
 - **Fondo del diálogo:** `::backdrop` usa `var(--ds-color-overlay)`. La herencia de variables CSS en `::backdrop` solo existe en navegadores recientes (aproximadamente 2023–2024 en adelante); en anteriores el fondo queda sin color. No verificado en navegador.
 - **La demo usa multiplicadores escritos:** `demo/App.svelte` usa `* 1.5`, `* 4` y `* 5` sobre tokens para anchos de maquetación. Solo afecta a la página de demo, no a los componentes.
 - **Comportamiento de Chip con `selected` sin bind:** si se pasa `selected` sin `bind:` ni actualización desde `onchange`, el chip cambia su estado interno al pulsarlo y puede quedar desincronizado del valor del padre.
