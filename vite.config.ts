@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [svelte()],
   resolve: {
     // design-system se enlaza como file: (symlink) y trae su propio node_modules
-    // con svelte: forzamos una única instancia de svelte en la app.
-    dedupe: ['svelte'],
+    // con svelte y @lucide/svelte: forzamos una única instancia de cada uno en la app.
+    dedupe: ['svelte', '@lucide/svelte'],
     // En tests (Vitest), usar la build de navegador de svelte (mount/DOM) en vez de la
     // de servidor. Fuera de Vitest se mantienen las condiciones por defecto de Vite.
     ...(process.env.VITEST ? { conditions: ['browser'] } : {}),

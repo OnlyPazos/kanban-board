@@ -490,7 +490,7 @@ interface Card {
 - Acceptance Checks: AC-047
 - Depende de: []
 - Rama sugerida: feature/wi-ac-047-font-icons-deps
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - Base técnica del rediseño (D-021). Todos los demás items del rediseño dependen de este.
   - Dependencias de la app con npm (no pnpm): añadir `@lucide/svelte` (la `peerDependency` del design-system, misma versión mayor `^1.55`) y `@fontsource-variable/plus-jakarta-sans`; quitar `@fontsource-variable/inter`. `@fontsource/jetbrains-mono` se queda (la lista de proyectos usa `family.mono`).
