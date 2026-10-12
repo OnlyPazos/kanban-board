@@ -510,14 +510,13 @@ interface Card {
 - Acceptance Checks: AC-048
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-048-appbar-header
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - D-028. `src/lib/AppHeader.svelte`: fondo `--ds-color-appbar-bg`, color `--ds-color-appbar-fg`, `box-shadow: var(--ds-shadow-sm)` y borde inferior `var(--ds-appbar-accent-width) solid var(--ds-color-appbar-accent)`.
   - El título "Kanban de proyectos" pasa a ser un enlace `<a href={LIST_HREF}>` con `Icon` `SquareKanban` (decorativo, sin `label`) delante. Foco visible con `--ds-color-focus` como los demás enlaces. El enlace hereda el color de la barra (no `action.primary`).
   - El selector "Modo de color" no cambia (AC-042, AC-045). Revisar que la cabecera sigue sin desbordar a 375 px con el icono añadido; ajustes solo con variables `--ds-*`.
   - Test e2e: en las 4 vistas, en claro y oscuro: `background-color` de la cabecera `rgb(255, 255, 255)` / `rgb(30, 41, 59)`; `border-bottom` 3 px `solid` `rgb(79, 70, 229)` / `rgb(139, 147, 250)`; `box-shadow` ≠ `none`; existe `svg.lucide-square-kanban` dentro de un ancestro con `aria-hidden="true"`; `getByRole('link', { name: 'Kanban de proyectos' })` lleva a la lista desde el tablero y desde las dos vistas de archivados. El e2e de AC-045 (incluido 375 px) sigue pasando.
-- Historial QA: []
-
+- Historial QA: [2026-10-12 PASS — AC-048 (commit 652f644). check 268 archivos 0 errores 0 warnings; test 296/296; test:e2e 91/91. e2e/redesign-header.spec.ts: en las 4 vistas y en claro/oscuro la cabecera tiene background `appbar.bg`, border-bottom 3px solid `appbar.accent`, box-shadow ≠ none y `svg.lucide-square-kanban` dentro de aria-hidden; el enlace "Kanban de proyectos" lleva a la lista desde el tablero y las dos vistas de archivados. AC-042/AC-045 siguen pasando, incluido 375 px sin desbordamiento ni solape etiqueta/título. Juicio sobre el cambio en los e2e de AC-042/AC-045: el selector pasa a ser la 2.ª parada de Tab (tras el enlace del título); AC-042 exige manejo con teclado, no que sea la primera parada, así que es aceptable. Diff: solo AppHeader.svelte (tokens appbar.*, shadow.sm, appbar.accent-width, sin valores sueltos) y tests. Reglas base de stack OK]
 ## WI-AC-049
 - Contexto: tablero
 - Acceptance Checks: AC-049
