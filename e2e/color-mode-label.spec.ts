@@ -107,6 +107,9 @@ test.describe('AC-045: etiqueta visible "Modo de color"', () => {
       await page.reload();
       await expect(page.getByRole('heading', { level: 1, name: view.heading })).toBeVisible();
       const select = colorModeSelect(page);
+      // Tras el enlace del título de la cabecera (AC-048) viene el selector.
+      await page.keyboard.press('Tab');
+      await expect(banner(page).getByRole('link', { name: 'Kanban de proyectos' })).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(select).toBeFocused();
       await page.keyboard.press('ArrowDown'); // Auto → Claro

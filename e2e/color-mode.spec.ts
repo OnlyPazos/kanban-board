@@ -96,7 +96,10 @@ test.describe('AC-042: modo de color', () => {
       const select = colorModeSelect(page);
       await expect(select).toBeVisible();
 
-      // Solo teclado: el selector es el primer elemento enfocable de la página.
+      // Solo teclado: tras el enlace del título de la cabecera (AC-048), el
+      // selector es el segundo elemento enfocable de la página.
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Kanban de proyectos' })).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(select).toBeFocused();
 
