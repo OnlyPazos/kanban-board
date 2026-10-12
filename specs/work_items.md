@@ -490,7 +490,7 @@ interface Card {
 - Acceptance Checks: AC-047
 - Depende de: []
 - Rama sugerida: feature/wi-ac-047-font-icons-deps
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - Base técnica del rediseño (D-021). Todos los demás items del rediseño dependen de este.
   - Dependencias de la app con npm (no pnpm): añadir `@lucide/svelte` (la `peerDependency` del design-system, misma versión mayor `^1.55`) y `@fontsource-variable/plus-jakarta-sans`; quitar `@fontsource-variable/inter`. `@fontsource/jetbrains-mono` se queda (la lista de proyectos usa `family.mono`).
@@ -503,7 +503,7 @@ interface Card {
     - Con el selector en "Claro", `body` tiene `background-color` `rgb(248, 250, 252)`; en "Oscuro", `rgb(15, 23, 42)`.
     - En la lista, el botón "Crear proyecto" tiene `background-color` `rgb(79, 70, 229)` en claro y `rgb(139, 147, 250)` en oscuro.
   - Los e2e de AC-042 y AC-045 siguen pasando sin cambios. Revisar los que comparan colores con los valores antiguos (ámbar/stone) y actualizarlos a los tokens nuevos.
-- Historial QA: []
+- Historial QA: [2026-10-12 PASS — AC-047 (commit aa0dca9). check 266 archivos, 0 errores, 0 warnings (desaparece el warning conocido del design-system); test 296/296; test:e2e 89/89 (incluye e2e/redesign-theme.spec.ts: fuente computada "Plus Jakarta Sans Variable" y `document.fonts.check` true en las 4 vistas, fondo `background` en claro/oscuro, "Crear proyecto" en `action.primary` claro/oscuro). Diff contra integration/kanban-board: package.json (+@lucide/svelte ^1.55.0, +@fontsource-variable/plus-jakarta-sans, −Inter, justificado por D-021), main.ts (import de la fuente), vite.config.ts (`dedupe` + '@lucide/svelte'), constantes de fondo de los 2 e2e de modo de color actualizadas a los tokens nuevos, e2e nuevo y su módulo de apoyo. Comprobado aparte: el CSS de dist/ no contiene ninguna fuente Inter y sí plus-jakarta-sans-latin-wght; `npm ls @lucide/svelte` muestra una sola instancia (la de design-system "deduped"). Sin cambios en design-system/ ni en vistas. Reglas base de stack OK (npm, dependencias justificadas por D-021, sin valores sueltos)]
 
 ## WI-AC-048
 - Contexto: apariencia
