@@ -510,7 +510,7 @@ interface Card {
 - Acceptance Checks: AC-048
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-048-appbar-header
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - D-028. `src/lib/AppHeader.svelte`: fondo `--ds-color-appbar-bg`, color `--ds-color-appbar-fg`, `box-shadow: var(--ds-shadow-sm)` y borde inferior `var(--ds-appbar-accent-width) solid var(--ds-color-appbar-accent)`.
   - El título "Kanban de proyectos" pasa a ser un enlace `<a href={LIST_HREF}>` con `Icon` `SquareKanban` (decorativo, sin `label`) delante. Foco visible con `--ds-color-focus` como los demás enlaces. El enlace hereda el color de la barra (no `action.primary`).
