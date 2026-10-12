@@ -126,7 +126,10 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Mi app' })).toBeInTheDocument();
     expect(window.location.hash).toBe(`#/project/${project.id}`);
-    expect(screen.getAllByRole('region').map((c) => c.getAttribute('aria-label'))).toEqual([
+    // Columnas `Column` del sistema de diseño: regiones etiquetadas por su encabezado.
+    const regionName = (c: HTMLElement) =>
+      document.getElementById(c.getAttribute('aria-labelledby') ?? '')?.textContent?.trim();
+    expect(screen.getAllByRole('region').map(regionName)).toEqual([
       'Sin empezar',
       'En curso',
       'En pausa',

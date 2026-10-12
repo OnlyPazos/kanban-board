@@ -522,7 +522,7 @@ interface Card {
 - Acceptance Checks: AC-049
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-049-board-columns-ds
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - D-023, D-024. `src/views/Board.svelte`: cada columna pasa de `<section class="board__column">` + `<h2>` propios a `Column` del design-system, con `title={CARD_STATUS_LABELS[status]}`, `status={CARD_STATUS_DS[status]}`, `headingLevel={2}` y `count` = número de tarjetas visibles de esa columna (de `cardsByStatus`, es decir, activas y que pasan el filtro; no de `columnItems`, para que el contador no cambie con el hueco del arrastre). El texto accesible por defecto de `Column` ("N tarjeta"/"N tarjetas") es el que pide AC-049: no pasar `countLabel`.
   - Añadir `CARD_STATUS_DS` a `domain` (bloque "Sistema de diseño (2026-10-12)").
@@ -530,8 +530,7 @@ interface Card {
   - `Column` no acepta atributos extra (`data-*`, `class`). Si tests o estilos usan `section[data-status]` o `.board__column`, mover `data-status` a un contenedor propio de la app que envuelva a `Column` o a la `<ul>`, y actualizar esos selectores. No se modifica `design-system/`.
   - Contenedor de columnas: `Column` tiene ancho fijo (`column.width`, `flex: 0 0`). Cambiar la rejilla actual (`grid` + `--board-column-min-width` calculado) por un contenedor flex con `overflow-x: auto`, de forma que AC-020 siga pasando (4 columnas desplazables dentro del tablero a 375 px, la página sin scroll horizontal). Mantener el hueco para el anillo de foco.
   - Test e2e: para cada columna (`getByRole('region', { name })`), en claro y oscuro, comparar `background-color` de la cabecera y `border-top` (4 px, color) con los valores de `status.*` de la tabla "Paleta de colores"; comprobar los iconos `svg.lucide-circle-dashed|circle-dot|circle-pause|circle-check` dentro de `aria-hidden`; contador "2"/"0" con texto accesible "2 tarjetas"/"0 tarjetas" y "1 tarjeta" con 1; con filtro "Arreglo", el contador de "En curso" pasa de 3 a 1 y vuelve a 3. Actualizar los e2e existentes que dependían de la estructura antigua de columna (`board-columns`, `auto-sort`, `type-filter`, `mobile-layout`, `drag-and-drop`…).
-- Historial QA: []
-
+- Historial QA: [2026-10-12 PASS — AC-049 (commit 29fdc9d). check 269 archivos 0 errores 0 warnings; test 297/297; test:e2e 94/94. e2e/redesign-columns.spec.ts: 4 regiones con encabezado h2 por estado; cabecera con background `status.<x>.tint` y border-top 4px `status.<x>.accent` en claro y oscuro; iconos circle-dashed/dot/pause/check en aria-hidden; contador "2 tarjetas"/"0 tarjetas"/"1 tarjeta"; con filtro "Arreglo" el contador de "En curso" pasa de 3 a 1 y vuelve a 3. AC-009, AC-014, AC-018, AC-020 (375 px sin scroll de página) y AC-039 siguen pasando. Durante el item se detectaron 2 defectos de design-system, corregidos por design-builder en integración (a94d7b6: `.ds-column` sin posicionar dejaba escapar el texto oculto del contador y ensanchaba la página; dfdfc61: el cuerpo con `overflow-y: auto` hacía que svelte-dnd-action acumulara bucles de autodesplazamiento y el arrastre táctil fallaba), con docs actualizadas (5b2c031). Los e2e táctiles de AC-017/AC-044 pasan sin cambios con esas correcciones. drag-and-drop.spec.ts:151 (teclado) es intermitente ya en integración (3/20 fallos con --repeat-each 20 antes del item; 1/20 en la rama), no lo introduce este item. Diff: Board.svelte (Column, CARD_STATUS_DS, contenedor flex, data-status en envoltorio), CARD_STATUS_DS en domain + test, tests de componente ajustados a aria-labelledby, e2e nuevo. Sin valores sueltos. Reglas base de stack OK]
 ## WI-AC-050
 - Contexto: tablero
 - Acceptance Checks: AC-050

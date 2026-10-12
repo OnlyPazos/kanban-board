@@ -2,7 +2,9 @@
   Tablero de un proyecto: cabecera con el nombre del proyecto (siempre el
   valor actual del store, así que se actualiza al editarlo), enlace para
   volver a la lista y botón "Editar". Debajo, exactamente 4 columnas en el
-  orden de `CARD_STATUSES` (constante única del dominio). Cada columna lista
+  orden de `CARD_STATUSES` (constante única del dominio), cada una con el
+  `Column` del sistema de diseño (WI-AC-049, D-023): color e icono de su
+  estado (`CARD_STATUS_DS`) y contador de tarjetas visibles (D-024). Cada columna lista
   sus tarjetas no archivadas en el orden automático de `sortCards` (componente `Card`, con el tipo y la prioridad
   como `Badge` según `CARD_TYPE_TONE`/`PRIORITY_TONE`; al abrirla avisa con
   `oneditcard`) y tiene el botón "Añadir tarjeta", que avisa con el estado de
@@ -38,7 +40,7 @@
 -->
 <script lang="ts">
   import { tick } from 'svelte';
-  import { Alert, Badge, Button, Card, Chip } from 'design-system';
+  import { Alert, Badge, Button, Card, Chip, Column } from 'design-system';
   import {
     dndzone,
     DRAGGED_ELEMENT_ID,
@@ -46,6 +48,7 @@
     type DndEvent,
   } from 'svelte-dnd-action';
   import {
+    CARD_STATUS_DS,
     CARD_STATUS_LABELS,
     CARD_STATUSES,
     CARD_TYPE_LABELS,
@@ -206,60 +209,66 @@
 
   <div class="board__columns" data-testid="board-columns">
     {#each CARD_STATUSES as status (status)}
-      <section class="board__column" aria-label={CARD_STATUS_LABELS[status]} data-status={status}>
-        <h2 class="board__column-title">{CARD_STATUS_LABELS[status]}</h2>
-        <ul
-          class="board__cards"
-          aria-label={CARD_STATUS_LABELS[status]}
-          use:dndzone={{
-            items: columnItems[status],
-            flipDurationMs: 0,
-            dropAnimationDisabled: reducedMotion,
-            dropTargetStyle: {},
-            dropTargetClasses: ['board-drop-target'],
-            dragDisabled: readonly,
-            // Sin arrastre, las tarjetas no son paradas de tabulación "cogibles".
-            zoneItemTabIndex: readonly ? -1 : 0,
-            transformDraggedElement: reflectDragging,
-          }}
-          onconsider={(event) => handleConsider(status, event)}
-          onfinalize={(event) => handleFinalize(status, event)}
+      <div class="board__column" data-status={status}>
+        <Column
+          title={CARD_STATUS_LABELS[status]}
+          status={CARD_STATUS_DS[status]}
+          headingLevel={2}
+          count={cardsByStatus[status].length}
         >
-          {#each columnItems[status] as card (card.id)}
-            {@const dragging = !!card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
-            <li
-              aria-label={card.title}
-              data-card-id={card.id}
-              data-type={card.type}
-              data-priority={card.priority ?? ''}
-              data-dnd-shadow={dragging || undefined}
-            >
-              <Card
-                title={card.title}
-                description={card.description}
-                {dragging}
-                {readonly}
-                onopen={readonly ? undefined : () => oneditcard?.(card)}
+          <ul
+            class="board__cards"
+            aria-label={CARD_STATUS_LABELS[status]}
+            use:dndzone={{
+              items: columnItems[status],
+              flipDurationMs: 0,
+              dropAnimationDisabled: reducedMotion,
+              dropTargetStyle: {},
+              dropTargetClasses: ['board-drop-target'],
+              dragDisabled: readonly,
+              // Sin arrastre, las tarjetas no son paradas de tabulación "cogibles".
+              zoneItemTabIndex: readonly ? -1 : 0,
+              transformDraggedElement: reflectDragging,
+            }}
+            onconsider={(event) => handleConsider(status, event)}
+            onfinalize={(event) => handleFinalize(status, event)}
+          >
+            {#each columnItems[status] as card (card.id)}
+              {@const dragging = !!card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
+              <li
+                aria-label={card.title}
+                data-card-id={card.id}
+                data-type={card.type}
+                data-priority={card.priority ?? ''}
+                data-dnd-shadow={dragging || undefined}
               >
-                {#snippet tags()}
-                  <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
-                  {#if card.priority !== null}
-                    <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
-                  {/if}
-                {/snippet}
-                {#snippet footer()}
-                  {#if !readonly}
-                    <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
-                  {/if}
-                {/snippet}
-              </Card>
-            </li>
-          {/each}
-        </ul>
-        {#if !readonly}
-          <Button variant="ghost" size="sm" onclick={() => onaddcard?.(status)}>Añadir tarjeta</Button>
-        {/if}
-      </section>
+                <Card
+                  title={card.title}
+                  description={card.description}
+                  {dragging}
+                  {readonly}
+                  onopen={readonly ? undefined : () => oneditcard?.(card)}
+                >
+                  {#snippet tags()}
+                    <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
+                    {#if card.priority !== null}
+                      <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
+                    {/if}
+                  {/snippet}
+                  {#snippet footer()}
+                    {#if !readonly}
+                      <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
+                    {/if}
+                  {/snippet}
+                </Card>
+              </li>
+            {/each}
+          </ul>
+          {#if !readonly}
+            <Button variant="ghost" size="sm" onclick={() => onaddcard?.(status)}>Añadir tarjeta</Button>
+          {/if}
+        </Column>
+      </div>
     {/each}
   </div>
 </div>
@@ -327,11 +336,11 @@
   }
 
   .board__columns {
-    /* Ancho mínimo de columna: con 4 columnas no caben en móvil y el tablero
-       se desplaza horizontalmente dentro de sí mismo, nunca la página (AC-020). */
-    --board-column-min-width: calc(var(--ds-spacing-8) * 4);
-    display: grid;
-    grid-template-columns: repeat(4, minmax(var(--board-column-min-width), 1fr));
+    /* `Column` tiene ancho fijo (column.width): con 4 columnas no caben en
+       móvil y el tablero se desplaza horizontalmente dentro de sí mismo,
+       nunca la página (AC-020). */
+    display: flex;
+    align-items: flex-start;
     gap: var(--ds-spacing-4);
     overflow-x: auto;
     /* Hueco para el anillo de foco y el contorno de destino al desplazar. */
@@ -339,14 +348,11 @@
     margin: calc(var(--ds-spacing-2) * -1);
   }
 
+  /* Envoltorio de la app alrededor de `Column` (que no admite atributos
+     propios): lleva `data-status` y es el elemento flexible del tablero. */
   .board__column {
     display: flex;
-    flex-direction: column;
-    gap: var(--ds-spacing-3);
-    padding: var(--ds-spacing-3);
-    background: var(--ds-color-surface-base);
-    border: var(--ds-border-width-default) solid var(--ds-color-border-default);
-    border-radius: var(--ds-radii-large);
+    flex: 0 0 auto;
   }
 
   .board__cards {
@@ -386,13 +392,5 @@
     :global(#dnd-action-dragged-el) {
       transition: none !important;
     }
-  }
-
-  .board__column-title {
-    margin: 0;
-    font-size: var(--ds-font-subheading-size);
-    font-weight: var(--ds-font-subheading-weight);
-    line-height: var(--ds-font-subheading-line-height);
-    letter-spacing: var(--ds-font-subheading-letter-spacing);
   }
 </style>

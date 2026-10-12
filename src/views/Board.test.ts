@@ -3,19 +3,23 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import Board from './Board.svelte';
 import { CARD_STATUSES, createCard, createProject, type Card as CardData, type CardStatus, type Priority } from '../domain';
 
+/** Nombre accesible de una región etiquetada con `aria-labelledby`. */
+function regionName(region: HTMLElement): string | undefined {
+  const id = region.getAttribute('aria-labelledby');
+  return id ? document.getElementById(id)?.textContent?.trim() : undefined;
+}
+
 describe('Board', () => {
   it('muestra exactamente 4 columnas en orden: Sin empezar, En curso, En pausa, Finalizado', () => {
     render(Board, { project: createProject({ name: 'Mi app' }) });
     const columns = screen.getAllByRole('region');
-    expect(columns.map((c) => c.getAttribute('aria-label'))).toEqual([
-      'Sin empezar',
-      'En curso',
-      'En pausa',
-      'Finalizado',
+    // Cada columna es un `Column` (región etiquetada por su encabezado, WI-AC-049).
+    expect(columns.map(regionName)).toEqual(['Sin empezar', 'En curso', 'En pausa', 'Finalizado']);
+    expect(columns.map((c) => c.closest<HTMLElement>('[data-status]')?.dataset.status)).toEqual([
+      ...CARD_STATUSES,
     ]);
-    expect(columns.map((c) => c.dataset.status)).toEqual([...CARD_STATUSES]);
     expect(
-      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.trim()),
     ).toEqual(['Sin empezar', 'En curso', 'En pausa', 'Finalizado']);
   });
 
