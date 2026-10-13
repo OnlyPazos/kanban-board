@@ -47,7 +47,7 @@ test('AC-012: editar una tarjeta → cambia de columna, persiste tras recargar y
   const [before] = await stored(page, 'cards');
   const [projectBefore] = await stored(page, 'projects');
 
-  await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Editar tarjeta' });
   await expect(dialog.getByLabel('Título')).toHaveValue('Login');
   // Las fechas se muestran en solo lectura: no hay campos para editarlas.
@@ -97,7 +97,7 @@ test('AC-012: editar una tarjeta → cambia de columna, persiste tras recargar y
   expect((projectAfter.updatedAt as string) > (projectBefore.updatedAt as string)).toBe(true);
 
   // El editor reabierto conserva la descripción multilínea y muestra la nueva fecha de modificación.
-  await enPausa.getByRole('button', { name: 'Login con Google' }).click();
+  await enPausa.getByRole('button', { name: 'Login con Google', exact: true }).click();
   await expect(dialog.getByLabel('Descripción')).toHaveValue('Primera línea\nSegunda línea');
   await expect(dialog.getByTestId('card-updated-at')).toHaveAttribute('datetime', after.updatedAt as string);
 });
@@ -119,7 +119,7 @@ test('AC-013: etiqueta de tipo con color distinto por tipo y prioridad solo cuan
   const dialog = page.getByRole('dialog', { name: 'Editar tarjeta' });
   for (const s of specs) {
     await addCard(page, 'Sin empezar', s.title);
-    await column.getByRole('button', { name: s.title }).click();
+    await column.getByRole('button', { name: s.title, exact: true }).click();
     await dialog.getByLabel('Tipo').selectOption({ label: s.type });
     await dialog.getByLabel('Prioridad').selectOption({ label: s.priority });
     await dialog.getByRole('button', { name: 'Guardar cambios' }).click();

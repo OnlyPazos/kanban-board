@@ -116,7 +116,7 @@ describe('Board', () => {
       const project = createProject({ name: 'Mi app' });
       const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
       render(Board, { project, cards: [card], onarchivecard });
-      await fireEvent.click(screen.getByRole('button', { name: 'Archivar' }));
+      await fireEvent.click(screen.getByRole('button', { name: 'Archivar Login' }));
       expect(onarchivecard).toHaveBeenCalledExactlyOnceWith(card);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
@@ -344,7 +344,7 @@ describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/solo lectura/i);
 
     expect(screen.queryByRole('button', { name: /^Añadir tarjeta/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Archivar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Archivar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Editar proyecto' })).not.toBeInTheDocument();
     expect(within(item).queryByRole('button')).not.toBeInTheDocument();
     await fireEvent.click(within(item).getByText('Login'));

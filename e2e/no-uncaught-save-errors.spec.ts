@@ -259,7 +259,7 @@ test.describe('AC-044: tarjetas', () => {
     const errors = watchUncaught(page);
     await setFailWrites(page, true);
 
-    await cardIn(page, 'Sin empezar', 'Login').getByRole('button', { name: 'Archivar' }).click();
+    await cardIn(page, 'Sin empezar', 'Login').getByRole('button', { name: 'Archivar Login', exact: true }).click();
 
     await expectSaveErrorNotice(page);
     await expect(cardIn(page, 'Sin empezar', 'Login')).toHaveCount(1);
@@ -270,7 +270,7 @@ test.describe('AC-044: tarjetas', () => {
     page,
   }) => {
     await boardWithCard(page);
-    await cardIn(page, 'Sin empezar', 'Login').getByRole('button', { name: 'Archivar' }).click();
+    await cardIn(page, 'Sin empezar', 'Login').getByRole('button', { name: 'Archivar Login', exact: true }).click();
     await expect(cardIn(page, 'Sin empezar', 'Login')).toHaveCount(0);
     await page.getByRole('link', { name: 'Tarjetas archivadas' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Tarjetas archivadas' })).toBeVisible();

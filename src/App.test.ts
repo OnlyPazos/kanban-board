@@ -170,9 +170,9 @@ describe('App', () => {
     const dialog = screen.getByRole('dialog', { name: 'Añadir tarjeta' });
     await fireEvent.input(within(dialog).getByLabelText(/Título/), { target: { value: 'Login' } });
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Añadir' }));
-    await within(enCurso).findByRole('button', { name: 'Archivar' });
+    await within(enCurso).findByRole('button', { name: 'Archivar Login' });
 
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Archivar' }));
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Archivar Login' }));
     await waitFor(() => expect(within(enCurso).queryByText('Login')).not.toBeInTheDocument());
     expect((await repository.listCards())[0]).toMatchObject({ title: 'Login', archived: true });
 

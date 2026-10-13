@@ -58,7 +58,7 @@ test('AC-037: sin IndexedDB hay un aviso permanente y se puede crear, editar y e
   await addCard.getByRole('button', { name: 'Añadir' }).click();
   await expect(addCard).toBeHidden();
 
-  await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login', exact: true }).click();
   const editCard = page.getByRole('dialog', { name: 'Editar tarjeta' });
   await editCard.getByLabel('Título').fill('Login con Google');
   await editCard.getByLabel('Estado').selectOption({ label: 'En curso' });

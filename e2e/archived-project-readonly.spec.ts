@@ -68,7 +68,7 @@ async function openArchivedBoard(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Mi app' })).toBeVisible();
   await addCard(page, 'Sin empezar', 'A');
   await addCard(page, 'En pausa', 'D');
-  await cardIn(page, 'En pausa', 'D').getByRole('button', { name: 'Archivar' }).click();
+  await cardIn(page, 'En pausa', 'D').getByRole('button', { name: 'Archivar D', exact: true }).click();
   await expect(cardIn(page, 'En pausa', 'D')).toHaveCount(0);
   await page.getByRole('link', { name: /volver a proyectos/i }).click();
   await page.getByRole('button', { name: 'Archivar Mi app' }).click();
@@ -85,7 +85,7 @@ async function expectReadonlyBoard(page: Page) {
   await expect(page.getByRole('status')).toContainText('solo lectura');
   // Sin crear, editar, archivar tarjetas ni editar el proyecto.
   await expect(page.getByRole('button', { name: 'Añadir tarjeta' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Archivar' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Archivar/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Editar proyecto' })).toHaveCount(0);
   await expect(cardIn(page, 'Sin empezar', 'A').getByRole('button')).toHaveCount(0);
   // Exportar sigue disponible.

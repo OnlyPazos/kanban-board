@@ -575,13 +575,13 @@ interface Card {
 - Acceptance Checks: AC-053
 - Depende de: [WI-AC-052]
 - Rama sugerida: feature/wi-ac-053-card-footer-date-archive
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - D-030, D-027. Nueva función de formato (p. ej. `formatCreatedDate(iso)` en `src/lib/`) con `Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric' })` en hora local → "Creada el 9 oct 2026". Test unitario con una fecha fija. Comprobar literalmente el caso de octubre del AC ("Creada el 9 oct 2026"); para otros meses, comparar con la salida del propio `Intl.DateTimeFormat` y no con un texto fijo, porque la abreviatura de algunos meses depende de la versión de ICU (p. ej. "sept"/"sep").
   - Pie de cada tarjeta del tablero: `Icon` `Calendar` (`size="sm"`, decorativo) + texto "Creada el …" dentro de un `<time datetime={card.createdAt}>` (o junto a él), a la izquierda. En proyectos activos, a la derecha, el botón "Archivar" pasa a solo icono: `<Button variant="ghost" size="sm" icon={Archive} aria-label={`Archivar ${card.title}`} onclick={() => archive(card)} />`. En solo lectura, solo la fecha.
   - Actualizar los tests que buscan el botón "Archivar" de la tarjeta por nombre exacto (archivado de tarjetas, AC-044, sincronización…) para usar "Archivar {título}". Ojo: en la lista de proyectos el botón "Archivar {nombre}" de proyecto ya usa ese patrón; los tests deben seguir distinguiendo ambos por vista.
   - Test e2e: tarjeta creada con el reloj fijado (`page.clock`) el 9 de octubre de 2026 muestra "Creada el 9 oct 2026" con `svg.lucide-calendar` en `aria-hidden`; editar la tarjeta no cambia el texto; botón `Archivar <título>` con `svg.lucide-archive`, sin ningún botón de texto visible "Archivar" dentro de la tarjeta; pulsarlo archiva (AC-021). En un proyecto archivado, la fecha está y el botón no.
-- Historial QA: []
+- Historial QA: [2026-10-13 PASS — AC-053 (commit 6ade258). check 281 archivos 0 errores 0 warnings; test 304/304 (incluye src/lib/dates.test.ts: "Creada el 9 oct 2026" literal, hora local a las 23:30, otro mes comparado con Intl); test:e2e 105 tests, 103 passed y las 2 intermitencias previas conocidas (drag-and-drop.spec.ts:151, 2/30 igual que antes del item; redesign-add-card.spec.ts:21). e2e/redesign-card-footer.spec.ts con page.clock fijado: "Creada el 9 oct 2026" dentro de <time> con svg.lucide-calendar en aria-hidden; editar la tarjeta otro día no cambia la fecha; botón "Archivar Mi tarjeta" sin texto visible con svg.lucide-archive, sin ningún "Archivar" de texto en la tarjeta, y al pulsarlo la tarjeta pasa a archivadas (AC-021); en proyecto archivado está la fecha y no el botón. Tests actualizados: los que buscaban "Archivar" usan "Archivar {título}" (exacto), y los que abrían la tarjeta por su título con coincidencia parcial usan `exact: true` (si no, también encuentran "Archivar {título}"). Diff sin valores sueltos ni SVG a mano. Reglas base de stack OK]
 
 ## WI-AC-054
 - Contexto: proyectos
