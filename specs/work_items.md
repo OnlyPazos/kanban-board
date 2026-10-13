@@ -562,7 +562,7 @@ interface Card {
 - Acceptance Checks: AC-052
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-052-priority-stripe-icons
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - D-026, D-016. Añadir `PRIORITY_DS` a `domain` y `PRIORITY_ICON` a `src/lib/icons.ts` (bloque "Sistema de diseño (2026-10-12)").
   - `Board.svelte`: pasar `priority={card.priority ? PRIORITY_DS[card.priority] : undefined}` a `Card`; el `Badge` de prioridad recibe `icon={PRIORITY_ICON[card.priority]}` sin cambiar su `tone` ni su texto. Los `Badge` de tipo y los `Chip` del filtro ya muestran sus iconos por defecto del design-system (`CATEGORY_ICONS`); no hace falta pasar `icon`.
