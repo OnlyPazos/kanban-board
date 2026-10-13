@@ -17,6 +17,11 @@
   activa esté vacía.
 -->
 <script lang="ts">
+  import Archive from '@lucide/svelte/icons/archive';
+  import Download from '@lucide/svelte/icons/download';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Plus from '@lucide/svelte/icons/plus';
+  import Upload from '@lucide/svelte/icons/upload';
   import { Button, Card, Icon } from 'design-system';
   import {
     CARD_STATUS_DS,
@@ -68,16 +73,18 @@
   <div class="project-list__header">
     <div class="project-list__heading">
       <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
-      <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}>Proyectos archivados</a>
+      <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}
+        ><Icon icon={Archive} size="sm" />Proyectos archivados</a
+      >
     </div>
     {#if projects.length > 0 || canExportAll}
       <div class="project-list__actions">
         {#if canExportAll}
-          <Button variant="secondary" onclick={() => onexportall?.()}>Exportar todo</Button>
+          <Button variant="secondary" icon={Download} onclick={() => onexportall?.()}>Exportar todo</Button>
         {/if}
         {#if projects.length > 0}
-          <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
-          <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
+          <Button variant="secondary" icon={Upload} onclick={() => onimport?.()}>Importar</Button>
+          <Button icon={Plus} onclick={() => oncreate?.()}>Crear proyecto</Button>
         {/if}
       </div>
     {/if}
@@ -109,12 +116,14 @@
               <Button
                 variant="ghost"
                 size="sm"
+                icon={Pencil}
                 aria-label={`Editar ${project.name}`}
                 onclick={() => onedit?.(project)}>Editar</Button
               >
               <Button
                 variant="ghost"
                 size="sm"
+                icon={Archive}
                 aria-label={`Archivar ${project.name}`}
                 onclick={() => archive(project)}>Archivar</Button
               >
@@ -128,8 +137,8 @@
       <p class="empty-state__title">Todavía no tienes proyectos</p>
       <p class="empty-state__text">Crea tu primer proyecto o importa un archivo exportado.</p>
       <div class="empty-state__actions">
-        <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
-        <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
+        <Button icon={Plus} onclick={() => oncreate?.()}>Crear proyecto</Button>
+        <Button variant="secondary" icon={Upload} onclick={() => onimport?.()}>Importar</Button>
       </div>
     </div>
   {/if}
@@ -157,6 +166,9 @@
   }
 
   .project-list__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);
     font-weight: var(--ds-font-label-weight);

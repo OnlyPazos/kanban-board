@@ -45,7 +45,10 @@
 -->
 <script lang="ts">
   import Archive from '@lucide/svelte/icons/archive';
+  import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Calendar from '@lucide/svelte/icons/calendar';
+  import Download from '@lucide/svelte/icons/download';
+  import Pencil from '@lucide/svelte/icons/pencil';
   import Plus from '@lucide/svelte/icons/plus';
   import { Alert, Badge, Button, Card, Chip, Column, DropPlaceholder, Icon } from 'design-system';
   import {
@@ -182,17 +185,25 @@
 <div class="board">
   <div class="board__header">
     {#if readonly}
-      <a class="board__back" href={ARCHIVED_PROJECTS_HREF}>← Volver a proyectos archivados</a>
+      <a class="board__back" href={ARCHIVED_PROJECTS_HREF}
+        ><Icon icon={ArrowLeft} size="sm" />Volver a proyectos archivados</a
+      >
     {:else}
-      <a class="board__back" href={LIST_HREF}>← Volver a proyectos</a>
+      <a class="board__back" href={LIST_HREF}><Icon icon={ArrowLeft} size="sm" />Volver a proyectos</a>
     {/if}
     <div class="board__title-row">
       <h1 class="board__title">{project.name}</h1>
       <div class="board__actions">
-        <a class="board__link" href={archivedCardsHref(project.id)}>Tarjetas archivadas</a>
-        <Button variant="secondary" size="sm" onclick={() => onexport?.(project)}>Exportar proyecto</Button>
+        <a class="board__link" href={archivedCardsHref(project.id)}
+          ><Icon icon={Archive} size="sm" />Tarjetas archivadas</a
+        >
+        <Button variant="secondary" size="sm" icon={Download} onclick={() => onexport?.(project)}>
+          Exportar proyecto
+        </Button>
         {#if !readonly}
-          <Button variant="secondary" size="sm" onclick={() => onedit?.(project)}>Editar proyecto</Button>
+          <Button variant="secondary" size="sm" icon={Pencil} onclick={() => onedit?.(project)}>
+            Editar proyecto
+          </Button>
         {/if}
       </div>
     </div>
@@ -332,6 +343,9 @@
 
   .board__back,
   .board__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     align-self: flex-start;
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);

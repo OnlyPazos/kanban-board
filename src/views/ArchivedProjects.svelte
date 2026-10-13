@@ -11,7 +11,10 @@
     modo solo lectura (desde ahí se puede exportar).
 -->
 <script lang="ts">
-  import { Button, Card, Dialog } from 'design-system';
+  import ArchiveRestore from '@lucide/svelte/icons/archive-restore';
+  import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import { Button, Card, Dialog, Icon } from 'design-system';
   import type { Card as CardData, Project } from '../domain';
   import { boardHref, LIST_HREF } from '../lib/route';
 
@@ -74,7 +77,7 @@
 
 <section class="archived-projects" aria-labelledby="archived-projects-title">
   <div class="archived-projects__header">
-    <a class="archived-projects__back" href={LIST_HREF}>← Volver a proyectos</a>
+    <a class="archived-projects__back" href={LIST_HREF}><Icon icon={ArrowLeft} size="sm" />Volver a proyectos</a>
     <h1 id="archived-projects-title" class="archived-projects__title">Proyectos archivados</h1>
   </div>
 
@@ -95,12 +98,14 @@
                 <Button
                   variant="secondary"
                   size="sm"
+                  icon={ArchiveRestore}
                   aria-label={`Restaurar ${project.name}`}
                   onclick={() => restore(project)}>Restaurar</Button
                 >
                 <Button
                   variant="danger"
                   size="sm"
+                  icon={Trash2}
                   aria-label={`Borrar definitivamente ${project.name}`}
                   onclick={() => askDelete(project)}>Borrar definitivamente</Button
                 >
@@ -125,7 +130,9 @@
 >
   {#snippet actions()}
     <Button variant="secondary" onclick={() => (confirming = false)}>Cancelar</Button>
-    <Button variant="danger" loading={deleting} onclick={confirmDelete}>Borrar definitivamente</Button>
+    <Button variant="danger" icon={Trash2} loading={deleting} onclick={confirmDelete}>
+      Borrar definitivamente
+    </Button>
   {/snippet}
 </Dialog>
 
@@ -142,6 +149,9 @@
   }
 
   .archived-projects__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     align-self: flex-start;
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);
