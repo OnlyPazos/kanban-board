@@ -548,7 +548,7 @@ interface Card {
 - Acceptance Checks: AC-051
 - Depende de: [WI-AC-049]
 - Rama sugerida: feature/wi-ac-051-empty-column-drop-target
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - D-023. Columna sin tarjetas visibles (`columnItems[status]` vacío): renderizar `<DropPlaceholder label="Sin tarjetas" />` dentro del cuerpo de `Column`, también en solo lectura. Debe seguir siendo posible soltar en esa columna: el placeholder no puede tapar ni sustituir la `<ul use:dndzone>` (p. ej. va dentro de la zona o justo después, con la zona conservando su alto mínimo). Comprobar que no rompe la navegación por teclado de `svelte-dnd-action`.
   - Hueco del arrastre: el elemento sombra de `svelte-dnd-action` (`card[SHADOW_ITEM_MARKER_PROPERTY_NAME]`) se renderiza como `<DropPlaceholder active />` en lugar de `Card` con `dragging`. Ojo con `reflectDragging()`: hoy copia el `className` del `article` de la sombra a la copia que sigue al puntero. Con la sombra como `DropPlaceholder` ya no hay `article` del que copiar; en su lugar, en `transformDraggedElement`, añadir la clase `ds-card--dragging` al `article` de la copia (la copia ya conserva la clase de ámbito de Svelte del `Card` original, así que el selector con ámbito del design-system aplica). La tarjeta arrastrada debe seguir viéndose con sombra `lg` y giro.
