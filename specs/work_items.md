@@ -601,7 +601,7 @@ interface Card {
 - Acceptance Checks: AC-055
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-055-button-icons
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - D-027, D-032. Añadir `icon` (Lucide) a los `Button` de la tabla de AC-055, sin cambiar su texto: `ProjectList.svelte` (Crear proyecto ×2 `Plus`, Importar ×2 `Upload`, Exportar todo `Download`, Editar `Pencil`, Archivar `Archive`); `Board.svelte` (Exportar proyecto `Download`, Editar proyecto `Pencil`); `ArchivedProjects.svelte` y `ArchivedCards.svelte` (Restaurar `ArchiveRestore`, Borrar definitivamente `Trash2`, también en el diálogo de confirmación); `ImportFlow.svelte` (Reemplazar ×2 `Replace`, Importar como copia `Copy`); `App.svelte` (Exportar ahora `Download`). Sin icono: Crear, Añadir, Guardar cambios, Cancelar, Aceptar.
   - Enlaces (`<a>`, no `Button`): "Proyectos archivados" y "Tarjetas archivadas" con `Icon` `Archive`; "Volver a proyectos", "Volver a proyectos archivados" y "Volver al tablero" (en `Board.svelte`, `ArchivedCards.svelte`, `ArchivedProjects.svelte` y la página no encontrada de `App.svelte`) con `Icon` `ArrowLeft`, **quitando** la flecha de texto "←". Los enlaces con icono necesitan `display: inline-flex` + `gap` con `--ds-spacing-*`.
