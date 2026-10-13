@@ -20,7 +20,7 @@ async function addCard(page: Page, column: string, title: string) {
 
 async function archiveCard(page: Page, column: string, title: string) {
   const card = page.getByRole('region', { name: column }).getByRole('listitem', { name: title });
-  await card.getByRole('button', { name: 'Archivar' }).click();
+  await card.getByRole('button', { name: `Archivar ${title}`, exact: true }).click();
   await expect(card).toHaveCount(0);
 }
 

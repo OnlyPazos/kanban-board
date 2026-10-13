@@ -101,7 +101,7 @@ test('AC-011: editar con título no válido no modifica la tarjeta', async ({ pa
   const [before] = await stored(page, 'cards');
   const [projectBefore] = await stored(page, 'projects');
 
-  await column.getByRole('button', { name: 'Login' }).click();
+  await column.getByRole('button', { name: 'Login', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Editar tarjeta' });
   const title = dialog.getByLabel('Título');
 

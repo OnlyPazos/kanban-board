@@ -56,7 +56,7 @@ async function setup(page: Page) {
 
 async function archiveLogin(page: Page) {
   const card = page.getByRole('region', { name: 'En curso' }).getByRole('listitem', { name: 'Login' });
-  await card.getByRole('button', { name: 'Archivar' }).click();
+  await card.getByRole('button', { name: 'Archivar Login', exact: true }).click();
   await expect(card).toHaveCount(0);
 }
 

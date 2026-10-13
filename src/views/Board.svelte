@@ -27,8 +27,9 @@
   todas. La selección llega en `typeFilter` y cada cambio se avisa con
   `ontypefilterchange` (la app la recuerda por proyecto).
 
-  Archivo (WI-AC-021): cada tarjeta tiene "Archivar", que avisa con
-  `onarchivecard` sin pedir confirmación. La cabecera enlaza con la vista de
+  Archivo (WI-AC-021): cada tarjeta tiene "Archivar" (solo icono, "Archivar
+  {título}", WI-AC-053), que avisa con `onarchivecard` sin pedir confirmación.
+  El pie de la tarjeta muestra también "Creada el {fecha}". La cabecera enlaza con la vista de
   tarjetas archivadas del proyecto. El tablero no ofrece borrado definitivo.
 
   Export (WI-AC-028): "Exportar proyecto" avisa con `onexport`. Es una acción
@@ -43,8 +44,10 @@
   también está en el dominio (`ArchivedProjectError`).
 -->
 <script lang="ts">
+  import Archive from '@lucide/svelte/icons/archive';
+  import Calendar from '@lucide/svelte/icons/calendar';
   import Plus from '@lucide/svelte/icons/plus';
-  import { Alert, Badge, Button, Card, Chip, Column, DropPlaceholder } from 'design-system';
+  import { Alert, Badge, Button, Card, Chip, Column, DropPlaceholder, Icon } from 'design-system';
   import {
     dndzone,
     SHADOW_ITEM_MARKER_PROPERTY_NAME,
@@ -69,6 +72,7 @@
     type Project,
   } from '../domain';
   import { ARCHIVED_PROJECTS_HREF, archivedCardsHref, LIST_HREF } from '../lib/route';
+  import { formatCreatedDate } from '../lib/dates';
   import { applyDndAriaStrings } from '../lib/dnd';
   import { PRIORITY_ICON } from '../lib/icons';
 
@@ -281,8 +285,21 @@
                         {/if}
                       {/snippet}
                       {#snippet footer()}
+                        <!-- Fecha de creación y, en proyectos activos, "Archivar" de solo icono (WI-AC-053). -->
+                        <span class="board__created">
+                          <Icon icon={Calendar} size="sm" />
+                          <time datetime={card.createdAt}>{formatCreatedDate(card.createdAt)}</time>
+                        </span>
                         {#if !readonly}
-                          <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
+                          <span class="board__card-actions">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              icon={Archive}
+                              aria-label={`Archivar ${card.title}`}
+                              onclick={() => archive(card)}
+                            />
+                          </span>
                         {/if}
                       {/snippet}
                     </Card>
@@ -423,6 +440,16 @@
 
   .board__cards > li {
     border-radius: var(--ds-radii-large);
+  }
+
+  .board__created {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
+  }
+
+  .board__card-actions {
+    margin-left: auto;
   }
 
   .board__cards > li:focus-visible {

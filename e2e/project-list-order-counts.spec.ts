@@ -77,7 +77,7 @@ test('AC-007: crear/editar tarjeta o editar proyecto lo pone el primero de la li
   // Editar la tarjeta de A → A vuelve a ser el primero.
   await later(page);
   await openBoard(page, 'A');
-  await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login', exact: true }).click();
   const editCard = page.getByRole('dialog', { name: 'Editar tarjeta' });
   await editCard.getByLabel('Título').fill('Login con Google');
   await editCard.getByRole('button', { name: 'Guardar cambios' }).click();

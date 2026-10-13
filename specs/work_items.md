@@ -575,7 +575,7 @@ interface Card {
 - Acceptance Checks: AC-053
 - Depende de: [WI-AC-052]
 - Rama sugerida: feature/wi-ac-053-card-footer-date-archive
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-030, D-027. Nueva función de formato (p. ej. `formatCreatedDate(iso)` en `src/lib/`) con `Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric' })` en hora local → "Creada el 9 oct 2026". Test unitario con una fecha fija. Comprobar literalmente el caso de octubre del AC ("Creada el 9 oct 2026"); para otros meses, comparar con la salida del propio `Intl.DateTimeFormat` y no con un texto fijo, porque la abreviatura de algunos meses depende de la versión de ICU (p. ej. "sept"/"sep").
   - Pie de cada tarjeta del tablero: `Icon` `Calendar` (`size="sm"`, decorativo) + texto "Creada el …" dentro de un `<time datetime={card.createdAt}>` (o junto a él), a la izquierda. En proyectos activos, a la derecha, el botón "Archivar" pasa a solo icono: `<Button variant="ghost" size="sm" icon={Archive} aria-label={`Archivar ${card.title}`} onclick={() => archive(card)} />`. En solo lectura, solo la fecha.
