@@ -562,13 +562,13 @@ interface Card {
 - Acceptance Checks: AC-052
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-052-priority-stripe-icons
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - D-026, D-016. Añadir `PRIORITY_DS` a `domain` y `PRIORITY_ICON` a `src/lib/icons.ts` (bloque "Sistema de diseño (2026-10-12)").
   - `Board.svelte`: pasar `priority={card.priority ? PRIORITY_DS[card.priority] : undefined}` a `Card`; el `Badge` de prioridad recibe `icon={PRIORITY_ICON[card.priority]}` sin cambiar su `tone` ni su texto. Los `Badge` de tipo y los `Chip` del filtro ya muestran sus iconos por defecto del design-system (`CATEGORY_ICONS`); no hace falta pasar `icon`.
   - No tocar la vista de tarjetas archivadas (la cubre WI-AC-056).
   - Test e2e, en claro y oscuro: tarjeta Alta / Media / Baja con `border-top` 4 px del color de `priority.*` (valores de AC-052); tarjeta sin prioridad con `border-top` 1 px del color `border.default` (claro `rgb(226, 232, 240)`, oscuro `rgb(51, 65, 85)`) y sin etiqueta de prioridad; iconos `svg.lucide-arrow-up|equal|arrow-down` en las etiquetas de prioridad y `sparkles|trending-up|bug|wrench` en las de tipo; en el filtro, cada chip con el icono de su tipo y el seleccionado además con `svg.lucide-check`; todos dentro de `aria-hidden`. Los e2e de AC-013, AC-014, AC-018 y AC-039 siguen pasando (sus nombres accesibles no cambian).
-- Historial QA: []
+- Historial QA: [2026-10-13 PASS — AC-052 (commit cd47883). check 277 archivos 0 errores 0 warnings; test 301/301; test:e2e 102 tests, 100 passed y 2 fallos de intermitencia previa ajena al item (drag-and-drop.spec.ts:151 teclado, conocida; redesign-add-card.spec.ts:21, que falla igual en 7f4c4f9 — 18/30 con --repeat-each 30 — por una carrera del test: pulsa Intro antes de que llegue el evento `close` del diálogo cerrado con Escape). e2e/redesign-card-tags.spec.ts: en claro y oscuro, Alta/Media/Baja con border-top 4px `priority.*` y sin prioridad 1px `border.default` y sin etiqueta; iconos arrow-up/equal/arrow-down en las etiquetas de prioridad y sparkles/trending-up/bug/wrench en las de tipo, en aria-hidden; chips del filtro con su icono y check solo en el seleccionado. AC-013/014/018/039 30/30 con --repeat-each 3. Diff: PRIORITY_DS en domain (+test), src/lib/icons.ts (PRIORITY_ICON), Board.svelte (priority a Card, icon al Badge). Incluye además 0c4fd5b, ajuste del e2e de Escape de WI-AC-051 para que no dependa de la columna donde cae la tarjeta (90/90). Sin valores sueltos ni SVG a mano. Reglas base de stack OK]
 
 ## WI-AC-053
 - Contexto: tablero
