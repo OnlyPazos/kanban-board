@@ -837,7 +837,7 @@ Los nombres accesibles de estos botones y enlaces no cambian, salvo en los enlac
 Tarjetas en la vista de tarjetas archivadas. Cada tarjeta archivada se muestra con la misma presentación de prioridad y tipo que en el tablero (franja superior por prioridad e iconos de las etiquetas, puntos (1) a (3) de AC-052) y sigue mostrando su estado, su fecha de creación y su fecha de última modificación. Sus botones "Restaurar" y "Borrar definitivamente" llevan los iconos de AC-055 y conservan sus nombres accesibles ("Restaurar {título}" y "Borrar definitivamente {título}"). AC-021, AC-022 y AC-023 siguen pasando. depende_de: [AC-021, AC-052, AC-055]
 
 ### AC-057 [apariencia] [categoría: edge-case]
-Accesibilidad y adaptación del rediseño. (1) En las 4 vistas de AC-047, en claro y en oscuro, todo botón cuyo contenido visible sea solo un icono tiene un nombre accesible no vacío, y ningún `svg.lucide` está expuesto a lectores de pantalla (todos tienen `aria-hidden="true"` o están dentro de un elemento que lo tiene). (2) Con un viewport de 375 px, ninguna de esas vistas se desplaza en horizontal (`document.documentElement.scrollWidth` ≤ 375); en el tablero, las 4 columnas siguen viéndose desplazándose dentro del tablero (AC-020). (3) Los botones de solo icono de AC-050 y AC-053 tienen un área de pulsación mínima de 44 × 44 px, contando la zona ampliada del `::after` de `Button size="sm"` (se comprueba con `elementFromPoint` en un punto a 4 px fuera del borde visible del botón, que devuelve el propio botón). (4) Con `prefers-reduced-motion: reduce` emulado, AC-015 sigue pasando. depende_de: [AC-020, AC-048, AC-049, AC-050, AC-053]
+Accesibilidad y adaptación del rediseño. (1) En las 4 vistas de AC-047, en claro y en oscuro, todo botón cuyo contenido visible sea solo un icono tiene un nombre accesible no vacío, y ningún `svg.lucide` está expuesto a lectores de pantalla (todos tienen `aria-hidden="true"` o están dentro de un elemento que lo tiene). (2) Con un viewport de 375 px, ninguna de esas vistas se desplaza en horizontal (`document.documentElement.scrollWidth` ≤ 375); en el tablero, las 4 columnas siguen viéndose desplazándose dentro del tablero (AC-020). (3) Los botones de solo icono de AC-050 y AC-053 tienen un área de pulsación mínima de 44 × 44 px, contando la zona ampliada del `::after` de `Button size="sm"` (se comprueba con `elementFromPoint` en un punto a 3,5 px fuera del borde visible del botón, por arriba, abajo, izquierda y derecha, que devuelve el propio botón; ver D-033). (4) Con `prefers-reduced-motion: reduce` emulado, AC-015 sigue pasando. depende_de: [AC-020, AC-048, AC-049, AC-050, AC-053]
 
 ## Decisiones de diseño
 
@@ -1071,8 +1071,18 @@ Elegido: A. "Borrar definitivamente" `Trash2`, "Reemplazar" `Replace`, "Importar
 Razón: El icono marca las acciones con consecuencias; en las acciones neutras solo añadiría ruido.
 Prueba (AC): AC-055
 
+### D-033 [tema: edge-case]
+Pregunta: AC-057 (3) medía el área de pulsación con `elementFromPoint` a 4 px fuera del borde visible. La zona ampliada del `::after` de `Button size="sm"` mide exactamente 44 × 44 px (de −4 a +40 px sobre el botón de 36 px): responde hasta 3,99 px por los 4 lados, pero a 4,0 px exactos abajo y a la derecha el punto cae en el borde exclusivo de la zona. ¿Cómo se mide?
+Opciones: A) A 3,5 px fuera del borde, dentro de la zona de 44 px por los 4 lados; B) Comprobar el tamaño del `::after` con `getComputedStyle` (≥ 44 × 44, centrado); C) Agrandar la zona ampliada en `design-system/` (p. ej. 48 px) y dejar los 4 px.
+Elegido: A. Lo decidió el usuario (2026-10-13) al detectarlo `builder` en WI-AC-057.
+Razón: Comprueba lo que importa (que un toque junto al botón lo acierta) con un punto claramente dentro de la zona de 44 × 44, sin depender del redondeo del borde ni tocar el sistema de diseño.
+Prueba (AC): AC-057
+
 ## Preguntas abiertas
-Ninguna pendiente. Resueltas el 2026-10-11:
+Ninguna pendiente. Resuelta el 2026-10-13:
+- **P-4 (AC-057, D-033)**: ¿a qué distancia del borde visible se comprueba el área de pulsación de 44 × 44? → **Resuelta**: a 3,5 px; a 4,0 px exactos el punto cae en el borde exclusivo de la zona.
+
+Resueltas el 2026-10-11:
 - **P-1 (AC-045, D-019)**: ¿la etiqueta visible va encima del selector o en la misma línea? → **Resuelta**: va encima, que es la disposición de serie de `Field`, y no se toca `design-system/`.
 - **P-2 (AC-044, D-018)**: ¿se permite registrar el fallo a propósito con `console.error` o `console.warn`? → **Resuelta**: sí. AC-044 solo prohíbe `pageerror`, "Uncaught" y "Uncaught (in promise)".
 - **P-3 (AC-046, D-020)**: ¿qué pasa si el recorte deja vacío el nombre original? → **Resuelta**: se guarda "(copia)" sin espacio delante (ejemplo (e) de AC-046). Un recorte que termina en espacio deja un espacio interno, no exterior, así que no hace falta ninguna regla más.

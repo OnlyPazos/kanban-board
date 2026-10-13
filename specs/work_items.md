@@ -633,7 +633,7 @@ interface Card {
   - Test e2e (p. ej. `e2e/redesign-a11y.spec.ts`), en lista, tablero (proyecto activo y archivado), tarjetas archivadas y proyectos archivados, en claro y oscuro:
     - (1) Todo `button` cuyo texto visible está vacío tiene nombre accesible no vacío (`getByRole('button')` + `accessibleName` o `aria-label`); todo `svg.lucide` tiene `aria-hidden="true"` o un ancestro con `aria-hidden="true"`.
     - (2) Con 375×667: `document.documentElement.scrollWidth` ≤ 375 en las 4 vistas; en el tablero, las 4 columnas se alcanzan desplazando el contenedor de columnas (AC-020).
-    - (3) Botones "Añadir tarjeta en …" y "Archivar {título}": `elementFromPoint` en un punto a 4 px fuera de su borde visible (arriba, abajo, izquierda y derecha) devuelve el propio botón (zona ampliada a 44×44 del `::after` de `Button size="sm"`). Atención: el botón visible mide 36 px y la zona ampliada 44 px, así que "4 px fuera" cae justo en el límite de la zona. Si el punto exacto a 4,0 px no resuelve de forma estable por redondeo de subpíxeles, no se ajusta el umbral por cuenta propia: se informa a QA y se devuelve a `spec-writer` para precisar AC-057.
+    - (3) Botones "Añadir tarjeta en …" y "Archivar {título}": `elementFromPoint` en un punto a 3,5 px fuera de su borde visible (arriba, abajo, izquierda y derecha) devuelve el propio botón (zona ampliada a 44×44 del `::after` de `Button size="sm"`). Antes eran 4 px; a 4,0 px exactos el punto cae en el borde exclusivo de la zona (D-033, 2026-10-13).
     - (4) Con `reducedMotion: 'reduce'` en el contexto de Playwright, el e2e de AC-015 pasa.
   - Ejecutar todos los tests (`npm run check`, `npm run test`, `npm run test:e2e`) como regresión completa del rediseño.
 - Historial QA: []
