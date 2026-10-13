@@ -6,8 +6,8 @@
   `Column` del sistema de diseño (WI-AC-049, D-023): color e icono de su
   estado (`CARD_STATUS_DS`) y contador de tarjetas visibles (D-024). Cada columna lista
   sus tarjetas no archivadas en el orden automático de `sortCards` (componente `Card`, con el tipo y la prioridad
-  como `Badge` según `CARD_TYPE_TONE`/`PRIORITY_TONE`, la franja superior por prioridad
-  de `PRIORITY_DS` y el icono de `PRIORITY_ICON`, WI-AC-052; al abrirla avisa con
+  como `Badge` en `CardTags`, la franja superior por prioridad de `PRIORITY_DS`,
+  WI-AC-052; al abrirla avisa con
   `oneditcard`) y en su cabecera el botón de solo icono "Añadir tarjeta en <estado>" (WI-AC-050), que avisa con el estado de
   la columna.
 
@@ -50,7 +50,7 @@
   import Download from '@lucide/svelte/icons/download';
   import Pencil from '@lucide/svelte/icons/pencil';
   import Plus from '@lucide/svelte/icons/plus';
-  import { Alert, Badge, Button, Card, Chip, Column, DropPlaceholder, Icon } from 'design-system';
+  import { Alert, Button, Card, Chip, Column, DropPlaceholder, Icon } from 'design-system';
   import {
     dndzone,
     SHADOW_ITEM_MARKER_PROPERTY_NAME,
@@ -65,8 +65,6 @@
     CARD_TYPES,
     matchesTypeFilter,
     PRIORITY_DS,
-    PRIORITY_LABELS,
-    PRIORITY_TONE,
     sortCards,
     toggleTypeFilter,
     type Card as CardData,
@@ -77,7 +75,7 @@
   import { ARCHIVED_PROJECTS_HREF, archivedCardsHref, LIST_HREF } from '../lib/route';
   import { formatCreatedDate } from '../lib/dates';
   import { applyDndAriaStrings } from '../lib/dnd';
-  import { PRIORITY_ICON } from '../lib/icons';
+  import CardTags from '../lib/CardTags.svelte';
 
   let {
     project,
@@ -287,14 +285,7 @@
                       {readonly}
                       onopen={readonly ? undefined : () => oneditcard?.(card)}
                     >
-                      {#snippet tags()}
-                        <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
-                        {#if card.priority !== null}
-                          <Badge tone={PRIORITY_TONE[card.priority]} icon={PRIORITY_ICON[card.priority]}>
-                            {PRIORITY_LABELS[card.priority]}
-                          </Badge>
-                        {/if}
-                      {/snippet}
+                      {#snippet tags()}<CardTags {card} />{/snippet}
                       {#snippet footer()}
                         <!-- Fecha de creación y, en proyectos activos, "Archivar" de solo icono (WI-AC-053). -->
                         <span class="board__created">
