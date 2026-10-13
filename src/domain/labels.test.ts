@@ -6,6 +6,7 @@ import {
   CARD_TYPES,
   CARD_TYPE_LABELS,
   CARD_TYPE_TONE,
+  PRIORITY_DS,
   PRIORITY_TONE,
   priorityLabel,
 } from './index';
@@ -38,6 +39,10 @@ describe('domain labels', () => {
       'en-pausa': 'paused',
       finalizado: 'done',
     });
+  });
+
+  it('asigna a cada prioridad la franja de Card de D-026', () => {
+    expect(PRIORITY_DS).toEqual({ alta: 'high', media: 'medium', baja: 'low' });
   });
 
   it('asigna los tonos de D-016', () => {

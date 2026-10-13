@@ -55,6 +55,13 @@ export const CARD_STATUS_DS = {
   finalizado: 'done',
 } as const satisfies Record<CardStatus, string>;
 
+/** `priority` del `Card` del sistema de diseño (franja superior, D-026); `null` → sin franja. */
+export const PRIORITY_DS = {
+  alta: 'high',
+  media: 'medium',
+  baja: 'low',
+} as const satisfies Record<Exclude<Priority, null>, string>;
+
 /** Tono del Badge para cada prioridad; `null` → sin Badge. */
 export const PRIORITY_TONE = {
   alta: 'danger',
