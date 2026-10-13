@@ -588,7 +588,7 @@ interface Card {
 - Acceptance Checks: AC-054
 - Depende de: [WI-AC-049]
 - Rama sugerida: feature/wi-ac-054-project-status-pills
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-029. `src/views/ProjectList.svelte`: el `<dl class="status-counts">` actual se mantiene como estructura (cada estado es un par `dt`/`dd`, texto accesible), pero cada `.status-counts__item` pasa a ser una pastilla: `background: var(--ds-color-status-<x>-tint)`, `color: var(--ds-color-status-<x>-on-tint)`, `border-radius: var(--ds-radii-full)`, relleno con `--ds-spacing-*`, e `Icon` de `STATUS_ICON[status]` (`size="sm"`, decorativo) con `color: var(--ds-color-status-<x>-accent)`. La correspondencia estado → `<x>` sale de `CARD_STATUS_DS` (WI-AC-049).
   - Los 4 estados se muestran siempre, también con 0. Se puede quitar el `':'` generado tras el `dt` si la pastilla queda más clara, mientras el nombre y el número sigan siendo texto.
