@@ -1,7 +1,8 @@
 <!--
   Vista "Tarjetas archivadas" de un proyecto (WI-AC-021). Lista las tarjetas
   archivadas del proyecto con todos sus campos: título, tipo y prioridad
-  (`Badge` según `CARD_TYPE_TONE`/`PRIORITY_TONE`), descripción, estado y
+  (`CardTags`, y la franja de prioridad de `PRIORITY_DS`, igual que en el
+  tablero, WI-AC-056), descripción, estado y
   fechas de creación y última modificación. Cada una ofrece:
   - "Restaurar" (AC-022): avisa con `onrestorecard`; la app pone `archived` a
     `false` y la tarjeta vuelve a la columna de su estado.
@@ -11,17 +12,18 @@
   sin "Restaurar" ni "Borrar definitivamente".
 -->
 <script lang="ts">
-  import { Badge, Button, Card, Dialog } from 'design-system';
+  import ArchiveRestore from '@lucide/svelte/icons/archive-restore';
+  import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import { Button, Card, Dialog, Icon } from 'design-system';
   import {
     CARD_STATUS_LABELS,
-    CARD_TYPE_LABELS,
-    CARD_TYPE_TONE,
-    PRIORITY_LABELS,
-    PRIORITY_TONE,
+    PRIORITY_DS,
     sortCards,
     type Card as CardData,
     type Project,
   } from '../domain';
+  import CardTags from '../lib/CardTags.svelte';
   import { boardHref } from '../lib/route';
 
   let {
@@ -76,7 +78,7 @@
 
 <section class="archived" aria-labelledby="archived-title">
   <div class="archived__header">
-    <a class="archived__back" href={boardHref(project.id)}>← Volver al tablero</a>
+    <a class="archived__back" href={boardHref(project.id)}><Icon icon={ArrowLeft} size="sm" />Volver al tablero</a>
     <h1 id="archived-title" class="archived__title">Tarjetas archivadas</h1>
     <p class="archived__project">{project.name}</p>
   </div>
@@ -85,13 +87,13 @@
     <ul class="archived__items">
       {#each archived as card (card.id)}
         <li aria-label={card.title} data-card-id={card.id} data-status={card.status}>
-          <Card title={card.title} description={card.description} readonly>
-            {#snippet tags()}
-              <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
-              {#if card.priority !== null}
-                <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
-              {/if}
-            {/snippet}
+          <Card
+            title={card.title}
+            description={card.description}
+            priority={card.priority ? PRIORITY_DS[card.priority] : undefined}
+            readonly
+          >
+            {#snippet tags()}<CardTags {card} />{/snippet}
             {#snippet footer()}
               <dl class="archived__meta">
                 <div class="archived__meta-item">
@@ -112,12 +114,14 @@
                   <Button
                     variant="secondary"
                     size="sm"
+                    icon={ArchiveRestore}
                     aria-label={`Restaurar ${card.title}`}
                     onclick={() => restore(card)}>Restaurar</Button
                   >
                   <Button
                     variant="danger"
                     size="sm"
+                    icon={Trash2}
                     aria-label={`Borrar definitivamente ${card.title}`}
                     onclick={() => askDelete(card)}>Borrar definitivamente</Button
                   >
@@ -143,7 +147,9 @@
 >
   {#snippet actions()}
     <Button variant="secondary" onclick={() => (confirming = false)}>Cancelar</Button>
-    <Button variant="danger" loading={deleting} onclick={confirmDelete}>Borrar definitivamente</Button>
+    <Button variant="danger" icon={Trash2} loading={deleting} onclick={confirmDelete}>
+      Borrar definitivamente
+    </Button>
   {/snippet}
 </Dialog>
 
@@ -160,6 +166,9 @@
   }
 
   .archived__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     align-self: flex-start;
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);

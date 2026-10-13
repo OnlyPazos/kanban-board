@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Alert, Button } from 'design-system';
+  import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+  import Download from '@lucide/svelte/icons/download';
+  import { Alert, Button, Icon } from 'design-system';
   import AppHeader from './lib/AppHeader.svelte';
   import ColorModeSelect from './lib/ColorModeSelect.svelte';
   import ProjectList from './views/ProjectList.svelte';
@@ -135,7 +137,7 @@
     <Alert tone="danger" title="No se pudieron guardar los cambios">
       Tus últimos cambios no se han guardado en este navegador. Exporta tus datos para no perderlos.
       {#snippet actions()}
-        <Button size="sm" onclick={exportAll}>Exportar ahora</Button>
+        <Button size="sm" icon={Download} onclick={exportAll}>Exportar ahora</Button>
       {/snippet}
     </Alert>
   </div>
@@ -172,7 +174,7 @@
     {:else if store.loaded}
       <section class="not-found">
         <h1 class="not-found__title">Proyecto no encontrado</h1>
-        <a class="not-found__back" href={LIST_HREF}>← Volver a proyectos</a>
+        <a class="not-found__back" href={LIST_HREF}><Icon icon={ArrowLeft} size="sm" />Volver a proyectos</a>
       </section>
     {/if}
   {:else}
@@ -234,6 +236,9 @@
   }
 
   .not-found__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     align-self: flex-start;
     color: var(--ds-color-action-primary);
     border-radius: var(--ds-radii-small);

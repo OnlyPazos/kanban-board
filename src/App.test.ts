@@ -126,7 +126,10 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Mi app' })).toBeInTheDocument();
     expect(window.location.hash).toBe(`#/project/${project.id}`);
-    expect(screen.getAllByRole('region').map((c) => c.getAttribute('aria-label'))).toEqual([
+    // Columnas `Column` del sistema de diseño: regiones etiquetadas por su encabezado.
+    const regionName = (c: HTMLElement) =>
+      document.getElementById(c.getAttribute('aria-labelledby') ?? '')?.textContent?.trim();
+    expect(screen.getAllByRole('region').map(regionName)).toEqual([
       'Sin empezar',
       'En curso',
       'En pausa',
@@ -163,13 +166,13 @@ describe('App', () => {
     await screen.findByRole('heading', { level: 1, name: 'Mi app' });
 
     const enCurso = screen.getByRole('region', { name: 'En curso' });
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta en En curso' }));
     const dialog = screen.getByRole('dialog', { name: 'Añadir tarjeta' });
     await fireEvent.input(within(dialog).getByLabelText(/Título/), { target: { value: 'Login' } });
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Añadir' }));
-    await within(enCurso).findByRole('button', { name: 'Archivar' });
+    await within(enCurso).findByRole('button', { name: 'Archivar Login' });
 
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Archivar' }));
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Archivar Login' }));
     await waitFor(() => expect(within(enCurso).queryByText('Login')).not.toBeInTheDocument());
     expect((await repository.listCards())[0]).toMatchObject({ title: 'Login', archived: true });
 
@@ -242,7 +245,7 @@ describe('App', () => {
     await screen.findByRole('heading', { level: 1, name: 'Mi app' });
 
     const enCurso = screen.getByRole('region', { name: 'En curso' });
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta en En curso' }));
     const dialog = screen.getByRole('dialog', { name: 'Añadir tarjeta' });
     await fireEvent.input(within(dialog).getByLabelText(/Título/), { target: { value: 'Login' } });
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Añadir' }));

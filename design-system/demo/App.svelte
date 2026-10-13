@@ -4,13 +4,27 @@
   Arrancar: npm run demo (dentro de design-system/).
 -->
 <script lang="ts">
+  import Archive from '@lucide/svelte/icons/archive';
+  import ArrowDown from '@lucide/svelte/icons/arrow-down';
+  import ArrowUp from '@lucide/svelte/icons/arrow-up';
+  import Calendar from '@lucide/svelte/icons/calendar';
+  import Download from '@lucide/svelte/icons/download';
+  import Equal from '@lucide/svelte/icons/equal';
+  import KanbanSquare from '@lucide/svelte/icons/square-kanban';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Plus from '@lucide/svelte/icons/plus';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import X from '@lucide/svelte/icons/x';
   import {
     Alert,
     Badge,
     Button,
     Card,
     Chip,
+    Column,
     Dialog,
+    DropPlaceholder,
+    Icon,
     Input,
     Select,
     Textarea,
@@ -81,7 +95,16 @@
       <Button disabled>Deshabilitado</Button>
       <Button variant="secondary" disabled>Deshabilitado</Button>
       <Button {loading} onclick={fakeSave}>{loading ? 'Guardando…' : 'Loading (1,5 s)'}</Button>
-      <Button variant="ghost" size="sm" aria-label="Cerrar"><span aria-hidden="true">×</span></Button>
+      <Button variant="ghost" size="sm" icon={X} aria-label="Cerrar" />
+    </div>
+    <div class="demo__row">
+      <Button icon={Plus}>Nueva tarjeta</Button>
+      <Button variant="secondary" icon={Pencil}>Editar</Button>
+      <Button variant="outline" icon={Download}>Exportar</Button>
+      <Button variant="ghost" icon={Archive}>Archivar</Button>
+      <Button variant="danger" icon={Trash2}>Borrar</Button>
+      <Button variant="secondary" icon={Pencil} aria-label="Editar" />
+      <Button size="lg" icon={Plus} aria-label="Añadir" />
     </div>
     <Button block variant="outline">Ancho completo</Button>
     <p class="demo__log">{log}</p>
@@ -96,9 +119,10 @@
       <Badge tone="technical">Técnico</Badge>
     </div>
     <div class="demo__row demo__surface">
-      <Badge tone="danger">Alta</Badge>
-      <Badge tone="warning">Media</Badge>
-      <Badge tone="neutral">Baja</Badge>
+      <Badge tone="danger" icon={ArrowUp}>Alta</Badge>
+      <Badge tone="warning" icon={Equal}>Media</Badge>
+      <Badge tone="neutral" icon={ArrowDown}>Baja</Badge>
+      <Badge tone="feature" icon={null}>Sin icono</Badge>
       <Badge tone="success">Éxito</Badge>
       <Badge tone="info">Info</Badge>
     </div>
@@ -145,6 +169,70 @@
       <Card title="Solo lectura (proyecto archivado)" readonly onopen={() => {}}>
         {#snippet tags()}<Badge tone="technical">Técnico</Badge>{/snippet}
       </Card>
+    </div>
+  </section>
+
+  <section class="demo__section">
+    <h2 class="demo__heading">Tablero (AppBar · Column · DropPlaceholder)</h2>
+    <div class="demo__appbar">
+      <span class="demo__appbar-title"><Icon icon={KanbanSquare} size="lg" /> Kanban · Mi app</span>
+      <Button size="sm" icon={Plus}>Nueva tarjeta</Button>
+    </div>
+    <div class="demo__board">
+      <Column title="Sin empezar" status="todo" count={2} headingLevel={3}>
+        {#snippet actions()}
+          <Button variant="ghost" size="sm" icon={Plus} aria-label="Añadir tarjeta en Sin empezar" />
+        {/snippet}
+        <Card title="Exportar proyecto a JSON" priority="high" onopen={() => (editOpen = true)}>
+          {#snippet tags()}
+            <Badge tone="feature">Novedad</Badge>
+            <Badge tone="danger" icon={ArrowUp}>Alta</Badge>
+          {/snippet}
+          {#snippet footer()}<Icon icon={Calendar} size="sm" /> Creada el 9 oct 2026{/snippet}
+        </Card>
+        <Card title="Revisar textos de ayuda" onopen={() => (editOpen = true)}>
+          {#snippet tags()}<Badge tone="improvement">Mejora</Badge>{/snippet}
+        </Card>
+      </Column>
+
+      <Column title="En curso" status="doing" count={2} headingLevel={3} dropTarget>
+        {#snippet actions()}
+          <Button variant="ghost" size="sm" icon={Plus} aria-label="Añadir tarjeta en En curso" />
+        {/snippet}
+        <Card title="Arreglar orden tras importar" priority="medium" onopen={() => (editOpen = true)}>
+          {#snippet tags()}
+            <Badge tone="bugfix">Arreglo</Badge>
+            <Badge tone="warning" icon={Equal}>Media</Badge>
+          {/snippet}
+        </Card>
+        <DropPlaceholder active label="Suelta aquí" />
+        <Card title="Arrastrando" priority="low" dragging>
+          {#snippet tags()}
+            <Badge tone="technical">Técnico</Badge>
+            <Badge tone="neutral" icon={ArrowDown}>Baja</Badge>
+          {/snippet}
+        </Card>
+      </Column>
+
+      <Column title="En pausa" status="paused" count={0} headingLevel={3}>
+        {#snippet actions()}
+          <Button variant="ghost" size="sm" icon={Plus} aria-label="Añadir tarjeta en En pausa" />
+        {/snippet}
+        <DropPlaceholder label="Sin tarjetas" />
+      </Column>
+
+      <Column title="Finalizado" status="done" count={1} headingLevel={3}>
+        {#snippet actions()}
+          <Button variant="ghost" size="sm" icon={Plus} aria-label="Añadir tarjeta en Finalizado" />
+        {/snippet}
+        <Card title="Modo oscuro" priority="low" onopen={() => (editOpen = true)}>
+          {#snippet tags()}
+            <Badge tone="feature">Novedad</Badge>
+            <Badge tone="neutral" icon={ArrowDown}>Baja</Badge>
+          {/snippet}
+          {#snippet footer()}<Icon icon={Calendar} size="sm" /> Creada el 2 oct 2026{/snippet}
+        </Card>
+      </Column>
     </div>
   </section>
 
@@ -266,8 +354,38 @@
     gap: var(--ds-spacing-3);
     max-width: calc(var(--ds-spacing-8) * 5);
     padding: var(--ds-spacing-3);
-    background-color: var(--ds-color-surface-base);
+    background-color: var(--ds-color-surface-sunken);
     border-radius: var(--ds-radii-large);
+  }
+
+  .demo__appbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-spacing-3);
+    padding: var(--ds-spacing-2) var(--ds-spacing-4);
+    background-color: var(--ds-color-appbar-bg);
+    color: var(--ds-color-appbar-fg);
+    border-bottom: var(--ds-appbar-accent-width) solid var(--ds-color-appbar-accent);
+    border-radius: var(--ds-radii-medium);
+    box-shadow: var(--ds-shadow-sm);
+  }
+
+  .demo__appbar-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-2);
+    font-size: var(--ds-font-subheading-size);
+    font-weight: var(--ds-font-subheading-weight);
+    line-height: var(--ds-font-subheading-line-height);
+  }
+
+  .demo__board {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ds-spacing-4);
+    overflow-x: auto;
+    padding-bottom: var(--ds-spacing-3);
   }
 
   .demo__log {

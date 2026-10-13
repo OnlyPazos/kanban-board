@@ -17,9 +17,16 @@
     tone     danger | warning | success | info   (info)
     title    texto del título (opcional)
     actions  snippet con botones (opcional)
+  Cada tono lleva su icono (CircleAlert, TriangleAlert, CircleCheck, Info),
+  decorativo: el significado va en el título y el texto.
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import CircleAlert from '@lucide/svelte/icons/circle-alert';
+  import CircleCheck from '@lucide/svelte/icons/circle-check';
+  import Info from '@lucide/svelte/icons/info';
+  import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+  import Icon from '../icon/Icon.svelte';
 
   type Props = {
     tone?: 'danger' | 'warning' | 'success' | 'info';
@@ -30,10 +37,13 @@
 
   let { tone = 'info', title, children, actions }: Props = $props();
 
+  const ICONS = { danger: CircleAlert, warning: TriangleAlert, success: CircleCheck, info: Info };
+
   const role = $derived(tone === 'danger' || tone === 'warning' ? 'alert' : 'status');
 </script>
 
 <div class="ds-alert ds-alert--{tone}" {role}>
+  <span class="ds-alert__icon"><Icon icon={ICONS[tone]} size="lg" /></span>
   <div class="ds-alert__content">
     {#if title}
       <p class="ds-alert__title">{title}</p>
@@ -80,6 +90,27 @@
   .ds-alert__title {
     margin: 0;
     font-weight: var(--ds-font-subheading-weight);
+  }
+
+  .ds-alert__icon {
+    display: inline-flex;
+    align-self: flex-start;
+  }
+
+  .ds-alert--danger .ds-alert__icon {
+    color: var(--ds-color-feedback-danger);
+  }
+
+  .ds-alert--warning .ds-alert__icon {
+    color: var(--ds-color-feedback-warning);
+  }
+
+  .ds-alert--success .ds-alert__icon {
+    color: var(--ds-color-feedback-success);
+  }
+
+  .ds-alert--info .ds-alert__icon {
+    color: var(--ds-color-feedback-info);
   }
 
   .ds-alert__actions {

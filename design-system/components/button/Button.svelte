@@ -18,18 +18,23 @@
              (usa aria-disabled en lugar de disabled)
     disabled deshabilitado nativo
     block    ocupa todo el ancho
+    icon     icono de @lucide/svelte delante del texto (decorativo). Sin
+             texto, el botón es cuadrado (solo icono).
     + cualquier atributo nativo de <button> (onclick, aria-label…).
-  aria-label es obligatorio si el botón no tiene texto (solo icono).
+  aria-label es obligatorio si el botón no tiene texto (solo icono):
+    <Button variant="ghost" size="sm" icon={X} aria-label="Cerrar" />
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import type { HTMLButtonAttributes } from 'svelte/elements';
+  import Icon, { type IconComponent } from '../icon/Icon.svelte';
 
   type Props = Omit<HTMLButtonAttributes, 'class'> & {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
     size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     block?: boolean;
+    icon?: IconComponent;
     children?: Snippet;
   };
 
@@ -40,6 +45,7 @@
     loading = false,
     block = false,
     disabled = false,
+    icon,
     onclick,
     children,
     ...rest
@@ -62,12 +68,16 @@
   {disabled}
   class="ds-btn ds-btn--{variant} ds-btn--{size}"
   class:ds-btn--block={block}
+  class:ds-btn--icon-only={!!icon && !children}
   aria-disabled={loading ? 'true' : undefined}
   aria-busy={loading ? 'true' : undefined}
   onclick={handleClick}
 >
   <span class="ds-btn__spinner" aria-hidden="true"></span>
-  <span class="ds-btn__label">{@render children?.()}</span>
+  <span class="ds-btn__label">
+    {#if icon}<Icon {icon} size={size === 'lg' ? 'lg' : 'md'} />{/if}
+    {@render children?.()}
+  </span>
 </button>
 
 <style>
@@ -258,6 +268,20 @@
     min-width: var(--ds-control-hit-area);
     min-height: var(--ds-control-hit-area);
     transform: translate(-50%, -50%);
+  }
+
+  /* Solo icono: cuadrado con la altura del tamaño elegido. */
+  .ds-btn.ds-btn--icon-only {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .ds-btn--icon-only.ds-btn--sm {
+    min-width: var(--ds-control-min-height-sm);
+  }
+
+  .ds-btn--icon-only.ds-btn--lg {
+    min-width: var(--ds-control-min-height-lg);
   }
 
   .ds-btn--lg {

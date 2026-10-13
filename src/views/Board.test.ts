@@ -3,19 +3,23 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import Board from './Board.svelte';
 import { CARD_STATUSES, createCard, createProject, type Card as CardData, type CardStatus, type Priority } from '../domain';
 
+/** Nombre accesible de una región etiquetada con `aria-labelledby`. */
+function regionName(region: HTMLElement): string | undefined {
+  const id = region.getAttribute('aria-labelledby');
+  return id ? document.getElementById(id)?.textContent?.trim() : undefined;
+}
+
 describe('Board', () => {
   it('muestra exactamente 4 columnas en orden: Sin empezar, En curso, En pausa, Finalizado', () => {
     render(Board, { project: createProject({ name: 'Mi app' }) });
     const columns = screen.getAllByRole('region');
-    expect(columns.map((c) => c.getAttribute('aria-label'))).toEqual([
-      'Sin empezar',
-      'En curso',
-      'En pausa',
-      'Finalizado',
+    // Cada columna es un `Column` (región etiquetada por su encabezado, WI-AC-049).
+    expect(columns.map(regionName)).toEqual(['Sin empezar', 'En curso', 'En pausa', 'Finalizado']);
+    expect(columns.map((c) => c.closest<HTMLElement>('[data-status]')?.dataset.status)).toEqual([
+      ...CARD_STATUSES,
     ]);
-    expect(columns.map((c) => c.dataset.status)).toEqual([...CARD_STATUSES]);
     expect(
-      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.trim()),
     ).toEqual(['Sin empezar', 'En curso', 'En pausa', 'Finalizado']);
   });
 
@@ -42,12 +46,12 @@ describe('Board', () => {
     expect(onedit).toHaveBeenCalledExactlyOnceWith(project);
   });
 
-  it('cada columna tiene "Añadir tarjeta", que avisa con el estado de esa columna', async () => {
+  it('cada columna tiene "Añadir tarjeta en <estado>" (solo icono), que avisa con el estado de esa columna', async () => {
     const onaddcard = vi.fn();
     render(Board, { project: createProject({ name: 'Mi app' }), onaddcard });
     const enCurso = screen.getByRole('region', { name: 'En curso' });
-    expect(screen.getAllByRole('button', { name: 'Añadir tarjeta' })).toHaveLength(4);
-    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta' }));
+    expect(screen.getAllByRole('button', { name: /^Añadir tarjeta en / })).toHaveLength(4);
+    await fireEvent.click(within(enCurso).getByRole('button', { name: 'Añadir tarjeta en En curso' }));
     expect(onaddcard).toHaveBeenCalledExactlyOnceWith('en-curso');
   });
 
@@ -112,7 +116,7 @@ describe('Board', () => {
       const project = createProject({ name: 'Mi app' });
       const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
       render(Board, { project, cards: [card], onarchivecard });
-      await fireEvent.click(screen.getByRole('button', { name: 'Archivar' }));
+      await fireEvent.click(screen.getByRole('button', { name: 'Archivar Login' }));
       expect(onarchivecard).toHaveBeenCalledExactlyOnceWith(card);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
@@ -297,6 +301,31 @@ describe('Board', () => {
   });
 });
 
+describe('Board · columna vacía (AC-051)', () => {
+  const project = createProject({ name: 'Mi app' });
+  const login = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+
+  it('las columnas sin tarjetas visibles muestran "Sin tarjetas" y la zona de arrastre sigue presente', () => {
+    render(Board, { project, cards: [login] });
+    for (const name of ['Sin empezar', 'En pausa', 'Finalizado']) {
+      const region = screen.getByRole('region', { name });
+      expect(within(region).getByText('Sin tarjetas')).toBeInTheDocument();
+      expect(within(region).getByRole('list', { name })).toBeInTheDocument();
+    }
+    expect(within(screen.getByRole('region', { name: 'En curso' })).queryByText('Sin tarjetas')).not.toBeInTheDocument();
+  });
+
+  it('con el filtro que oculta todas sus tarjetas, la columna muestra "Sin tarjetas"', () => {
+    render(Board, { project, cards: [login], typeFilter: ['arreglo'] });
+    expect(screen.getAllByText('Sin tarjetas')).toHaveLength(4);
+  });
+
+  it('en el tablero de solo lectura también se muestra "Sin tarjetas"', () => {
+    render(Board, { project: { ...project, archived: true }, cards: [login] });
+    expect(screen.getAllByText('Sin tarjetas')).toHaveLength(3);
+  });
+});
+
 describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
   const project = { ...createProject({ name: 'Vieja' }), archived: true };
   const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
@@ -314,8 +343,8 @@ describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
     expect(item).toHaveTextContent('Login');
     expect(screen.getByRole('status')).toHaveTextContent(/solo lectura/i);
 
-    expect(screen.queryByRole('button', { name: 'Añadir tarjeta' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Archivar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Añadir tarjeta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Archivar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Editar proyecto' })).not.toBeInTheDocument();
     expect(within(item).queryByRole('button')).not.toBeInTheDocument();
     await fireEvent.click(within(item).getByText('Login'));
@@ -340,7 +369,7 @@ describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
 
   it('un proyecto activo sí es editable y sus tarjetas se pueden coger', () => {
     render(Board, { project: { ...project, archived: false }, cards: [card] });
-    expect(screen.getAllByRole('button', { name: 'Añadir tarjeta' })).toHaveLength(4);
+    expect(screen.getAllByRole('button', { name: /^Añadir tarjeta en / })).toHaveLength(4);
     expect(screen.getByRole('button', { name: 'Editar proyecto' })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     const item = within(screen.getByRole('region', { name: 'En curso' })).getByRole('listitem', { name: 'Login' });

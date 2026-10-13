@@ -11,6 +11,9 @@
   Props:
     tone  neutral | feature | improvement | bugfix | technical |
           danger | warning | success | info                (neutral)
+    icon  icono de @lucide/svelte delante del texto (decorativo). Las
+          categorías tienen uno por defecto (feature Sparkles, improvement
+          TrendingUp, bugfix Bug, technical Wrench); null lo quita.
     Las tonalidades feature/improvement/bugfix/technical usan tag.* (relleno).
     Las de feedback usan contorno sobre la superficie que las contiene; están
     validadas sobre surface.raised (tarjetas y diálogos).
@@ -30,21 +33,32 @@
 
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import Icon, { type IconComponent } from '../icon/Icon.svelte';
+  import { CATEGORY_ICONS } from '../icon/category-icons.js';
 
   type Props = {
     tone?: BadgeTone;
+    icon?: IconComponent | null;
     children: Snippet;
   };
 
-  let { tone = 'neutral', children }: Props = $props();
+  let { tone = 'neutral', icon, children }: Props = $props();
+
+  const resolvedIcon = $derived(
+    icon === null ? undefined : (icon ?? CATEGORY_ICONS[tone as keyof typeof CATEGORY_ICONS]),
+  );
 </script>
 
-<span class="ds-badge ds-badge--{tone}">{@render children()}</span>
+<span class="ds-badge ds-badge--{tone}">
+  {#if resolvedIcon}<Icon icon={resolvedIcon} size="sm" />{/if}
+  {@render children()}
+</span>
 
 <style>
   .ds-badge {
     display: inline-flex;
     align-items: center;
+    gap: var(--ds-spacing-1);
     box-sizing: border-box;
     padding: 0 var(--ds-spacing-2);
     border: var(--ds-border-width-default) solid transparent;

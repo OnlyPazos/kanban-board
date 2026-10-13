@@ -19,6 +19,8 @@
   (`importFailureMessage`) y no se modifica ningún dato.
 -->
 <script lang="ts">
+  import Copy from '@lucide/svelte/icons/copy';
+  import Replace from '@lucide/svelte/icons/replace';
   import { Button, Dialog } from 'design-system';
   import {
     copyImportedProject,
@@ -190,7 +192,7 @@
 >
   {#snippet actions()}
     <Button variant="secondary" onclick={() => (confirming = false)}>Cancelar</Button>
-    <Button variant="danger" loading={replacing} onclick={confirmFull}>Reemplazar</Button>
+    <Button variant="danger" icon={Replace} loading={replacing} onclick={confirmFull}>Reemplazar</Button>
   {/snippet}
 </Dialog>
 
@@ -203,10 +205,12 @@
 >
   {#snippet actions()}
     <Button variant="secondary" onclick={() => (resolvingConflict = false)}>Cancelar</Button>
-    <Button variant="secondary" disabled={importingProject} onclick={() => resolveConflict('copy')}>
+    <Button variant="secondary" icon={Copy} disabled={importingProject} onclick={() => resolveConflict('copy')}>
       Importar como copia
     </Button>
-    <Button variant="danger" disabled={importingProject} onclick={() => resolveConflict('replace')}>Reemplazar</Button>
+    <Button variant="danger" icon={Replace} disabled={importingProject} onclick={() => resolveConflict('replace')}>
+      Reemplazar
+    </Button>
   {/snippet}
 </Dialog>
 

@@ -6,7 +6,8 @@
   "Editar" que avisa con el proyecto (identificado por id); al abrir la
   tarjeta (`onopen`) se avisa para mostrar su tablero. Cada proyecto muestra
   el recuento de sus tarjetas no archivadas en los 4 estados, en el orden de
-  las columnas (AC-008). El orden de `projects` lo decide el store (AC-007).
+  las columnas (AC-008), como pastillas con el color e icono del estado
+  (WI-AC-054). El orden de `projects` lo decide el store (AC-007).
   Archivo (WI-AC-024): cada proyecto tiene "Archivar" (sin confirmación, es
   reversible), que avisa con `onarchive`; la app solo pasa aquí proyectos no
   archivados. La cabecera enlaza siempre a la vista global "Proyectos
@@ -16,8 +17,14 @@
   activa esté vacía.
 -->
 <script lang="ts">
-  import { Button, Card } from 'design-system';
+  import Archive from '@lucide/svelte/icons/archive';
+  import Download from '@lucide/svelte/icons/download';
+  import Pencil from '@lucide/svelte/icons/pencil';
+  import Plus from '@lucide/svelte/icons/plus';
+  import Upload from '@lucide/svelte/icons/upload';
+  import { Button, Card, Icon } from 'design-system';
   import {
+    CARD_STATUS_DS,
     CARD_STATUSES,
     CARD_STATUS_LABELS,
     countCardsByProject,
@@ -25,6 +32,7 @@
     type Card as KanbanCard,
     type Project,
   } from '../domain';
+  import { STATUS_ICON } from '../lib/icons';
   import { ARCHIVED_PROJECTS_HREF } from '../lib/route';
 
   let {
@@ -65,16 +73,18 @@
   <div class="project-list__header">
     <div class="project-list__heading">
       <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
-      <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}>Proyectos archivados</a>
+      <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}
+        ><Icon icon={Archive} size="sm" />Proyectos archivados</a
+      >
     </div>
     {#if projects.length > 0 || canExportAll}
       <div class="project-list__actions">
         {#if canExportAll}
-          <Button variant="secondary" onclick={() => onexportall?.()}>Exportar todo</Button>
+          <Button variant="secondary" icon={Download} onclick={() => onexportall?.()}>Exportar todo</Button>
         {/if}
         {#if projects.length > 0}
-          <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
-          <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
+          <Button variant="secondary" icon={Upload} onclick={() => onimport?.()}>Importar</Button>
+          <Button icon={Plus} onclick={() => oncreate?.()}>Crear proyecto</Button>
         {/if}
       </div>
     {/if}
@@ -93,8 +103,12 @@
             {#snippet footer()}
               <dl class="status-counts">
                 {#each CARD_STATUSES as status (status)}
-                  <div class="status-counts__item" data-status={status}>
-                    <dt>{CARD_STATUS_LABELS[status]}</dt>
+                  <!-- Pastilla con el color e icono del estado (WI-AC-054, D-029). -->
+                  <div
+                    class="status-counts__item status-counts__item--{CARD_STATUS_DS[status]}"
+                    data-status={status}
+                  >
+                    <dt><span class="status-counts__icon"><Icon icon={STATUS_ICON[status]} size="sm" /></span>{CARD_STATUS_LABELS[status]}</dt>
                     <dd class="status-counts__value">{counts[status]}</dd>
                   </div>
                 {/each}
@@ -102,12 +116,14 @@
               <Button
                 variant="ghost"
                 size="sm"
+                icon={Pencil}
                 aria-label={`Editar ${project.name}`}
                 onclick={() => onedit?.(project)}>Editar</Button
               >
               <Button
                 variant="ghost"
                 size="sm"
+                icon={Archive}
                 aria-label={`Archivar ${project.name}`}
                 onclick={() => archive(project)}>Archivar</Button
               >
@@ -121,8 +137,8 @@
       <p class="empty-state__title">Todavía no tienes proyectos</p>
       <p class="empty-state__text">Crea tu primer proyecto o importa un archivo exportado.</p>
       <div class="empty-state__actions">
-        <Button onclick={() => oncreate?.()}>Crear proyecto</Button>
-        <Button variant="secondary" onclick={() => onimport?.()}>Importar</Button>
+        <Button icon={Plus} onclick={() => oncreate?.()}>Crear proyecto</Button>
+        <Button variant="secondary" icon={Upload} onclick={() => onimport?.()}>Importar</Button>
       </div>
     </div>
   {/if}
@@ -150,6 +166,9 @@
   }
 
   .project-list__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);
     font-weight: var(--ds-font-label-weight);
@@ -180,23 +199,56 @@
   .status-counts {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--ds-spacing-1) var(--ds-spacing-3);
+    gap: var(--ds-spacing-2);
     flex: 1 1 auto;
     margin: 0;
   }
 
   .status-counts__item {
-    display: flex;
+    --pill-accent: var(--ds-color-status-todo-accent);
+    --pill-tint: var(--ds-color-status-todo-tint);
+    --pill-on-tint: var(--ds-color-status-todo-on-tint);
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
+    padding: var(--ds-spacing-1) var(--ds-spacing-2);
+    border-radius: var(--ds-radii-full);
+    background-color: var(--pill-tint);
+    color: var(--pill-on-tint);
+  }
+
+  .status-counts__item--doing {
+    --pill-accent: var(--ds-color-status-doing-accent);
+    --pill-tint: var(--ds-color-status-doing-tint);
+    --pill-on-tint: var(--ds-color-status-doing-on-tint);
+  }
+
+  .status-counts__item--paused {
+    --pill-accent: var(--ds-color-status-paused-accent);
+    --pill-tint: var(--ds-color-status-paused-tint);
+    --pill-on-tint: var(--ds-color-status-paused-on-tint);
+  }
+
+  .status-counts__item--done {
+    --pill-accent: var(--ds-color-status-done-accent);
+    --pill-tint: var(--ds-color-status-done-tint);
+    --pill-on-tint: var(--ds-color-status-done-on-tint);
+  }
+
+  .status-counts__item dt {
+    display: inline-flex;
+    align-items: center;
     gap: var(--ds-spacing-1);
   }
 
-  .status-counts__item dt::after {
-    content: ':';
+  .status-counts__icon {
+    display: inline-flex;
+    color: var(--pill-accent);
   }
 
   .status-counts__value {
     margin: 0;
-    color: var(--ds-color-text-primary);
     font-family: var(--ds-font-family-mono);
   }
 

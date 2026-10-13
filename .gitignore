@@ -7,3 +7,9 @@ blob-report/
 playwright/.cache/
 .vite/
 *.log
+
+# Referencias visuales locales (no versionadas)
+specs/docs/images/
+
+# Build de la demo del sistema de diseño
+design-system/dist-demo/

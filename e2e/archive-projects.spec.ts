@@ -53,7 +53,7 @@ async function setup(page: Page) {
   await addCard(page, 'Finalizado', 'C');
   await addCard(page, 'En pausa', 'D');
   const d = page.getByRole('region', { name: 'En pausa' }).getByRole('listitem', { name: 'D' });
-  await d.getByRole('button', { name: 'Archivar' }).click();
+  await d.getByRole('button', { name: 'Archivar D', exact: true }).click();
   await expect(d).toHaveCount(0);
   await page.getByRole('link', { name: /volver a proyectos/i }).click();
   await expect(projectList(page).getByRole('button', { name: 'Mi app', exact: true })).toBeVisible();

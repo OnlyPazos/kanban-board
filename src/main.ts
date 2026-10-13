@@ -1,5 +1,5 @@
 // Fuentes y tokens del sistema de diseño: se importan una sola vez aquí.
-import '@fontsource-variable/inter';
+import '@fontsource-variable/plus-jakarta-sans';
 import '@fontsource/jetbrains-mono';
 import 'design-system/tokens.css';
 import './app.css';

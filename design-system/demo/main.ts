@@ -1,4 +1,4 @@
-import '@fontsource-variable/inter';
+import '@fontsource-variable/plus-jakarta-sans';
 import '@fontsource/jetbrains-mono';
 import '../tokens/tokens.css';
 import { mount } from 'svelte';

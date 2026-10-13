@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 // AC-042 (D-017): selector "Modo de color" en la cabecera con Auto / Claro / Oscuro.
 // El color de fondo del body debe ser el del token `background`.
-const LIGHT_BACKGROUND = 'rgb(252, 251, 248)'; // #FCFBF8
-const DARK_BACKGROUND = 'rgb(28, 25, 23)'; // #1C1917
+const LIGHT_BACKGROUND = 'rgb(248, 250, 252)'; // #F8FAFC
+const DARK_BACKGROUND = 'rgb(15, 23, 42)'; // #0F172A
 
 function colorModeSelect(page: Page) {
   return page.getByRole('banner').getByRole('combobox', { name: 'Modo de color' });
@@ -96,7 +96,10 @@ test.describe('AC-042: modo de color', () => {
       const select = colorModeSelect(page);
       await expect(select).toBeVisible();
 
-      // Solo teclado: el selector es el primer elemento enfocable de la página.
+      // Solo teclado: tras el enlace del título de la cabecera (AC-048), el
+      // selector es el segundo elemento enfocable de la página.
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Kanban de proyectos' })).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(select).toBeFocused();
 

@@ -17,7 +17,7 @@ async function addCard(page: Page, column: string, title: string, priority?: str
   await dialog.getByRole('button', { name: 'Añadir' }).click();
   await expect(dialog).toBeHidden();
   if (priority) {
-    await page.getByRole('region', { name: column }).getByRole('button', { name: title }).click();
+    await page.getByRole('region', { name: column }).getByRole('button', { name: title, exact: true }).click();
     const edit = page.getByRole('dialog', { name: 'Editar tarjeta' });
     await edit.getByLabel('Prioridad').selectOption({ label: priority });
     await edit.getByRole('button', { name: 'Guardar cambios' }).click();
