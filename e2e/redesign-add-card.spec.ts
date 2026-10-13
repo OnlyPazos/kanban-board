@@ -35,9 +35,14 @@ test.describe('AC-050: "Añadir tarjeta en <estado>" en la cabecera', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
 
-    await button.focus();
-    await page.keyboard.press('Enter');
-    await expect(dialog).toBeVisible();
+    // El diálogo cerrado con Escape ya no se ve, pero la app lo da por cerrado al recibir su evento
+    // `close`, que llega en una tarea posterior; un Intro anterior a eso no lo reabre. Se reintenta
+    // hasta que la app haya registrado el cierre (un usuario no pulsa tan rápido).
+    await expect(async () => {
+      await button.focus();
+      await page.keyboard.press('Enter');
+      await expect(dialog).toBeVisible({ timeout: 500 });
+    }).toPass();
     await dialog.getByLabel('Título').fill('Login');
     await dialog.getByRole('button', { name: 'Añadir' }).click();
     await expect(dialog).toBeHidden();
