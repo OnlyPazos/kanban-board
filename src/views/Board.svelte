@@ -15,7 +15,10 @@
   coger la tarjeta, Tab para llevarla a otra columna, Escape para soltarla).
   Al soltar en otra columna avisa con `onmovecard` (la app cambia `status` y
   lo persiste); al soltar en la misma se descarta el orden visual y se
-  re-aplica `sortCards`. El componente `Card` refleja el arrastre con `dragging`.
+  re-aplica `sortCards`. La copia que sigue al puntero lleva el aspecto
+  `dragging` de `Card`; el hueco donde caerá es un `DropPlaceholder` activo y
+  la columna que lo contiene se marca como destino (`dropTarget`). Una columna
+  sin tarjetas visibles muestra "Sin tarjetas" (WI-AC-051, D-023).
 
   Filtro por tipo (WI-AC-018, D-012): un `Chip` por tipo (tono de
   `CARD_TYPE_TONE`) en un grupo "Filtrar por tipo", de selección múltiple.
@@ -39,12 +42,10 @@
   también está en el dominio (`ArchivedProjectError`).
 -->
 <script lang="ts">
-  import { tick } from 'svelte';
   import Plus from '@lucide/svelte/icons/plus';
-  import { Alert, Badge, Button, Card, Chip, Column } from 'design-system';
+  import { Alert, Badge, Button, Card, Chip, Column, DropPlaceholder } from 'design-system';
   import {
     dndzone,
-    DRAGGED_ELEMENT_ID,
     SHADOW_ITEM_MARKER_PROPERTY_NAME,
     type DndEvent,
   } from 'svelte-dnd-action';
@@ -142,22 +143,20 @@
    */
   let columnItems: Record<CardStatus, DndCard[]> = $derived(cardsByStatus);
 
-  let boardEl: HTMLElement | undefined = $state();
+  const isShadow = (card: DndCard) => !!card[SHADOW_ITEM_MARKER_PROPERTY_NAME];
 
   /*
-   * El elemento que sigue al puntero es una copia estática que crea la
-   * librería; le copiamos el aspecto del `Card` del hueco, que se renderiza
-   * con `dragging`, para que la tarjeta arrastrada se vea como tal.
+   * El elemento que sigue al puntero es una copia estática del `li` de la
+   * tarjeta que crea la librería; su `article` conserva la clase de ámbito del
+   * `Card`, así que basta con añadirle la de `dragging` para que se vea como
+   * tarjeta arrastrada (sombra lg y giro).
    */
-  function reflectDragging() {
-    const dragged = document.getElementById(DRAGGED_ELEMENT_ID)?.querySelector('article');
-    const source = boardEl?.querySelector('[data-dnd-shadow] article');
-    if (dragged && source) dragged.className = source.className;
+  function markDragging(element?: HTMLElement) {
+    element?.querySelector('article')?.classList.add('ds-card--dragging');
   }
 
   function handleConsider(status: CardStatus, event: CustomEvent<DndEvent<DndCard>>) {
     columnItems = { ...columnItems, [status]: event.detail.items };
-    void tick().then(reflectDragging);
   }
 
   function handleFinalize(status: CardStatus, event: CustomEvent<DndEvent<DndCard>>) {
@@ -173,7 +172,7 @@
   }
 </script>
 
-<div class="board" bind:this={boardEl}>
+<div class="board">
   <div class="board__header">
     {#if readonly}
       <a class="board__back" href={ARCHIVED_PROJECTS_HREF}>← Volver a proyectos archivados</a>
@@ -216,6 +215,7 @@
           status={CARD_STATUS_DS[status]}
           headingLevel={2}
           count={cardsByStatus[status].length}
+          dropTarget={columnItems[status].some(isShadow)}
         >
           {#snippet actions()}
             {#if !readonly}
@@ -229,54 +229,66 @@
               />
             {/if}
           {/snippet}
-          <ul
-            class="board__cards"
-            aria-label={CARD_STATUS_LABELS[status]}
-            use:dndzone={{
-              items: columnItems[status],
-              flipDurationMs: 0,
-              dropAnimationDisabled: reducedMotion,
-              dropTargetStyle: {},
-              dropTargetClasses: ['board-drop-target'],
-              dragDisabled: readonly,
-              // Sin arrastre, las tarjetas no son paradas de tabulación "cogibles".
-              zoneItemTabIndex: readonly ? -1 : 0,
-              transformDraggedElement: reflectDragging,
-            }}
-            onconsider={(event) => handleConsider(status, event)}
-            onfinalize={(event) => handleFinalize(status, event)}
-          >
-            {#each columnItems[status] as card (card.id)}
-              {@const dragging = !!card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
-              <li
-                aria-label={card.title}
-                data-card-id={card.id}
-                data-type={card.type}
-                data-priority={card.priority ?? ''}
-                data-dnd-shadow={dragging || undefined}
-              >
-                <Card
-                  title={card.title}
-                  description={card.description}
-                  {dragging}
-                  {readonly}
-                  onopen={readonly ? undefined : () => oneditcard?.(card)}
+          <div class="board__zone">
+            <ul
+              class="board__cards"
+              aria-label={CARD_STATUS_LABELS[status]}
+              use:dndzone={{
+                items: columnItems[status],
+                flipDurationMs: 0,
+                dropAnimationDisabled: reducedMotion,
+                // El destino lo pinta `Column` (`dropTarget`), no la librería.
+                dropTargetStyle: {},
+                dropTargetClasses: [],
+                dragDisabled: readonly,
+                // Sin arrastre, las tarjetas no son paradas de tabulación "cogibles".
+                zoneItemTabIndex: readonly ? -1 : 0,
+                transformDraggedElement: markDragging,
+              }}
+              onconsider={(event) => handleConsider(status, event)}
+              onfinalize={(event) => handleFinalize(status, event)}
+            >
+              {#each columnItems[status] as card (card.id)}
+                {@const shadow = isShadow(card)}
+                <li
+                  aria-label={card.title}
+                  data-card-id={card.id}
+                  data-type={card.type}
+                  data-priority={card.priority ?? ''}
+                  data-dnd-shadow={shadow || undefined}
                 >
-                  {#snippet tags()}
-                    <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
-                    {#if card.priority !== null}
-                      <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
-                    {/if}
-                  {/snippet}
-                  {#snippet footer()}
-                    {#if !readonly}
-                      <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
-                    {/if}
-                  {/snippet}
-                </Card>
-              </li>
-            {/each}
-          </ul>
+                  {#if shadow}
+                    <!-- Hueco donde caerá la tarjeta. La librería oculta el `li` del hueco
+                         (visibility: hidden); el placeholder se vuelve a mostrar. -->
+                    <div class="board__shadow"><DropPlaceholder active /></div>
+                  {:else}
+                    <Card
+                      title={card.title}
+                      description={card.description}
+                      {readonly}
+                      onopen={readonly ? undefined : () => oneditcard?.(card)}
+                    >
+                      {#snippet tags()}
+                        <Badge tone={CARD_TYPE_TONE[card.type]}>{CARD_TYPE_LABELS[card.type]}</Badge>
+                        {#if card.priority !== null}
+                          <Badge tone={PRIORITY_TONE[card.priority]}>{PRIORITY_LABELS[card.priority]}</Badge>
+                        {/if}
+                      {/snippet}
+                      {#snippet footer()}
+                        {#if !readonly}
+                          <Button variant="ghost" size="sm" onclick={() => archive(card)}>Archivar</Button>
+                        {/if}
+                      {/snippet}
+                    </Card>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+            {#if columnItems[status].length === 0}
+              <!-- Va superpuesto a la zona (no la sustituye): se puede seguir soltando encima. -->
+              <div class="board__empty"><DropPlaceholder label="Sin tarjetas" /></div>
+            {/if}
+          </div>
         </Column>
       </div>
     {/each}
@@ -365,6 +377,27 @@
     flex: 0 0 auto;
   }
 
+  /* Zona de arrastre y, si la columna está vacía, "Sin tarjetas" en la misma
+     celda: el placeholder queda encima de la lista sin capturar el puntero. */
+  .board__zone {
+    display: grid;
+  }
+
+  .board__cards,
+  .board__empty {
+    grid-area: 1 / 1;
+  }
+
+  .board__empty {
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+
+  .board__shadow {
+    visibility: visible;
+  }
+
   .board__cards {
     display: flex;
     flex-direction: column;
@@ -389,12 +422,6 @@
   .board__cards > li:focus-visible {
     outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
     outline-offset: var(--ds-focus-ring-offset);
-  }
-
-  /* Columnas donde se puede soltar mientras dura un arrastre (clase que pone svelte-dnd-action). */
-  :global(.board-drop-target) {
-    outline: var(--ds-border-width-accent) dashed var(--ds-color-border-strong);
-    outline-offset: var(--ds-spacing-1);
   }
 
   @media (prefers-reduced-motion: reduce) {
