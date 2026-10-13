@@ -627,7 +627,7 @@ interface Card {
 - Acceptance Checks: AC-057
 - Depende de: [WI-AC-048, WI-AC-049, WI-AC-050, WI-AC-051, WI-AC-052, WI-AC-053, WI-AC-054, WI-AC-055, WI-AC-056]
 - Rama sugerida: feature/wi-ac-057-redesign-a11y-responsive
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - Item de verificación transversal del rediseño; va el último porque comprueba el resultado de todos los anteriores. Solo cambia código si algún punto falla (y entonces el arreglo se limita a lo necesario, con variables `--ds-*`; si el defecto está en `design-system/`, se devuelve a `design-builder`).
   - Test e2e (p. ej. `e2e/redesign-a11y.spec.ts`), en lista, tablero (proyecto activo y archivado), tarjetas archivadas y proyectos archivados, en claro y oscuro:
@@ -636,4 +636,4 @@ interface Card {
     - (3) Botones "Añadir tarjeta en …" y "Archivar {título}": `elementFromPoint` en un punto a 3,5 px fuera de su borde visible (arriba, abajo, izquierda y derecha) devuelve el propio botón (zona ampliada a 44×44 del `::after` de `Button size="sm"`). Antes eran 4 px; a 4,0 px exactos el punto cae en el borde exclusivo de la zona (D-033, 2026-10-13).
     - (4) Con `reducedMotion: 'reduce'` en el contexto de Playwright, el e2e de AC-015 pasa.
   - Ejecutar todos los tests (`npm run check`, `npm run test`, `npm run test:e2e`) como regresión completa del rediseño.
-- Historial QA: []
+- Historial QA: [2026-10-13 PASS — AC-057 (commit d0963c4). check 296 archivos 0 errores 0 warnings; test 304/304; test:e2e 116/116 en dos ejecuciones completas seguidas. e2e/redesign-a11y.spec.ts: (1) en lista, tablero, tablero de solo lectura, tarjetas archivadas y proyectos archivados, en claro y oscuro, todo botón sin texto visible tiene nombre accesible no vacío y ningún svg.lucide queda fuera de aria-hidden; (2) a 375×667 scrollWidth ≤ 375 en las 5 vistas y las 4 columnas se alcanzan desplazando el contenedor del tablero, con window.scrollX 0; (3) "Añadir tarjeta en …" ×4 y "Archivar Login" responden con elementFromPoint a 3,5 px fuera del borde por los 4 lados (D-033: a 4,0 px exactos abajo/derecha caen en el borde exclusivo de la zona de 44×44; decidido por el usuario el 2026-10-13, spec en acf7feb); (4) con reducedMotion "reduce" (matchMedia comprobado) el escenario de AC-015 pasa y persiste. Sin cambios de producto. Arreglo de test: redesign-add-card.spec.ts:21 tenía una carrera (Intro antes del evento `close` del diálogo cerrado con Escape; fallaba 12-18/30 con --repeat-each 30); ahora reintenta Intro y pasa 60/60. Queda una intermitencia previa en drag-and-drop.spec.ts:151 (AC-017 teclado), ajena al rediseño: ~2-7 % con --repeat-each 60, en las ejecuciones completas pasó; se investigó (la librería traslada el agarre si la lista de otra columna vuelve a contener la tarjeta al repintarse a mitad del arrastre) pero ningún cambio probado la elimina de forma demostrable, así que no se incluye ninguno. Reglas base de stack OK]
