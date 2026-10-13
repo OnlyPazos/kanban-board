@@ -615,12 +615,12 @@ interface Card {
 - Acceptance Checks: AC-056
 - Depende de: [WI-AC-052, WI-AC-055]
 - Rama sugerida: feature/wi-ac-056-archived-cards-presentation
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - `src/views/ArchivedCards.svelte`: pasar `priority={…PRIORITY_DS…}` a `Card` y `icon={PRIORITY_ICON[…]}` al `Badge` de prioridad, igual que en el tablero (WI-AC-052). Se mantiene el pie actual (Estado, Creada, Última modificación) y los botones "Restaurar"/"Borrar definitivamente" con sus `aria-label` y los iconos de WI-AC-055.
   - Si el marcado de etiquetas de tarjeta (tipo + prioridad) queda igual en tablero y archivadas, se puede extraer a un componente de la app (p. ej. `src/lib/CardTags.svelte`) para no duplicarlo.
   - Test e2e: en la vista de tarjetas archivadas, tarjetas Alta/Media/Baja/sin prioridad con la franja de AC-052 (1), iconos de prioridad y tipo de AC-052 (2) y (3), estado y fechas visibles, y botones "Restaurar {título}" (`archive-restore`) y "Borrar definitivamente {título}" (`trash-2`). Los e2e de AC-021, AC-022 y AC-023 siguen pasando.
-- Historial QA: []
+- Historial QA: [2026-10-13 PASS — AC-056 (commit ada0b38). check 295 archivos 0 errores 0 warnings; test 304/304; test:e2e 112/112. e2e/redesign-archived-cards.spec.ts: en tarjetas archivadas, Alta/Media/Baja con border-top 4px `priority.*` y sin prioridad 1px `border.default` en claro y oscuro; iconos de prioridad (arrow-up/equal/arrow-down) y de tipo (bug/trending-up/wrench/sparkles) en aria-hidden; sin prioridad no hay etiqueta; cada tarjeta mantiene Estado, Creada y Última modificación (2 <time>) y los botones "Restaurar {título}" (archive-restore) y "Borrar definitivamente {título}" (trash-2). AC-021/022/023 (archive-cards, archived-project-readonly) y AC-052 21/21 con --repeat-each 3. Diff: src/lib/CardTags.svelte (etiquetas compartidas por tablero y archivadas), ArchivedCards.svelte (priority a Card + CardTags), Board.svelte (usa CardTags, sin cambio visible), e2e nuevo. Sin valores sueltos. Reglas base de stack OK]
 
 ## WI-AC-057
 - Contexto: apariencia
