@@ -615,7 +615,7 @@ interface Card {
 - Acceptance Checks: AC-056
 - Depende de: [WI-AC-052, WI-AC-055]
 - Rama sugerida: feature/wi-ac-056-archived-cards-presentation
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - `src/views/ArchivedCards.svelte`: pasar `priority={…PRIORITY_DS…}` a `Card` y `icon={PRIORITY_ICON[…]}` al `Badge` de prioridad, igual que en el tablero (WI-AC-052). Se mantiene el pie actual (Estado, Creada, Última modificación) y los botones "Restaurar"/"Borrar definitivamente" con sus `aria-label` y los iconos de WI-AC-055.
   - Si el marcado de etiquetas de tarjeta (tipo + prioridad) queda igual en tablero y archivadas, se puede extraer a un componente de la app (p. ej. `src/lib/CardTags.svelte`) para no duplicarlo.
