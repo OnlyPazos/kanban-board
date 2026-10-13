@@ -627,7 +627,7 @@ interface Card {
 - Acceptance Checks: AC-057
 - Depende de: [WI-AC-048, WI-AC-049, WI-AC-050, WI-AC-051, WI-AC-052, WI-AC-053, WI-AC-054, WI-AC-055, WI-AC-056]
 - Rama sugerida: feature/wi-ac-057-redesign-a11y-responsive
-- Estado: en-progreso
+- Estado: qa
 - Notas de implementación:
   - Item de verificación transversal del rediseño; va el último porque comprueba el resultado de todos los anteriores. Solo cambia código si algún punto falla (y entonces el arreglo se limita a lo necesario, con variables `--ds-*`; si el defecto está en `design-system/`, se devuelve a `design-builder`).
   - Test e2e (p. ej. `e2e/redesign-a11y.spec.ts`), en lista, tablero (proyecto activo y archivado), tarjetas archivadas y proyectos archivados, en claro y oscuro:

@@ -96,18 +96,19 @@ test.describe('AC-057 (2): 375 px sin desplazamiento horizontal', () => {
   });
 });
 
-/** Puntos a 4 px fuera del borde visible del botón (arriba, abajo, izquierda, derecha). */
+/** Puntos a 3,5 px fuera del borde visible del botón (arriba, abajo, izquierda, derecha), D-033. */
 async function hitsOutside(button: Locator) {
   await button.scrollIntoViewIfNeeded();
   return button.evaluate((el) => {
     const r = el.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
+    const d = 3.5;
     const points = {
-      arriba: [cx, r.top - 4],
-      abajo: [cx, r.bottom + 4],
-      izquierda: [r.left - 4, cy],
-      derecha: [r.right + 4, cy],
+      arriba: [cx, r.top - d],
+      abajo: [cx, r.bottom + d],
+      izquierda: [r.left - d, cy],
+      derecha: [r.right + d, cy],
     } as const;
     return {
       size: [r.width, r.height],
@@ -119,11 +120,9 @@ async function hitsOutside(button: Locator) {
 }
 
 test.describe('AC-057 (3): área de pulsación de 44 × 44 en los botones de solo icono', () => {
-  test('"Añadir tarjeta en …" y "Archivar {título}" responden a 4 px fuera de su borde visible', async ({ page }) => {
-    // La zona ampliada del `::after` mide exactamente 44 × 44 (de −4 a +40 px sobre el botón de 36 px):
-    // hasta 3,99 px responde por los 4 lados, pero a 4,0 px exactos abajo y derecha caen en su borde
-    // exclusivo. Según WI-AC-057 no se ajusta el umbral por cuenta propia: pendiente de spec-writer.
-    test.fixme(true, 'AC-057 (3): medida a 4,0 px exactos en el límite de la zona; pendiente de precisar en la spec');
+  test('"Añadir tarjeta en …" y "Archivar {título}" responden a 3,5 px fuera de su borde visible', async ({ page }) => {
+    // La zona ampliada del `::after` mide 44 × 44 (de −4 a +40 px sobre el botón de 36 px). Se mide a
+    // 3,5 px: a 4,0 px exactos el punto cae en el borde exclusivo de la zona (D-033).
     await createProject(page, 'Mi app');
     await openProject(page, 'Mi app');
     await addCard(page, 'Sin empezar', 'Login');
