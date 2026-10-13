@@ -22,7 +22,7 @@ async function openBoard(page: Page, name: string) {
 }
 
 async function backToList(page: Page) {
-  await page.getByRole('link', { name: '← Volver a proyectos' }).click();
+  await page.getByRole('link', { name: 'Volver a proyectos', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Proyectos', level: 1 })).toBeVisible();
 }
 

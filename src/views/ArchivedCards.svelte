@@ -11,7 +11,10 @@
   sin "Restaurar" ni "Borrar definitivamente".
 -->
 <script lang="ts">
-  import { Badge, Button, Card, Dialog } from 'design-system';
+  import ArchiveRestore from '@lucide/svelte/icons/archive-restore';
+  import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+  import Trash2 from '@lucide/svelte/icons/trash-2';
+  import { Badge, Button, Card, Dialog, Icon } from 'design-system';
   import {
     CARD_STATUS_LABELS,
     CARD_TYPE_LABELS,
@@ -76,7 +79,7 @@
 
 <section class="archived" aria-labelledby="archived-title">
   <div class="archived__header">
-    <a class="archived__back" href={boardHref(project.id)}>← Volver al tablero</a>
+    <a class="archived__back" href={boardHref(project.id)}><Icon icon={ArrowLeft} size="sm" />Volver al tablero</a>
     <h1 id="archived-title" class="archived__title">Tarjetas archivadas</h1>
     <p class="archived__project">{project.name}</p>
   </div>
@@ -112,12 +115,14 @@
                   <Button
                     variant="secondary"
                     size="sm"
+                    icon={ArchiveRestore}
                     aria-label={`Restaurar ${card.title}`}
                     onclick={() => restore(card)}>Restaurar</Button
                   >
                   <Button
                     variant="danger"
                     size="sm"
+                    icon={Trash2}
                     aria-label={`Borrar definitivamente ${card.title}`}
                     onclick={() => askDelete(card)}>Borrar definitivamente</Button
                   >
@@ -143,7 +148,9 @@
 >
   {#snippet actions()}
     <Button variant="secondary" onclick={() => (confirming = false)}>Cancelar</Button>
-    <Button variant="danger" loading={deleting} onclick={confirmDelete}>Borrar definitivamente</Button>
+    <Button variant="danger" icon={Trash2} loading={deleting} onclick={confirmDelete}>
+      Borrar definitivamente
+    </Button>
   {/snippet}
 </Dialog>
 
@@ -160,6 +167,9 @@
   }
 
   .archived__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-spacing-1);
     align-self: flex-start;
     color: var(--ds-color-action-primary);
     font-size: var(--ds-font-label-size);

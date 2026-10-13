@@ -601,14 +601,14 @@ interface Card {
 - Acceptance Checks: AC-055
 - Depende de: [WI-AC-047]
 - Rama sugerida: feature/wi-ac-055-button-icons
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - D-027, D-032. Añadir `icon` (Lucide) a los `Button` de la tabla de AC-055, sin cambiar su texto: `ProjectList.svelte` (Crear proyecto ×2 `Plus`, Importar ×2 `Upload`, Exportar todo `Download`, Editar `Pencil`, Archivar `Archive`); `Board.svelte` (Exportar proyecto `Download`, Editar proyecto `Pencil`); `ArchivedProjects.svelte` y `ArchivedCards.svelte` (Restaurar `ArchiveRestore`, Borrar definitivamente `Trash2`, también en el diálogo de confirmación); `ImportFlow.svelte` (Reemplazar ×2 `Replace`, Importar como copia `Copy`); `App.svelte` (Exportar ahora `Download`). Sin icono: Crear, Añadir, Guardar cambios, Cancelar, Aceptar.
   - Enlaces (`<a>`, no `Button`): "Proyectos archivados" y "Tarjetas archivadas" con `Icon` `Archive`; "Volver a proyectos", "Volver a proyectos archivados" y "Volver al tablero" (en `Board.svelte`, `ArchivedCards.svelte`, `ArchivedProjects.svelte` y la página no encontrada de `App.svelte`) con `Icon` `ArrowLeft`, **quitando** la flecha de texto "←". Los enlaces con icono necesitan `display: inline-flex` + `gap` con `--ds-spacing-*`.
   - Fuera de este item: "Añadir tarjeta" (WI-AC-050) y "Archivar" de la tarjeta (WI-AC-053). Las vistas de archivados no cambian su presentación de tarjeta aquí (WI-AC-056).
   - Actualizar los tests que usan nombres con "←" (`← Volver a proyectos`, etc.): ahora son "Volver a proyectos", "Volver a proyectos archivados" y "Volver al tablero".
   - Test e2e: recorrer la tabla de AC-055 comprobando en cada botón o enlace el `svg.lucide-<nombre>` indicado, dentro de `aria-hidden`, y que `getByRole(…, { name: '<texto>' })` sigue resolviendo; que los botones de diálogo sin icono no contienen `svg.lucide`; y que ningún enlace "Volver a …" contiene el carácter "←".
-- Historial QA: []
+- Historial QA: [2026-10-13 PASS — AC-055 (commit b03aeda). check 293 archivos 0 errores 0 warnings; test 304/304; test:e2e 111 tests, 110 passed y la intermitencia previa conocida de redesign-add-card.spec.ts:21. e2e/redesign-button-icons.spec.ts recorre la tabla de AC-055: en cada botón o enlace el svg.lucide indicado está en aria-hidden y va delante del texto visible, y getByRole con el nombre exacto sigue resolviendo (Crear proyecto/Importar en estado vacío y lista, Exportar todo, Editar/Archivar de proyecto, Proyectos archivados, Exportar proyecto, Editar proyecto, Tarjetas archivadas, Volver a proyectos / a proyectos archivados / al tablero también en la página no encontrada, Restaurar y Borrar definitivamente en las dos vistas de archivados y en sus diálogos, Reemplazar ×2, Importar como copia, Exportar ahora); Crear, Añadir, Guardar cambios, Cancelar y Aceptar no contienen svg.lucide; ningún enlace "Volver…" contiene "←". Import, archivo, AC-035 y AC-007/008 44/44 con --repeat-each 2. Diff: 6 vistas (icon en Button, Icon en enlaces con inline-flex + gap --ds-spacing-1), test de "← Volver a proyectos" actualizado, e2e nuevo. Sin valores sueltos ni SVG a mano. Reglas base de stack OK]
 
 ## WI-AC-056
 - Contexto: archivo
