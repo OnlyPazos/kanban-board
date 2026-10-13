@@ -301,6 +301,31 @@ describe('Board', () => {
   });
 });
 
+describe('Board · columna vacía (AC-051)', () => {
+  const project = createProject({ name: 'Mi app' });
+  const login = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
+
+  it('las columnas sin tarjetas visibles muestran "Sin tarjetas" y la zona de arrastre sigue presente', () => {
+    render(Board, { project, cards: [login] });
+    for (const name of ['Sin empezar', 'En pausa', 'Finalizado']) {
+      const region = screen.getByRole('region', { name });
+      expect(within(region).getByText('Sin tarjetas')).toBeInTheDocument();
+      expect(within(region).getByRole('list', { name })).toBeInTheDocument();
+    }
+    expect(within(screen.getByRole('region', { name: 'En curso' })).queryByText('Sin tarjetas')).not.toBeInTheDocument();
+  });
+
+  it('con el filtro que oculta todas sus tarjetas, la columna muestra "Sin tarjetas"', () => {
+    render(Board, { project, cards: [login], typeFilter: ['arreglo'] });
+    expect(screen.getAllByText('Sin tarjetas')).toHaveLength(4);
+  });
+
+  it('en el tablero de solo lectura también se muestra "Sin tarjetas"', () => {
+    render(Board, { project: { ...project, archived: true }, cards: [login] });
+    expect(screen.getAllByText('Sin tarjetas')).toHaveLength(3);
+  });
+});
+
 describe('Board · proyecto archivado de solo lectura (AC-026)', () => {
   const project = { ...createProject({ name: 'Vieja' }), archived: true };
   const card = createCard({ projectId: project.id, title: 'Login', status: 'en-curso' });
