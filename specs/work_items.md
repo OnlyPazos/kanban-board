@@ -588,13 +588,13 @@ interface Card {
 - Acceptance Checks: AC-054
 - Depende de: [WI-AC-049]
 - Rama sugerida: feature/wi-ac-054-project-status-pills
-- Estado: pendiente
+- Estado: verificado
 - Notas de implementación:
   - D-029. `src/views/ProjectList.svelte`: el `<dl class="status-counts">` actual se mantiene como estructura (cada estado es un par `dt`/`dd`, texto accesible), pero cada `.status-counts__item` pasa a ser una pastilla: `background: var(--ds-color-status-<x>-tint)`, `color: var(--ds-color-status-<x>-on-tint)`, `border-radius: var(--ds-radii-full)`, relleno con `--ds-spacing-*`, e `Icon` de `STATUS_ICON[status]` (`size="sm"`, decorativo) con `color: var(--ds-color-status-<x>-accent)`. La correspondencia estado → `<x>` sale de `CARD_STATUS_DS` (WI-AC-049).
   - Los 4 estados se muestran siempre, también con 0. Se puede quitar el `':'` generado tras el `dt` si la pastilla queda más clara, mientras el nombre y el número sigan siendo texto.
   - Estos pares (`on-tint`/`tint`, `accent`/`tint`) ya están validados en el design-system; no se crean colores nuevos.
   - Test e2e, en claro y oscuro: con 2 tarjetas en "Sin empezar" y 1 en "En curso", hay 4 pastillas en orden con 2, 1, 0 y 0 (AC-008); cada una con el icono `svg.lucide-circle-*` de su estado en `aria-hidden` y `background-color`/`color` de `status.<x>.tint`/`.on-tint`. Actualizar `e2e/project-list-order-counts.spec.ts` si dependía del formato "Estado: N".
-- Historial QA: []
+- Historial QA: [2026-10-13 PASS — AC-054 (commit d70c439). check 283 archivos 0 errores 0 warnings; test 304/304; test:e2e 106/106 (antes del último ajuste de espacios del dt; tras él, los e2e afectados 21/21 con --repeat-each 3). e2e/redesign-status-pills.spec.ts: con 2 tarjetas en "Sin empezar" y 1 en "En curso", 4 pastillas en orden con términos "Sin empezar…Finalizado" y valores 2, 1, 0, 0; cada una con svg.lucide-circle-dashed/dot/pause/check en aria-hidden coloreado `status.<x>.accent`, y background-color/color `status.<x>.tint`/`.on-tint` en claro y oscuro. Se mantiene la estructura dl/dt/dd (el icono va dentro del dt, sin texto) y desaparece el ":" tras el dt; project-list-order-counts.spec.ts (AC-008) y el test de componente pasan sin cambios. Diff: ProjectList.svelte (pastillas con variables --ds-color-status-*), STATUS_ICON en src/lib/icons.ts, e2e nuevo. Sin valores sueltos ni SVG a mano. Reglas base de stack OK]
 
 ## WI-AC-055
 - Contexto: apariencia
