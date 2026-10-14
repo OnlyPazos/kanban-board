@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { chooseColorMode } from './color-mode';
 import { chooseOption } from './select';
 
 // Utilidades comunes de los e2e del rediseño visual (AC-047 … AC-057).
@@ -52,12 +53,10 @@ export const STATUSES = [
   { label: 'Finalizado', ds: 'done', icon: 'circle-check' },
 ] as const;
 
-export const colorModeSelect = (page: Page) =>
-  page.getByRole('banner').getByRole('combobox', { name: 'Modo de color' });
 
-/** Fuerza el modo de color desde el selector de la cabecera. */
+/** Fuerza el modo de color desde el menú de la cabecera. */
 export async function setMode(page: Page, mode: Mode) {
-  await chooseOption(page.getByRole('banner'), 'Modo de color', mode === 'dark' ? 'Oscuro' : 'Claro');
+  await chooseColorMode(page, mode === 'dark' ? 'Oscuro' : 'Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', mode);
 }
 

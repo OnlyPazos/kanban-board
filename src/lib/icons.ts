@@ -10,7 +10,11 @@ import CircleDashed from '@lucide/svelte/icons/circle-dashed';
 import CircleDot from '@lucide/svelte/icons/circle-dot';
 import CirclePause from '@lucide/svelte/icons/circle-pause';
 import Equal from '@lucide/svelte/icons/equal';
+import Monitor from '@lucide/svelte/icons/monitor';
+import Moon from '@lucide/svelte/icons/moon';
+import Sun from '@lucide/svelte/icons/sun';
 import type { CardStatus, Priority } from '../domain';
+import type { ColorMode } from '../state/color-mode.svelte';
 
 /** Icono decorativo de la etiqueta de prioridad (D-026). */
 export const PRIORITY_ICON = {
@@ -26,3 +30,10 @@ export const STATUS_ICON = {
   'en-pausa': CirclePause,
   finalizado: CircleCheck,
 } satisfies Record<CardStatus, unknown>;
+
+/** Icono de cada modo de color, en el botón y en el menú "Modo de color" (D-035). */
+export const COLOR_MODE_ICON = {
+  auto: Monitor,
+  light: Sun,
+  dark: Moon,
+} satisfies Record<ColorMode, unknown>;

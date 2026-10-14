@@ -1,5 +1,5 @@
 import { expect, test, type FileChooser, type Page } from '@playwright/test';
-import { chooseOption } from './support/select';
+import { chooseColorMode, expectColorMode } from './support/color-mode';
 
 // AC-043 (D-017): la preferencia de modo de color se recuerda entre sesiones
 // (localStorage), no viaja en los exports, ninguna importación la cambia y,
@@ -8,18 +8,17 @@ const LIGHT_BACKGROUND = 'rgb(248, 250, 252)'; // #F8FAFC
 const DARK_BACKGROUND = 'rgb(15, 23, 42)'; // #0F172A
 const STORAGE_KEY = 'kanban-board:color-mode';
 
-const colorModeSelect = (page: Page) => page.getByRole('banner').getByRole('combobox', { name: 'Modo de color' });
 const projectList = (page: Page) => page.getByRole('region', { name: 'Proyectos', exact: true });
 const storedMode = (page: Page) => page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
 
 async function expectDark(page: Page) {
-  await expect(colorModeSelect(page)).toHaveText('Oscuro');
+  await expectColorMode(page, 'Oscuro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveCSS('background-color', DARK_BACKGROUND);
 }
 
 async function expectAutoLight(page: Page) {
-  await expect(colorModeSelect(page)).toHaveText('Auto');
+  await expectColorMode(page, 'Auto');
   await expect(page.locator('html')).not.toHaveAttribute('data-theme');
   await expect(page.locator('body')).toHaveCSS('background-color', LIGHT_BACKGROUND);
 }
@@ -66,7 +65,7 @@ test('AC-043: tras elegir "Oscuro" y recargar sigue en oscuro con el sistema en 
   await expectAutoLight(page);
   expect(await storedMode(page)).toBeNull();
 
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
+  await chooseColorMode(page, 'Oscuro');
   await expectDark(page);
   expect(await storedMode(page)).toBe('dark');
 
@@ -87,7 +86,7 @@ test('AC-043: tras elegir "Oscuro" y recargar sigue en oscuro con el sistema en 
   );
 
   // Volver a "Auto" elimina la preferencia: al recargar sigue al sistema.
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Auto');
+  await chooseColorMode(page, 'Auto');
   await expect.poll(() => storedMode(page)).toBeNull();
   await page.reload();
   await expectAutoLight(page);
@@ -96,9 +95,9 @@ test('AC-043: tras elegir "Oscuro" y recargar sigue en oscuro con el sistema en 
 test('AC-043: "Claro" también se recuerda con el sistema en oscuro', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Claro');
+  await chooseColorMode(page, 'Claro');
   await page.reload();
-  await expect(colorModeSelect(page)).toHaveText('Claro');
+  await expectColorMode(page, 'Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('body')).toHaveCSS('background-color', LIGHT_BACKGROUND);
 });
@@ -107,7 +106,7 @@ test('AC-043: la preferencia no aparece en los exports e importar cualquier arch
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');
   await createProject(page, 'Mi app');
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
+  await chooseColorMode(page, 'Oscuro');
   await expectDark(page);
 
   // Export completo y de proyecto: solo datos del modelo, sin la preferencia.
@@ -196,11 +195,11 @@ test('AC-043: con localStorage bloqueado el selector funciona en la sesión, al 
   await page.goto('/');
   await expectAutoLight(page);
 
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
+  await chooseColorMode(page, 'Oscuro');
   await expectDark(page);
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Claro');
+  await chooseColorMode(page, 'Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
+  await chooseColorMode(page, 'Oscuro');
   await expectDark(page);
 
   await page.reload();

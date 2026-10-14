@@ -4,7 +4,7 @@
   import Download from '@lucide/svelte/icons/download';
   import { Alert, Button, Icon } from 'design-system';
   import AppHeader from './lib/AppHeader.svelte';
-  import ColorModeSelect from './lib/ColorModeSelect.svelte';
+  import ColorModeMenu from './lib/ColorModeMenu.svelte';
   import ProjectList from './views/ProjectList.svelte';
   import CreateProjectDialog from './views/CreateProjectDialog.svelte';
   import EditProjectDialog from './views/EditProjectDialog.svelte';
@@ -121,7 +121,7 @@
 
 <AppHeader>
   {#snippet actions()}
-    <ColorModeSelect bind:mode={colorMode.mode} />
+    <ColorModeMenu bind:mode={colorMode.mode} />
   {/snippet}
 </AppHeader>
 {#if storageUnavailable}

@@ -1,5 +1,5 @@
 import { expect, test, type Download, type FileChooser, type Locator, type Page } from '@playwright/test';
-import { chooseOption } from './support/select';
+import { chooseColorMode } from './support/color-mode';
 
 /**
  * AC-044: con el almacenamiento forzado a fallar, ningún flujo que escribe
@@ -522,11 +522,11 @@ test('AC-044: si falla guardar el modo de color no hay errores no controlados ni
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Proyectos' })).toBeVisible();
 
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
+  await chooseColorMode(page, 'Oscuro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Claro');
+  await chooseColorMode(page, 'Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Auto');
+  await chooseColorMode(page, 'Auto');
   await expect(page.locator('html')).not.toHaveAttribute('data-theme');
 
   await expect(saveErrorAlert(page)).toHaveCount(0);

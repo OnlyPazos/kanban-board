@@ -669,7 +669,7 @@ interface Card {
 - Acceptance Checks: AC-058
 - Depende de: [WI-AC-059]
 - Rama sugerida: feature/wi-ac-058-color-mode-menu
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-035. Sustituir `src/lib/ColorModeSelect.svelte` por un `ColorModeMenu.svelte` (o similar) con `MenuButton` de `design-system`: `label="Modo de color"`, `items` de `COLOR_MODES` con `COLOR_MODE_LABELS` ("Auto", "Claro", "Oscuro") e iconos `Monitor` / `Sun` / `Moon` (`@lucide/svelte/icons/monitor|sun|moon`), `icon` según el modo actual y `bind:value` con la misma guarda `isColorMode`. Variante y tamaño por defecto (`ghost`, `md` → 44 × 44 px), `align="end"`. La correspondencia modo → icono va en `src/lib/icons.ts` (no en `domain`).
   - `AppHeader` y las 4 vistas usan el nuevo control donde estaba el selector. Quitar los estilos de la app que solo existían para la etiqueta visible (AC-045).
