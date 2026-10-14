@@ -651,7 +651,7 @@ interface Card {
 - Acceptance Checks: AC-059, AC-061
 - Depende de: []
 - Rama sugerida: feature/wi-ac-059-adopt-ds-select-chip
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - D-034, D-037. **Primer commit de la rama (git-manager):** la iteración de `design-system/` pendiente en `integration/kanban-board` + `design-system/design_system.md` + `specs/templates/design_system.md` + `specs/project_specs.md` + `specs/work_items.md`. El builder parte de ahí y no toca `design-system/`.
   - Objetivo: adoptar el `Select` y el `Chip` nuevos y dejar **toda** la suite en verde con ellos (`npm run check`, `npm run test`, `npm run test:e2e`). El selector de modo de color sigue siendo `ColorModeSelect` (con el `Select` nuevo) hasta WI-AC-058.
@@ -661,7 +661,8 @@ interface Card {
   - `e2e/redesign-card-tags.spec.ts` (AC-052 (4)): el chip seleccionado ya no tiene `svg.lucide-check` (nota del 2026-10-14 en AC-052).
   - Tests nuevos: e2e de AC-059 (p. ej. `e2e/card-dialog-selects.spec.ts`) con los puntos (1) a (5), en claro y oscuro para (5); e2e de AC-061 (p. ej. dentro de `redesign-card-tags.spec.ts` o `e2e/type-filter-chip.spec.ts`) en claro y oscuro.
   - Para AC-059 (4): abrir "Prioridad" con la tarjeta en un viewport normal y comprobar `elementFromPoint` en el centro de "Sin prioridad" (la lista está en la top layer, por encima del `<dialog>`).
-- Historial QA: []
+- Historial QA:
+  - 2026-10-14 PASS (AC-059, AC-061): `npm run check` 0 errores; `npx vitest run` 304/304; `npx playwright test` 124/124 (incluye `card-dialog-selects.spec.ts` y AC-061 en `redesign-card-tags.spec.ts`, claro y oscuro). Reglas base OK: sin dependencias nuevas, sin valores sueltos, `design-system/` sin tocar por el builder. Observación: AC-059 (5) se mide con el puntero sobre otra opción, porque la opción elegida que además es la activa usa `action.tint-active`.
 
 ## WI-AC-058
 - Contexto: apariencia
