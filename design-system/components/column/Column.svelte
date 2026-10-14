@@ -2,7 +2,8 @@
   Column — design-system/components/column/Column.svelte
 
   Columna del tablero kanban: cabecera tintada con el color de su estado
-  (franja superior, icono, título y contador) y un cuerpo con las tarjetas.
+  (franja superior, icono, título y contador) y un cuerpo con las tarjetas,
+  sobre el mismo tono más suave (status.*.surface).
   Iconos por estado (decorativos, refuerzan el color): todo CircleDashed,
   doing CircleDot, paused CirclePause, done CircleCheck.
 
@@ -97,6 +98,7 @@
     --ds-column-accent: var(--ds-color-status-todo-accent);
     --ds-column-tint: var(--ds-color-status-todo-tint);
     --ds-column-on-tint: var(--ds-color-status-todo-on-tint);
+    --ds-column-surface: var(--ds-color-status-todo-surface);
 
     /* Bloque contenedor del texto oculto del contador (.ds-column__sr, que es
        position: absolute): sin esto se escapa del overflow y ensancha la página. */
@@ -109,7 +111,7 @@
     max-width: 100%;
     min-height: 0;
 
-    background-color: var(--ds-color-surface-sunken);
+    background-color: var(--ds-column-surface);
     color: var(--ds-color-text-primary);
     border: var(--ds-border-width-dashed) solid transparent;
     border-top: var(--ds-border-width-accent) solid var(--ds-column-accent);
@@ -126,18 +128,21 @@
     --ds-column-accent: var(--ds-color-status-doing-accent);
     --ds-column-tint: var(--ds-color-status-doing-tint);
     --ds-column-on-tint: var(--ds-color-status-doing-on-tint);
+    --ds-column-surface: var(--ds-color-status-doing-surface);
   }
 
   .ds-column--paused {
     --ds-column-accent: var(--ds-color-status-paused-accent);
     --ds-column-tint: var(--ds-color-status-paused-tint);
     --ds-column-on-tint: var(--ds-color-status-paused-on-tint);
+    --ds-column-surface: var(--ds-color-status-paused-surface);
   }
 
   .ds-column--done {
     --ds-column-accent: var(--ds-color-status-done-accent);
     --ds-column-tint: var(--ds-color-status-done-tint);
     --ds-column-on-tint: var(--ds-color-status-done-on-tint);
+    --ds-column-surface: var(--ds-color-status-done-surface);
   }
 
   /* ── Destino de arrastre ────────────────────────────────── */

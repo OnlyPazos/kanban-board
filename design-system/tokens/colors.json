@@ -2,9 +2,9 @@
   "_meta": {
     "description": "Paleta semántica 'índigo' sobre neutros fríos slate, con modo claro y oscuro. Cada rol es { light, dark }. Los colores apuntan a roles (background, surface.*, text.*, action.*, feedback.*, tag.*, status.*, priority.*, appbar.*), no a tonos. Todo par texto/fondo o borde/fondo usado por un componente está en scripts/contrast-pairs.json y se valida en ambos modos.",
     "tag": "Etiquetas de categoría para tarjetas. En la app kanban: feature = Novedad, improvement = Mejora, bugfix = Arreglo, technical = Técnico.",
-    "status": "Color de cada columna del tablero. todo = Sin empezar, doing = En curso, paused = En pausa, done = Finalizado. accent = franja y punto; tint = fondo de cabecera; on-tint = texto de cabecera y del contador.",
+    "status": "Color de cada columna del tablero. todo = Sin empezar, doing = En curso, paused = En pausa, done = Finalizado. accent = franja y punto; tint = fondo de cabecera; on-tint = texto de cabecera y del contador; surface = fondo del cuerpo de la columna (el tono de la cabecera, más suave: en claro tira a blanco, en oscuro a background).",
     "priority": "Franja superior de la tarjeta según prioridad. Es decorativa: la prioridad siempre se muestra también en texto.",
-    "surface.sunken": "Fondo de columnas: más hundido que la página para que las tarjetas (surface.raised) destaquen."
+    "surface.sunken": "Superficie más hundida que la página. Las columnas usan ahora status.*.surface."
   },
   "background": { "light": "#F8FAFC", "dark": "#0F172A" },
   "surface": {
@@ -62,22 +62,26 @@
     "todo": {
       "accent": { "light": "#64748B", "dark": "#94A3B8" },
       "tint": { "light": "#F1F5F9", "dark": "#1E293B" },
-      "on-tint": { "light": "#334155", "dark": "#E2E8F0" }
+      "on-tint": { "light": "#334155", "dark": "#E2E8F0" },
+      "surface": { "light": "#F3F6F9", "dark": "#162033" }
     },
     "doing": {
       "accent": { "light": "#2563EB", "dark": "#60A5FA" },
       "tint": { "light": "#DBEAFE", "dark": "#172554" },
-      "on-tint": { "light": "#1E40AF", "dark": "#BFDBFE" }
+      "on-tint": { "light": "#1E40AF", "dark": "#BFDBFE" },
+      "surface": { "light": "#EFF6FF", "dark": "#131E3F" }
     },
     "paused": {
       "accent": { "light": "#EA580C", "dark": "#FB923C" },
       "tint": { "light": "#FFEDD5", "dark": "#431407" },
-      "on-tint": { "light": "#9A3412", "dark": "#FED7AA" }
+      "on-tint": { "light": "#9A3412", "dark": "#FED7AA" },
+      "surface": { "light": "#FFF7ED", "dark": "#291718" }
     },
     "done": {
       "accent": { "light": "#15803D", "dark": "#4ADE80" },
       "tint": { "light": "#DCFCE7", "dark": "#052E16" },
-      "on-tint": { "light": "#166534", "dark": "#BBF7D0" }
+      "on-tint": { "light": "#166534", "dark": "#BBF7D0" },
+      "surface": { "light": "#F0FDF4", "dark": "#0A2220" }
     }
   },
   "priority": {

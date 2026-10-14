@@ -2,8 +2,8 @@
   Chip — design-system/components/chip/Chip.svelte
 
   Botón conmutable (aria-pressed) para filtros. Varios chips forman un
-  filtro de selección múltiple. Seleccionado se indica con relleno, borde
-  y una marca ✓ (no solo con color).
+  filtro de selección múltiple. Seleccionado se indica con relleno y con
+  un borde de doble grosor en action.primary (no solo con color).
 
   Uso:
     <Chip bind:selected={showBugs} tone="bugfix">Arreglo</Chip>
@@ -18,7 +18,6 @@
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import Check from '@lucide/svelte/icons/check';
   import Icon, { type IconComponent } from '../icon/Icon.svelte';
   import { CATEGORY_ICONS } from '../icon/category-icons.js';
 
@@ -49,7 +48,6 @@
   {disabled}
   onclick={toggle}
 >
-  <span class="ds-chip__check"><Icon icon={Check} size="sm" /></span>
   {#if resolvedIcon}
     <span class="ds-chip__icon ds-chip__icon--{tone ?? 'none'}"><Icon icon={resolvedIcon} size="sm" /></span>
   {/if}
@@ -120,19 +118,13 @@
   .ds-chip--selected:hover:not(:disabled) {
     background-color: var(--ds-color-action-tint);
     border-color: var(--ds-color-action-primary);
+    /* Segundo trazo hacia dentro: el borde engorda sin mover el contenido. */
+    box-shadow: inset 0 0 0 var(--ds-border-width-default) var(--ds-color-action-primary);
     color: var(--ds-color-action-on-tint);
   }
 
   .ds-chip--selected:active:not(:disabled) {
     background-color: var(--ds-color-action-tint-active);
-  }
-
-  .ds-chip__check {
-    display: none;
-  }
-
-  .ds-chip--selected .ds-chip__check {
-    display: inline-flex;
   }
 
   /* ── Icono de categoría (en el color de su tag) ─────────── */

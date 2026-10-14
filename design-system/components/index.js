@@ -17,5 +17,6 @@ export { default as Field } from './field/Field.svelte';
 export { default as Icon } from './icon/Icon.svelte';
 export { CATEGORY_ICONS } from './icon/category-icons.js';
 export { default as Input } from './input/Input.svelte';
+export { default as MenuButton } from './menu-button/MenuButton.svelte';
 export { default as Select } from './select/Select.svelte';
 export { default as Textarea } from './textarea/Textarea.svelte';

@@ -6,13 +6,17 @@
 <script lang="ts">
   import Archive from '@lucide/svelte/icons/archive';
   import ArrowDown from '@lucide/svelte/icons/arrow-down';
+  import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowUp from '@lucide/svelte/icons/arrow-up';
   import Calendar from '@lucide/svelte/icons/calendar';
   import Download from '@lucide/svelte/icons/download';
   import Equal from '@lucide/svelte/icons/equal';
   import KanbanSquare from '@lucide/svelte/icons/square-kanban';
+  import Monitor from '@lucide/svelte/icons/monitor';
+  import Moon from '@lucide/svelte/icons/moon';
   import Pencil from '@lucide/svelte/icons/pencil';
   import Plus from '@lucide/svelte/icons/plus';
+  import Sun from '@lucide/svelte/icons/sun';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import X from '@lucide/svelte/icons/x';
   import {
@@ -26,6 +30,7 @@
     DropPlaceholder,
     Icon,
     Input,
+    MenuButton,
     Select,
     Textarea,
   } from '../components/index.js';
@@ -55,6 +60,21 @@
   let confirmOpen = $state(false);
   let log = $state('Sin eventos todavía.');
 
+  const THEME_ICONS: Record<string, typeof Sun> = { auto: Monitor, light: Sun, dark: Moon };
+  const themeItems = [
+    { value: 'auto', label: 'Automático', icon: Monitor },
+    { value: 'light', label: 'Claro', icon: Sun },
+    { value: 'dark', label: 'Oscuro', icon: Moon },
+  ];
+
+  let priority = $state('');
+  const priorityOptions = [
+    { value: '', label: 'Sin prioridad' },
+    { value: 'alta', label: 'Alta' },
+    { value: 'media', label: 'Media' },
+    { value: 'baja', label: 'Baja' },
+  ];
+
   const typeOptions = [
     { value: 'novedad', label: 'Novedad' },
     { value: 'mejora', label: 'Mejora' },
@@ -66,15 +86,7 @@
 <main class="demo">
   <header class="demo__header">
     <h1 class="demo__title">Design System — Demo</h1>
-    <Select
-      label="Modo de color"
-      bind:value={theme}
-      options={[
-        { value: 'auto', label: 'Auto (sistema)' },
-        { value: 'light', label: 'Claro' },
-        { value: 'dark', label: 'Oscuro' },
-      ]}
-    />
+    <MenuButton label="Tema" icon={THEME_ICONS[theme]} items={themeItems} bind:value={theme} />
   </header>
 
   <section class="demo__section">
@@ -105,6 +117,10 @@
       <Button variant="danger" icon={Trash2}>Borrar</Button>
       <Button variant="secondary" icon={Pencil} aria-label="Editar" />
       <Button size="lg" icon={Plus} aria-label="Añadir" />
+    </div>
+    <div class="demo__row">
+      <Button href="#volver" variant="ghost" size="sm" icon={ArrowLeft}>Volver a proyectos (enlace)</Button>
+      <Button href="#archivados" variant="secondary" size="sm" icon={Archive}>Proyectos archivados (enlace)</Button>
     </div>
     <Button block variant="outline">Ancho completo</Button>
     <p class="demo__log">{log}</p>
@@ -140,12 +156,18 @@
   </section>
 
   <section class="demo__section">
-    <h2 class="demo__heading">Input · Textarea · Select</h2>
+    <h2 class="demo__heading">Input · Textarea · Select · MenuButton</h2>
     <div class="demo__grid">
       <Input label="Título" bind:value={title} required maxlength={120} error={titleError} hint="Máximo 120 caracteres" />
       <Select label="Tipo" bind:value={type} options={typeOptions} />
+      <Select label="Prioridad" bind:value={priority} options={priorityOptions} hint="Lista propia, no el <select> nativo" />
+      <Select label="Con error" options={typeOptions} placeholder="Elige un tipo" error="Elige un tipo." />
+      <Select label="Deshabilitado" value="mejora" options={typeOptions} disabled />
       <Textarea label="Descripción" bind:value={description} placeholder="Opcional" />
       <Input label="Deshabilitado" value="No editable" disabled />
+    </div>
+    <div class="demo__row">
+      <MenuButton label="Tema (con texto)" items={themeItems} bind:value={theme} variant="secondary" align="start" />
     </div>
   </section>
 
