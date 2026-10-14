@@ -15,7 +15,7 @@
   import ArchiveRestore from '@lucide/svelte/icons/archive-restore';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Trash2 from '@lucide/svelte/icons/trash-2';
-  import { Button, Card, Dialog, Icon } from 'design-system';
+  import { Button, Card, Dialog } from 'design-system';
   import {
     CARD_STATUS_LABELS,
     PRIORITY_DS,
@@ -78,7 +78,9 @@
 
 <section class="archived" aria-labelledby="archived-title">
   <div class="archived__header">
-    <a class="archived__back" href={boardHref(project.id)}><Icon icon={ArrowLeft} size="sm" />Volver al tablero</a>
+    <div class="archived__nav">
+      <Button href={boardHref(project.id)} variant="ghost" size="sm" icon={ArrowLeft}>Volver al tablero</Button>
+    </div>
     <h1 id="archived-title" class="archived__title">Tarjetas archivadas</h1>
     <p class="archived__project">{project.name}</p>
   </div>
@@ -165,21 +167,8 @@
     margin: 0 0 var(--ds-spacing-5);
   }
 
-  .archived__back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-spacing-1);
+  .archived__nav {
     align-self: flex-start;
-    color: var(--ds-color-action-primary);
-    font-size: var(--ds-font-label-size);
-    font-weight: var(--ds-font-label-weight);
-    line-height: var(--ds-font-label-line-height);
-    border-radius: var(--ds-radii-small);
-  }
-
-  .archived__back:focus-visible {
-    outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
-    outline-offset: var(--ds-focus-ring-offset);
   }
 
   .archived__title {

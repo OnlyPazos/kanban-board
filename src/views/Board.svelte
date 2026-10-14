@@ -183,18 +183,22 @@
 <div class="board">
   <div class="board__header">
     {#if readonly}
-      <a class="board__back" href={ARCHIVED_PROJECTS_HREF}
-        ><Icon icon={ArrowLeft} size="sm" />Volver a proyectos archivados</a
-      >
+      <div class="board__nav">
+        <Button href={ARCHIVED_PROJECTS_HREF} variant="ghost" size="sm" icon={ArrowLeft}>
+          Volver a proyectos archivados
+        </Button>
+      </div>
     {:else}
-      <a class="board__back" href={LIST_HREF}><Icon icon={ArrowLeft} size="sm" />Volver a proyectos</a>
+      <div class="board__nav">
+        <Button href={LIST_HREF} variant="ghost" size="sm" icon={ArrowLeft}>Volver a proyectos</Button>
+      </div>
     {/if}
     <div class="board__title-row">
       <h1 class="board__title">{project.name}</h1>
       <div class="board__actions">
-        <a class="board__link" href={archivedCardsHref(project.id)}
-          ><Icon icon={Archive} size="sm" />Tarjetas archivadas</a
-        >
+        <Button href={archivedCardsHref(project.id)} variant="secondary" size="sm" icon={Archive}>
+          Tarjetas archivadas
+        </Button>
         <Button variant="secondary" size="sm" icon={Download} onclick={() => onexport?.(project)}>
           Exportar proyecto
         </Button>
@@ -332,23 +336,8 @@
     margin: 0 0 var(--ds-spacing-5);
   }
 
-  .board__back,
-  .board__link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-spacing-1);
+  .board__nav {
     align-self: flex-start;
-    color: var(--ds-color-action-primary);
-    font-size: var(--ds-font-label-size);
-    font-weight: var(--ds-font-label-weight);
-    line-height: var(--ds-font-label-line-height);
-    border-radius: var(--ds-radii-small);
-  }
-
-  .board__back:focus-visible,
-  .board__link:focus-visible {
-    outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
-    outline-offset: var(--ds-focus-ring-offset);
   }
 
   .board__title-row {
@@ -364,10 +353,6 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--ds-spacing-3);
-  }
-
-  .board__link {
-    align-self: center;
   }
 
   .board__title {
