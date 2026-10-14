@@ -684,7 +684,7 @@ interface Card {
 - Acceptance Checks: AC-060
 - Depende de: [WI-AC-059]
 - Rama sugerida: feature/wi-ac-060-column-surface
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-036. No se espera cambio de producto: `Column` ya pinta su cuerpo con `status.*.surface`. Revisar que ningún estilo de la app sobrescriba el fondo de la columna o de su cuerpo (p. ej. un `background` heredado de cuando era `surface.sunken`); si lo hay, quitarlo.
   - Test e2e (p. ej. añadir a `e2e/redesign-columns.spec.ts` o uno nuevo): en el tablero activo y en el de solo lectura, en claro y oscuro, `background-color` de cada `getByRole('region', { name: <estado> })` con los valores de AC-060, y la cabecera sigue con `status.<x>.tint` (AC-049).

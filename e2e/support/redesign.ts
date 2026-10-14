@@ -18,10 +18,10 @@ export const TOKENS = {
     borderDefault: 'rgb(226, 232, 240)',
     priority: { high: 'rgb(220, 38, 38)', medium: 'rgb(234, 88, 12)', low: 'rgb(77, 124, 15)' },
     status: {
-      todo: { accent: 'rgb(100, 116, 139)', tint: 'rgb(241, 245, 249)', onTint: 'rgb(51, 65, 85)' },
-      doing: { accent: 'rgb(37, 99, 235)', tint: 'rgb(219, 234, 254)', onTint: 'rgb(30, 64, 175)' },
-      paused: { accent: 'rgb(234, 88, 12)', tint: 'rgb(255, 237, 213)', onTint: 'rgb(154, 52, 18)' },
-      done: { accent: 'rgb(21, 128, 61)', tint: 'rgb(220, 252, 231)', onTint: 'rgb(22, 101, 52)' },
+      todo: { accent: 'rgb(100, 116, 139)', tint: 'rgb(241, 245, 249)', onTint: 'rgb(51, 65, 85)', surface: 'rgb(243, 246, 249)' },
+      doing: { accent: 'rgb(37, 99, 235)', tint: 'rgb(219, 234, 254)', onTint: 'rgb(30, 64, 175)', surface: 'rgb(239, 246, 255)' },
+      paused: { accent: 'rgb(234, 88, 12)', tint: 'rgb(255, 237, 213)', onTint: 'rgb(154, 52, 18)', surface: 'rgb(255, 247, 237)' },
+      done: { accent: 'rgb(21, 128, 61)', tint: 'rgb(220, 252, 231)', onTint: 'rgb(22, 101, 52)', surface: 'rgb(240, 253, 244)' },
     },
   },
   dark: {
@@ -34,10 +34,10 @@ export const TOKENS = {
     borderDefault: 'rgb(51, 65, 85)',
     priority: { high: 'rgb(248, 113, 113)', medium: 'rgb(251, 146, 60)', low: 'rgb(163, 230, 53)' },
     status: {
-      todo: { accent: 'rgb(148, 163, 184)', tint: 'rgb(30, 41, 59)', onTint: 'rgb(226, 232, 240)' },
-      doing: { accent: 'rgb(96, 165, 250)', tint: 'rgb(23, 37, 84)', onTint: 'rgb(191, 219, 254)' },
-      paused: { accent: 'rgb(251, 146, 60)', tint: 'rgb(67, 20, 7)', onTint: 'rgb(254, 215, 170)' },
-      done: { accent: 'rgb(74, 222, 128)', tint: 'rgb(5, 46, 22)', onTint: 'rgb(187, 247, 208)' },
+      todo: { accent: 'rgb(148, 163, 184)', tint: 'rgb(30, 41, 59)', onTint: 'rgb(226, 232, 240)', surface: 'rgb(22, 32, 51)' },
+      doing: { accent: 'rgb(96, 165, 250)', tint: 'rgb(23, 37, 84)', onTint: 'rgb(191, 219, 254)', surface: 'rgb(19, 30, 63)' },
+      paused: { accent: 'rgb(251, 146, 60)', tint: 'rgb(67, 20, 7)', onTint: 'rgb(254, 215, 170)', surface: 'rgb(41, 23, 24)' },
+      done: { accent: 'rgb(74, 222, 128)', tint: 'rgb(5, 46, 22)', onTint: 'rgb(187, 247, 208)', surface: 'rgb(10, 34, 32)' },
     },
   },
 } as const;
