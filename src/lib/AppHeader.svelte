@@ -1,7 +1,7 @@
 <!--
   Cabecera común a todas las vistas (AC-048, D-028): barra `appbar` con el
   logo y el título "Kanban de proyectos", que enlaza con la lista de
-  proyectos. Aloja el selector "Modo de color" (AC-042) en el snippet
+  proyectos. Aloja el menú "Modo de color" (AC-058) en el snippet
   `actions`.
 -->
 <script lang="ts">

@@ -1,7 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import App from './App.svelte';
-import { chooseOption, getCombobox, optionLabels } from './views/choose-option';
 import { buildExport, createCard, createProject, type Card, type CardType, type Project } from './domain';
 import type { Repository } from './persistence/repository';
 
@@ -65,6 +64,26 @@ afterEach(() => {
   window.location.hash = '';
 });
 
+/** Menú "Modo de color" (AC-058): abre el botón de la cabecera. */
+async function openColorModeMenu() {
+  await fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Modo de color' }));
+  return screen.getByRole('menu', { name: 'Modo de color' });
+}
+
+async function colorModeLabels() {
+  const menu = await openColorModeMenu();
+  const labels = within(menu)
+    .getAllByRole('menuitemradio')
+    .map((item) => item.textContent?.trim());
+  await fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Modo de color' }));
+  return labels;
+}
+
+async function chooseColorMode(label: string) {
+  const menu = await openColorModeMenu();
+  await fireEvent.click(within(menu).getByRole('menuitemradio', { name: label }));
+}
+
 describe('App', () => {
   it('renderiza la cabecera común y la lista de proyectos vacía', () => {
     render(App, { repository: memoryRepository() });
@@ -73,44 +92,37 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Crear proyecto' })).toBeInTheDocument();
   });
 
-  it('AC-042: la cabecera tiene el selector "Modo de color" que aplica data-theme a <html>', async () => {
+  it('AC-042/AC-058: la cabecera tiene el menú "Modo de color" que aplica data-theme a <html>', async () => {
     render(App, { repository: memoryRepository() });
     const banner = screen.getByRole('banner');
-    expect(getCombobox('Modo de color', banner)).toHaveTextContent('Auto');
-    expect(await optionLabels('Modo de color', banner)).toEqual(['Auto', 'Claro', 'Oscuro']);
+    const button = within(banner).getByRole('button', { name: 'Modo de color' });
+    expect(button).toHaveAttribute('aria-haspopup', 'menu');
+    expect(within(banner).queryByRole('combobox', { name: 'Modo de color' })).toBeNull();
+    expect(button.querySelector('svg.lucide-monitor')).not.toBeNull();
+    expect(await colorModeLabels()).toEqual(['Auto', 'Claro', 'Oscuro']);
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
 
-    await chooseOption('Modo de color', 'Oscuro', banner);
+    await chooseColorMode('Oscuro');
     await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('dark'));
-    await chooseOption('Modo de color', 'Claro', banner);
+    expect(button.querySelector('svg.lucide-moon')).not.toBeNull();
+    await chooseColorMode('Claro');
     await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('light'));
-    await chooseOption('Modo de color', 'Auto', banner);
+    expect(button.querySelector('svg.lucide-sun')).not.toBeNull();
+    await chooseColorMode('Auto');
     await waitFor(() => expect(document.documentElement.hasAttribute('data-theme')).toBe(false));
-  });
-
-  it('AC-045: la etiqueta "Modo de color" es una <label for> visible, antes del selector', () => {
-    render(App, { repository: memoryRepository() });
-    const banner = screen.getByRole('banner');
-    const select = within(banner).getByRole('combobox', { name: 'Modo de color' });
-    const label = within(banner).getByText('Modo de color', { selector: 'label' });
-    expect(label).toHaveAttribute('for', select.id);
-    expect(label).not.toHaveClass('ds-visually-hidden');
-    expect(select).not.toHaveAttribute('aria-label');
-    // La etiqueta va antes del selector en el documento (encima, en `.ds-field` en columna).
-    expect(label.compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('AC-043: el modo se recuerda en localStorage y se recupera al montar la app', async () => {
     localStorage.setItem('kanban-board:color-mode', 'dark');
     try {
       const { unmount } = render(App, { repository: memoryRepository() });
-      const banner = screen.getByRole('banner');
-      expect(getCombobox('Modo de color', banner)).toHaveTextContent('Oscuro');
+      const button = within(screen.getByRole('banner')).getByRole('button', { name: 'Modo de color' });
+      expect(button.querySelector('svg.lucide-moon')).not.toBeNull();
       await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('dark'));
 
-      await chooseOption('Modo de color', 'Claro', banner);
+      await chooseColorMode('Claro');
       await waitFor(() => expect(localStorage.getItem('kanban-board:color-mode')).toBe('light'));
-      await chooseOption('Modo de color', 'Auto', banner);
+      await chooseColorMode('Auto');
       await waitFor(() => expect(localStorage.getItem('kanban-board:color-mode')).toBeNull());
       expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
       unmount();

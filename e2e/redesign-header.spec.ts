@@ -13,6 +13,10 @@ test.describe('AC-048: cabecera de la app', () => {
       const header = page.getByRole('banner');
       await expectDecorativeIcon(header, 'square-kanban');
       await expect(header.getByRole('link', { name: 'Kanban de proyectos' })).toBeVisible();
+      // (3) A la derecha, el botón del menú "Modo de color" (AC-058).
+      const titleBox = await header.getByRole('link', { name: 'Kanban de proyectos' }).boundingBox();
+      const buttonBox = await header.getByRole('button', { name: 'Modo de color' }).boundingBox();
+      expect(titleBox && buttonBox && buttonBox.x >= titleBox.x + titleBox.width).toBe(true);
 
       for (const mode of MODES) {
         await setMode(page, mode);
