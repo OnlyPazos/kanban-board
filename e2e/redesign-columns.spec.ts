@@ -74,3 +74,37 @@ test.describe('AC-049: columnas con Column', () => {
     await expect(header).toContainText('3 tarjetas');
   });
 });
+
+// AC-060 (D-036): el cuerpo de cada columna tiene el fondo `status.<x>.surface`.
+test.describe('AC-060: fondo del cuerpo de las columnas', () => {
+  test('tablero activo y de solo lectura, en claro y en oscuro', async ({ page }) => {
+    await createProject(page, 'Viejo');
+    await openProject(page, 'Viejo');
+    await addCard(page, 'En curso', 'Antigua');
+    const readOnlyBoard = page.url();
+    await page.getByRole('link', { name: 'Volver a proyectos', exact: true }).click();
+    await page.getByRole('button', { name: 'Archivar Viejo', exact: true }).click();
+    await createProject(page, 'Mi app');
+    await openProject(page, 'Mi app');
+    await addCard(page, 'Sin empezar', 'Login');
+    const board = page.url();
+
+    for (const { url, heading } of [
+      { url: board, heading: 'Mi app' },
+      { url: readOnlyBoard, heading: 'Viejo' },
+    ]) {
+      await page.goto(url);
+      await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
+      for (const mode of MODES) {
+        await setMode(page, mode);
+        for (const status of STATUSES) {
+          const region = column(page, status.label);
+          const colors = TOKENS[mode].status[status.ds];
+          await expect(region).toHaveCSS('background-color', colors.surface);
+          // La cabecera conserva `status.<x>.tint` (AC-049).
+          await expect(region.locator('header')).toHaveCSS('background-color', colors.tint);
+        }
+      }
+    }
+  });
+});
