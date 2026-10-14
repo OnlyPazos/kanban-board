@@ -54,7 +54,10 @@ test.describe('AC-052: prioridad y tipo en la tarjeta', () => {
     }
   });
 
-  test('cada chip del filtro muestra el icono de su tipo y el seleccionado además el check', async ({ page }) => {
+  // Nota del 2026-10-14 (D-037): el chip seleccionado ya no muestra el check.
+  test('cada chip del filtro muestra el icono de su tipo, también el seleccionado, y ninguno el check', async ({
+    page,
+  }) => {
     await createProject(page, 'Mi app');
     await openProject(page, 'Mi app');
     const filter = page.getByRole('group', { name: 'Filtrar por tipo' });
@@ -62,14 +65,48 @@ test.describe('AC-052: prioridad y tipo en la tarjeta', () => {
     for (const t of TYPES) {
       const chip = filter.getByRole('button', { name: t.label, exact: true });
       await expectDecorativeIcon(chip, t.icon);
-      await expect(chip.locator('svg.lucide-check')).toBeHidden();
+      await expect(chip.locator('svg.lucide-check')).toHaveCount(0);
     }
 
     const arreglo = filter.getByRole('button', { name: 'Arreglo', exact: true });
     await arreglo.click();
     await expect(arreglo).toHaveAttribute('aria-pressed', 'true');
-    await expect(arreglo.locator('svg.lucide-check')).toBeVisible();
-    await expectDecorativeIcon(arreglo, 'check');
-    await expect(filter.getByRole('button', { name: 'Mejora', exact: true }).locator('svg.lucide-check')).toBeHidden();
+    await expectDecorativeIcon(arreglo, 'bug');
+    await expect(arreglo.locator('svg.lucide-check')).toHaveCount(0);
   });
+});
+
+// AC-061 (D-037): el chip seleccionado se distingue por relleno y borde doble, sin icono Check.
+test.describe('AC-061: chip seleccionado del filtro por tipo', () => {
+  for (const mode of MODES) {
+    test(`seleccionado con borde action.primary, fondo action.tint y segundo trazo; sin check (${mode})`, async ({
+      page,
+    }) => {
+      await createProject(page, 'Mi app');
+      await openProject(page, 'Mi app');
+      await setMode(page, mode);
+      const filter = page.getByRole('group', { name: 'Filtrar por tipo' });
+      const chip = (label: string) => filter.getByRole('button', { name: label, exact: true });
+
+      await chip('Mejora').click();
+      await expect(chip('Mejora')).toHaveAttribute('aria-pressed', 'true');
+
+      for (const t of TYPES) {
+        // Los nombres accesibles no cambian.
+        await expect(chip(t.label)).toHaveCount(1);
+        await expect(chip(t.label).locator('svg.lucide-check')).toHaveCount(0);
+        await expectDecorativeIcon(chip(t.label), t.icon);
+      }
+
+      const selected = chip('Mejora');
+      await expect(selected).toHaveCSS('border-top-color', TOKENS[mode].actionPrimary);
+      await expect(selected).toHaveCSS('background-color', TOKENS[mode].actionTint);
+      await expect(selected).not.toHaveCSS('box-shadow', 'none');
+
+      for (const t of TYPES.filter((t) => t.label !== 'Mejora')) {
+        await expect(chip(t.label)).toHaveAttribute('aria-pressed', 'false');
+        await expect(chip(t.label)).toHaveCSS('box-shadow', 'none');
+      }
+    });
+  }
 });

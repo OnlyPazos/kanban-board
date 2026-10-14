@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 async function createProject(page: Page, name: string) {
   await page.getByRole('button', { name: 'Crear proyecto' }).click();
@@ -53,13 +54,15 @@ test('AC-012: editar una tarjeta → cambia de columna, persiste tras recargar y
   // Las fechas se muestran en solo lectura: no hay campos para editarlas.
   await expect(dialog.getByTestId('card-created-at')).toHaveAttribute('datetime', before.createdAt as string);
   await expect(dialog.getByTestId('card-updated-at')).toBeVisible();
-  await expect(dialog.locator('input, select, textarea')).toHaveCount(5);
+  // 5 campos: título y descripción, más los combobox Tipo, Estado y Prioridad (D-034).
+  await expect(dialog.locator('input, select, textarea')).toHaveCount(2);
+  await expect(dialog.getByRole('combobox')).toHaveCount(3);
 
   await dialog.getByLabel('Título').fill('Login con Google');
-  await dialog.getByLabel('Tipo').selectOption({ label: 'Arreglo' });
-  await dialog.getByLabel('Estado').selectOption({ label: 'En pausa' });
+  await chooseOption(dialog, 'Tipo', 'Arreglo');
+  await chooseOption(dialog, 'Estado', 'En pausa');
   await dialog.getByLabel('Descripción').fill('Primera línea\nSegunda línea');
-  await dialog.getByLabel('Prioridad').selectOption({ label: 'Alta' });
+  await chooseOption(dialog, 'Prioridad', 'Alta');
   await dialog.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(dialog).toBeHidden();
 
@@ -120,8 +123,8 @@ test('AC-013: etiqueta de tipo con color distinto por tipo y prioridad solo cuan
   for (const s of specs) {
     await addCard(page, 'Sin empezar', s.title);
     await column.getByRole('button', { name: s.title, exact: true }).click();
-    await dialog.getByLabel('Tipo').selectOption({ label: s.type });
-    await dialog.getByLabel('Prioridad').selectOption({ label: s.priority });
+    await chooseOption(dialog, 'Tipo', s.type);
+    await chooseOption(dialog, 'Prioridad', s.priority);
     await dialog.getByRole('button', { name: 'Guardar cambios' }).click();
     await expect(dialog).toBeHidden();
   }

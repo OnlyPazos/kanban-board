@@ -5,6 +5,7 @@ Orden: por dependencias (los que no dependen de nada, primero). Cada Work Item s
 Ampliación del 2026-10-10: WI-AC-040, WI-AC-041, WI-AC-042 y WI-AC-043 añadidos al final. Notas de WI-AC-001, WI-AC-012, WI-AC-018, WI-AC-031 y WI-AC-034 alineadas con D-014, D-015 y D-016 (todos seguían en `pendiente`).
 Ampliación del 2026-10-11: WI-AC-044, WI-AC-045 y WI-AC-046 añadidos al final (AC-044, AC-045, AC-046; D-018, D-019, D-020). Los Work Items integrados no cambian; solo se añade a WI-AC-040 una referencia a que AC-040 queda precisado por AC-046 (D-020), sin tocar su estado ni su historial.
 Ampliación del 2026-10-12 (rediseño visual): WI-AC-047 … WI-AC-057 añadidos al final (AC-047 … AC-057; D-021 … D-032). Los Work Items integrados no cambian. Ver el bloque "Sistema de diseño (2026-10-12)" más abajo, que amplía al anterior para estos items.
+Ampliación del 2026-10-14 (iteración de diseño: Select con lista propia, MenuButton, Button href, `status.*.surface`, chip sin Check): WI-AC-059, WI-AC-058, WI-AC-060 y WI-AC-062 añadidos al final (AC-058 … AC-062; D-034 … D-038). AC-045 queda retirado (D-035); WI-AC-045 sigue `integrado` y no cambia. Ver el bloque "Sistema de diseño (2026-10-14)" más abajo.
 
 Sistema de diseño (D-015, D-016; aplica a todos los items con UI):
 - La UI se construye con los componentes de `design-system` (`Button`, `Input`, `Textarea`, `Select`, `Field`, `Dialog`, `Card`, `Badge`, `Chip`, `Alert`). Los estilos propios de la app solo usan variables `--ds-*`.
@@ -28,6 +29,13 @@ Sistema de diseño (2026-10-12; D-021 … D-032; aplica a WI-AC-047 … WI-AC-05
   ```
 - Ningún item modifica `design-system/`. Si algo no se puede hacer con lo que expone (props, tokens), se devuelve a `design-builder`; no se parchea con CSS global sobre clases `ds-*` ni con valores sueltos.
 - Los e2e y tests de componente existentes que usen selectores o nombres que cambian en un item (nombres accesibles, `data-*`, textos con "←", clases de la app) se actualizan en ese mismo item, y deben seguir pasando todos (`npm run test`, `npm run test:e2e`, `npm run check`).
+
+Sistema de diseño (2026-10-14; D-034 … D-038; aplica a WI-AC-058 … WI-AC-062):
+- La iteración de `design-system/` (Select con lista propia, `MenuButton`, `Button href`, `status.*.surface`, `popup.*`, chip seleccionado sin Check) está sin commit en `integration/kanban-board`. **`git-manager` la incluye como primer commit de la rama de WI-AC-059** (con `design_system.md`, `specs/templates/design_system.md`, la spec y este plan), no directamente en la rama de integración, porque rompe tests existentes y la rama de integración debe quedar en verde. WI-AC-058, WI-AC-060 y WI-AC-062 se ramifican después de integrar WI-AC-059.
+- `Select` ya no es un `<select>`: es `<button role="combobox">` + `<ul role="listbox">` con `<li role="option">`. No acepta atributos nativos (`...rest`), `onchange` recibe el valor (string) y el valor se lee/escribe con `bind:value`. En tests: Playwright `getByRole('combobox', { name }).click()` + `getByRole('option', { name }).click()` (o teclado), nunca `selectOption`; Testing Library: `fireEvent.click` / `userEvent.click` sobre el combobox y la `option`, nunca `fireEvent.change` ni `userEvent.selectOptions`. En jsdom no hay Popover API: la lista se queda en el DOM bajo el control (es el comportamiento previsto del componente).
+- `MenuButton` (`design-system`): `label`, `items: { value, label, icon? }[]`, `bind:value`, `icon`, `variant` (`ghost`), `size` (`md`), `align` (`end`), `onchange(value)`.
+- `Button href`: renderiza `<a href class="ds-btn ds-btn--<variant> ds-btn--<size>">`; sin `loading` ni `disabled`.
+- Ningún item modifica `design-system/`. Si algo falla por el componente, se devuelve a `design-builder`.
 
 Modelo de datos común (referencia para todos los items, definido en WI-AC-001 / WI-AC-002):
 
@@ -637,3 +645,61 @@ interface Card {
     - (4) Con `reducedMotion: 'reduce'` en el contexto de Playwright, el e2e de AC-015 pasa.
   - Ejecutar todos los tests (`npm run check`, `npm run test`, `npm run test:e2e`) como regresión completa del rediseño.
 - Historial QA: [2026-10-13 PASS — AC-057 (commit d0963c4). check 296 archivos 0 errores 0 warnings; test 304/304; test:e2e 116/116 en dos ejecuciones completas seguidas. e2e/redesign-a11y.spec.ts: (1) en lista, tablero, tablero de solo lectura, tarjetas archivadas y proyectos archivados, en claro y oscuro, todo botón sin texto visible tiene nombre accesible no vacío y ningún svg.lucide queda fuera de aria-hidden; (2) a 375×667 scrollWidth ≤ 375 en las 5 vistas y las 4 columnas se alcanzan desplazando el contenedor del tablero, con window.scrollX 0; (3) "Añadir tarjeta en …" ×4 y "Archivar Login" responden con elementFromPoint a 3,5 px fuera del borde por los 4 lados (D-033: a 4,0 px exactos abajo/derecha caen en el borde exclusivo de la zona de 44×44; decidido por el usuario el 2026-10-13, spec en acf7feb); (4) con reducedMotion "reduce" (matchMedia comprobado) el escenario de AC-015 pasa y persiste. Sin cambios de producto. Arreglo de test: redesign-add-card.spec.ts:21 tenía una carrera (Intro antes del evento `close` del diálogo cerrado con Escape; fallaba 12-18/30 con --repeat-each 30); ahora reintenta Intro y pasa 60/60. Queda una intermitencia previa en drag-and-drop.spec.ts:151 (AC-017 teclado), ajena al rediseño: ~2-7 % con --repeat-each 60, en las ejecuciones completas pasó; se investigó (la librería traslada el agarre si la lista de otra columna vuelve a contener la tarjeta al repintarse a mitad del arrastre) pero ningún cambio probado la elimina de forma demostrable, así que no se incluye ninguno. Reglas base de stack OK]
+
+## WI-AC-059
+- Contexto: tablero
+- Acceptance Checks: AC-059, AC-061
+- Depende de: []
+- Rama sugerida: feature/wi-ac-059-adopt-ds-select-chip
+- Estado: verificado
+- Notas de implementación:
+  - D-034, D-037. **Primer commit de la rama (git-manager):** la iteración de `design-system/` pendiente en `integration/kanban-board` + `design-system/design_system.md` + `specs/templates/design_system.md` + `specs/project_specs.md` + `specs/work_items.md`. El builder parte de ahí y no toca `design-system/`.
+  - Objetivo: adoptar el `Select` y el `Chip` nuevos y dejar **toda** la suite en verde con ellos (`npm run check`, `npm run test`, `npm run test:e2e`). El selector de modo de color sigue siendo `ColorModeSelect` (con el `Select` nuevo) hasta WI-AC-058.
+  - `src/views/EditCardDialog.svelte`: Tipo, Estado y Prioridad siguen con `<Select bind:value>`; revisar que no se le pase ningún atributo nativo ni se escuche `change`/`input` del DOM (la prop `onchange` recibe el string). El orden de opciones ya es el de AC-059 ("Sin prioridad" la última, valor `''`). `src/lib/ColorModeSelect.svelte`: solo lo necesario para compilar con los tipos nuevos.
+  - Migrar los tests que usan la API del `<select>` nativo a la interacción combobox → option (ver bloque "Sistema de diseño (2026-10-14)"): e2e `archive-cards`, `auto-sort`, `card-title-validation`, `color-mode-persistence`, `color-mode`, `drag-and-drop`, `edit-card`, `no-indexeddb`, `no-uncaught-save-errors`, `type-filter` y el helper `e2e/support/redesign.ts`; componente `src/App.test.ts`, `src/views/EditCardDialog.test.ts` y `src/views/ImportFlow.test.ts`. Conviene un helper único (p. ej. `chooseOption(page, 'Prioridad', 'Alta')` en `e2e/support/` y su equivalente para Testing Library) en lugar de repetir los dos clics. Las aserciones de valor pasan de `toHaveValue('alta')` a comprobar el texto del combobox (`toHaveText('Alta')`).
+  - `e2e/color-mode-label.spec.ts` (AC-045): si alguna aserción depende del `<select>` nativo (p. ej. clic en la etiqueta → foco), ajustarla al combobox; AC-045 está retirado (D-035) y el spec se elimina en WI-AC-058, así que aquí basta con que pase o, si no se puede sostener con el combobox, eliminarlo citando D-035.
+  - `e2e/redesign-card-tags.spec.ts` (AC-052 (4)): el chip seleccionado ya no tiene `svg.lucide-check` (nota del 2026-10-14 en AC-052).
+  - Tests nuevos: e2e de AC-059 (p. ej. `e2e/card-dialog-selects.spec.ts`) con los puntos (1) a (5), en claro y oscuro para (5); e2e de AC-061 (p. ej. dentro de `redesign-card-tags.spec.ts` o `e2e/type-filter-chip.spec.ts`) en claro y oscuro.
+  - Para AC-059 (4): abrir "Prioridad" con la tarjeta en un viewport normal y comprobar `elementFromPoint` en el centro de "Sin prioridad" (la lista está en la top layer, por encima del `<dialog>`).
+- Historial QA:
+  - 2026-10-14 PASS (AC-059, AC-061): `npm run check` 0 errores; `npx vitest run` 304/304; `npx playwright test` 124/124 (incluye `card-dialog-selects.spec.ts` y AC-061 en `redesign-card-tags.spec.ts`, claro y oscuro). Reglas base OK: sin dependencias nuevas, sin valores sueltos, `design-system/` sin tocar por el builder. Observación: AC-059 (5) se mide con el puntero sobre otra opción, porque la opción elegida que además es la activa usa `action.tint-active`.
+
+## WI-AC-058
+- Contexto: apariencia
+- Acceptance Checks: AC-058
+- Depende de: [WI-AC-059]
+- Rama sugerida: feature/wi-ac-058-color-mode-menu
+- Estado: pendiente
+- Notas de implementación:
+  - D-035. Sustituir `src/lib/ColorModeSelect.svelte` por un `ColorModeMenu.svelte` (o similar) con `MenuButton` de `design-system`: `label="Modo de color"`, `items` de `COLOR_MODES` con `COLOR_MODE_LABELS` ("Auto", "Claro", "Oscuro") e iconos `Monitor` / `Sun` / `Moon` (`@lucide/svelte/icons/monitor|sun|moon`), `icon` según el modo actual y `bind:value` con la misma guarda `isColorMode`. Variante y tamaño por defecto (`ghost`, `md` → 44 × 44 px), `align="end"`. La correspondencia modo → icono va en `src/lib/icons.ts` (no en `domain`).
+  - `AppHeader` y las 4 vistas usan el nuevo control donde estaba el selector. Quitar los estilos de la app que solo existían para la etiqueta visible (AC-045).
+  - Tests: eliminar `e2e/color-mode-label.spec.ts` (AC-045 retirado); adaptar `color-mode.spec.ts`, `color-mode-persistence.spec.ts`, `no-uncaught-save-errors.spec.ts` (fallo al guardar la preferencia), `e2e/support/redesign.ts` (helper de cambiar modo) y `src/App.test.ts` a "abrir menú → pulsar `menuitemradio`"; "el selector muestra X" se comprueba con `aria-checked="true"` en la opción X y el icono `svg.lucide-<x>` del botón (notas de AC-042 y AC-043). AC-048 (3): a la derecha de la cabecera está el botón "Modo de color".
+  - Test e2e nuevo de AC-058 (p. ej. `e2e/color-mode-menu.spec.ts`): puntos (1) a (5) en las 4 vistas; para (5), viewport 375×667, `scrollWidth` ≤ 375, caja del botón dentro del viewport y ≥ 44 × 44, y las 3 opciones dentro del viewport con el menú abierto. Comprobar también que no existe `getByRole('combobox', { name: 'Modo de color' })` ni texto visible "Modo de color".
+  - AC-057 (1) sigue pasando: el botón es de solo icono con nombre accesible y sus iconos (y los del menú) están en `aria-hidden`.
+- Historial QA: []
+
+## WI-AC-060
+- Contexto: tablero
+- Acceptance Checks: AC-060
+- Depende de: [WI-AC-059]
+- Rama sugerida: feature/wi-ac-060-column-surface
+- Estado: pendiente
+- Notas de implementación:
+  - D-036. No se espera cambio de producto: `Column` ya pinta su cuerpo con `status.*.surface`. Revisar que ningún estilo de la app sobrescriba el fondo de la columna o de su cuerpo (p. ej. un `background` heredado de cuando era `surface.sunken`); si lo hay, quitarlo.
+  - Test e2e (p. ej. añadir a `e2e/redesign-columns.spec.ts` o uno nuevo): en el tablero activo y en el de solo lectura, en claro y oscuro, `background-color` de cada `getByRole('region', { name: <estado> })` con los valores de AC-060, y la cabecera sigue con `status.<x>.tint` (AC-049).
+- Historial QA: []
+
+## WI-AC-062
+- Contexto: apariencia
+- Acceptance Checks: AC-062
+- Depende de: [WI-AC-059]
+- Rama sugerida: feature/wi-ac-062-nav-links-as-buttons
+- Estado: pendiente
+- Notas de implementación:
+  - D-038. Cambiar los `<a>` con `Icon` por `<Button href={…} size="sm" icon={…}>texto</Button>`:
+    - `variant="ghost"`, icono `ArrowLeft`: "Volver a proyectos" (`Board.svelte`, `ArchivedProjects.svelte`, página no encontrada en `App.svelte`), "Volver a proyectos archivados" (`Board.svelte`, solo lectura) y "Volver al tablero" (`ArchivedCards.svelte`).
+    - `variant="secondary"`, icono `Archive`: "Tarjetas archivadas" (`Board.svelte`) y "Proyectos archivados" (`ProjectList.svelte`).
+  - Quitar las clases y estilos propios que ya no se usan (`.board__back`, `.board__link`, `.archived__back`, `.archived-projects__back`, `.project-list__link`, `.not-found__back` y sus `:focus-visible`); si alguna clase se usaba solo para maquetación (márgenes), sustituirla por un contenedor con `--ds-spacing-*`. No tocar el título de `AppHeader` ni los enlaces de cada proyecto o tarjeta.
+  - Los nombres accesibles y destinos no cambian, así que los tests por `getByRole('link', { name })` deberían seguir pasando; actualizar los que usen las clases quitadas. `e2e/redesign-button-icons.spec.ts` (AC-055) debe seguir pasando.
+  - Test e2e nuevo de AC-062 (p. ej. `e2e/nav-links-as-buttons.spec.ts`): por cada enlace y vista, en claro y oscuro, `a.ds-btn` con la variante indicada, `text-decoration-line: none`, altura ≥ 36 px, fondo y borde de `secondary`, foco con Tab (`outline-style` ≠ `none`) e Intro navega; y área de pulsación con `elementFromPoint` a 3,5 px fuera del borde por los 4 lados (como WI-AC-057 (3)).
+- Historial QA: []

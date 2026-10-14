@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 const LONG_TITLE = 'a'.repeat(121);
 const PASTED_TITLE = 'b'.repeat(150);
@@ -112,7 +113,7 @@ test('AC-011: editar con título no válido no modifica la tarjeta', async ({ pa
   ] as const) {
     await title.fill(value);
     await expect(title).toHaveValue(value);
-    await dialog.getByLabel('Prioridad').selectOption({ label: 'Alta' });
+    await chooseOption(dialog, 'Prioridad', 'Alta');
     await dialog.getByRole('button', { name: 'Guardar cambios' }).click();
     await expect(dialog).toBeVisible();
     await expect(title).toHaveAttribute('aria-invalid', 'true');

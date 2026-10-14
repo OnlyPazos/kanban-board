@@ -42,15 +42,19 @@
   --ds-color-status-todo-accent: #64748B; /* colors.status.todo.accent.light */
   --ds-color-status-todo-tint: #F1F5F9; /* colors.status.todo.tint.light */
   --ds-color-status-todo-on-tint: #334155; /* colors.status.todo.on-tint.light */
+  --ds-color-status-todo-surface: #F3F6F9; /* colors.status.todo.surface.light */
   --ds-color-status-doing-accent: #2563EB; /* colors.status.doing.accent.light */
   --ds-color-status-doing-tint: #DBEAFE; /* colors.status.doing.tint.light */
   --ds-color-status-doing-on-tint: #1E40AF; /* colors.status.doing.on-tint.light */
+  --ds-color-status-doing-surface: #EFF6FF; /* colors.status.doing.surface.light */
   --ds-color-status-paused-accent: #EA580C; /* colors.status.paused.accent.light */
   --ds-color-status-paused-tint: #FFEDD5; /* colors.status.paused.tint.light */
   --ds-color-status-paused-on-tint: #9A3412; /* colors.status.paused.on-tint.light */
+  --ds-color-status-paused-surface: #FFF7ED; /* colors.status.paused.surface.light */
   --ds-color-status-done-accent: #15803D; /* colors.status.done.accent.light */
   --ds-color-status-done-tint: #DCFCE7; /* colors.status.done.tint.light */
   --ds-color-status-done-on-tint: #166534; /* colors.status.done.on-tint.light */
+  --ds-color-status-done-surface: #F0FDF4; /* colors.status.done.surface.light */
   --ds-color-priority-high: #DC2626; /* colors.priority.high.light */
   --ds-color-priority-medium: #EA580C; /* colors.priority.medium.light */
   --ds-color-priority-low: #4D7C0F; /* colors.priority.low.light */
@@ -102,6 +106,8 @@
   --ds-icon-size-xl: 28px; /* sizes.icon.size.xl */
   --ds-icon-stroke-width: 2px; /* sizes.icon.stroke-width */
   --ds-appbar-accent-width: 3px; /* sizes.appbar.accent-width */
+  --ds-popup-min-width: 180px; /* sizes.popup.min-width */
+  --ds-popup-max-height: 288px; /* sizes.popup.max-height */
 
   /* spacing.json */
   --ds-spacing-1: 4px; /* spacing.spacing.1 */
@@ -187,15 +193,19 @@
     --ds-color-status-todo-accent: #94A3B8; /* colors.status.todo.accent.dark */
     --ds-color-status-todo-tint: #1E293B; /* colors.status.todo.tint.dark */
     --ds-color-status-todo-on-tint: #E2E8F0; /* colors.status.todo.on-tint.dark */
+    --ds-color-status-todo-surface: #162033; /* colors.status.todo.surface.dark */
     --ds-color-status-doing-accent: #60A5FA; /* colors.status.doing.accent.dark */
     --ds-color-status-doing-tint: #172554; /* colors.status.doing.tint.dark */
     --ds-color-status-doing-on-tint: #BFDBFE; /* colors.status.doing.on-tint.dark */
+    --ds-color-status-doing-surface: #131E3F; /* colors.status.doing.surface.dark */
     --ds-color-status-paused-accent: #FB923C; /* colors.status.paused.accent.dark */
     --ds-color-status-paused-tint: #431407; /* colors.status.paused.tint.dark */
     --ds-color-status-paused-on-tint: #FED7AA; /* colors.status.paused.on-tint.dark */
+    --ds-color-status-paused-surface: #291718; /* colors.status.paused.surface.dark */
     --ds-color-status-done-accent: #4ADE80; /* colors.status.done.accent.dark */
     --ds-color-status-done-tint: #052E16; /* colors.status.done.tint.dark */
     --ds-color-status-done-on-tint: #BBF7D0; /* colors.status.done.on-tint.dark */
+    --ds-color-status-done-surface: #0A2220; /* colors.status.done.surface.dark */
     --ds-color-priority-high: #F87171; /* colors.priority.high.dark */
     --ds-color-priority-medium: #FB923C; /* colors.priority.medium.dark */
     --ds-color-priority-low: #A3E635; /* colors.priority.low.dark */
@@ -252,15 +262,19 @@
   --ds-color-status-todo-accent: #94A3B8; /* colors.status.todo.accent.dark */
   --ds-color-status-todo-tint: #1E293B; /* colors.status.todo.tint.dark */
   --ds-color-status-todo-on-tint: #E2E8F0; /* colors.status.todo.on-tint.dark */
+  --ds-color-status-todo-surface: #162033; /* colors.status.todo.surface.dark */
   --ds-color-status-doing-accent: #60A5FA; /* colors.status.doing.accent.dark */
   --ds-color-status-doing-tint: #172554; /* colors.status.doing.tint.dark */
   --ds-color-status-doing-on-tint: #BFDBFE; /* colors.status.doing.on-tint.dark */
+  --ds-color-status-doing-surface: #131E3F; /* colors.status.doing.surface.dark */
   --ds-color-status-paused-accent: #FB923C; /* colors.status.paused.accent.dark */
   --ds-color-status-paused-tint: #431407; /* colors.status.paused.tint.dark */
   --ds-color-status-paused-on-tint: #FED7AA; /* colors.status.paused.on-tint.dark */
+  --ds-color-status-paused-surface: #291718; /* colors.status.paused.surface.dark */
   --ds-color-status-done-accent: #4ADE80; /* colors.status.done.accent.dark */
   --ds-color-status-done-tint: #052E16; /* colors.status.done.tint.dark */
   --ds-color-status-done-on-tint: #BBF7D0; /* colors.status.done.on-tint.dark */
+  --ds-color-status-done-surface: #0A2220; /* colors.status.done.surface.dark */
   --ds-color-priority-high: #F87171; /* colors.priority.high.dark */
   --ds-color-priority-medium: #FB923C; /* colors.priority.medium.dark */
   --ds-color-priority-low: #A3E635; /* colors.priority.low.dark */

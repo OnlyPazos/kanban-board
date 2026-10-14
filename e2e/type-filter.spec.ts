@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 async function createProject(page: Page, name: string) {
   await page.getByRole('button', { name: 'Crear proyecto' }).click();
@@ -22,7 +23,7 @@ async function addCard(page: Page, title: string, type: string) {
   if (type === 'Novedad') return;
   await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: title, exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Editar tarjeta' });
-  await edit.getByLabel('Tipo').selectOption({ label: type });
+  await chooseOption(edit, 'Tipo', type);
   await edit.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(edit).toBeHidden();
 }

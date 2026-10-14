@@ -1,4 +1,5 @@
 import { expect, test, type Download, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 /** AC-037: se elimina `indexedDB` del navegador antes de que arranque la app. */
 const removeIndexedDB = (page: Page) =>
@@ -61,7 +62,7 @@ test('AC-037: sin IndexedDB hay un aviso permanente y se puede crear, editar y e
   await page.getByRole('region', { name: 'Sin empezar' }).getByRole('button', { name: 'Login', exact: true }).click();
   const editCard = page.getByRole('dialog', { name: 'Editar tarjeta' });
   await editCard.getByLabel('Título').fill('Login con Google');
-  await editCard.getByLabel('Estado').selectOption({ label: 'En curso' });
+  await chooseOption(editCard, 'Estado', 'En curso');
   await editCard.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(editCard).toBeHidden();
   await expect(

@@ -1,0 +1,114 @@
+/*
+ * Lista desplegable compartida — design-system/components/shared/popup.css
+ *
+ * La importan Select.svelte (role="listbox") y MenuButton.svelte
+ * (role="menu"). Global con prefijo .ds-*, para que ambas listas tengan
+ * exactamente el mismo aspecto. La colocación la hace shared/popup.js.
+ *
+ * Todos los valores salen de las variables --ds-* de tokens/tokens.css.
+ */
+
+.ds-popup {
+  /* Anula el estilo por defecto de [popover] (centrado a pantalla completa). */
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-spacing-1);
+  min-width: var(--ds-popup-min-width);
+  max-height: var(--ds-popup-max-height);
+  margin: 0;
+  padding: var(--ds-spacing-1);
+  overflow-y: auto;
+  list-style: none;
+
+  background-color: var(--ds-color-surface-raised);
+  color: var(--ds-color-text-primary);
+  border: var(--ds-border-width-default) solid var(--ds-color-border-default);
+  border-radius: var(--ds-radii-medium);
+  box-shadow: var(--ds-shadow-md);
+
+  font-family: var(--ds-font-family-sans);
+  font-size: var(--ds-font-body-size);
+  line-height: var(--ds-font-body-line-height);
+}
+
+/* Sin Popover API la lista se queda en el flujo, bajo el control. */
+.ds-popup:not([popover]) {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--ds-spacing-1);
+  z-index: 1;
+}
+
+.ds-popup__item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--ds-spacing-2);
+  width: 100%;
+  min-height: var(--ds-control-hit-area);
+  margin: 0;
+  padding: var(--ds-spacing-2) var(--ds-spacing-3);
+
+  background: none;
+  color: inherit;
+  border: 0;
+  border-radius: var(--ds-radii-small);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.ds-popup__label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Marca de la opción elegida: ocupa su hueco siempre para que no salte el texto. */
+.ds-popup__mark {
+  display: inline-flex;
+  flex: none;
+  color: var(--ds-color-action-primary);
+  visibility: hidden;
+}
+
+/* Opción activa (ratón encima, flechas o foco). */
+.ds-popup__item:hover,
+.ds-popup__item--active,
+.ds-popup__item:focus-visible {
+  background-color: var(--ds-color-surface-hover);
+}
+
+.ds-popup__item:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
+  outline-offset: calc(var(--ds-focus-ring-width) * -1);
+}
+
+/* Opción elegida: relleno action.tint, texto en negrita y marca visible. */
+.ds-popup__item--selected {
+  background-color: var(--ds-color-action-tint);
+  color: var(--ds-color-action-on-tint);
+  font-weight: var(--ds-font-label-weight);
+}
+
+.ds-popup__item--selected:hover,
+.ds-popup__item--selected.ds-popup__item--active,
+.ds-popup__item--selected:focus-visible {
+  background-color: var(--ds-color-action-tint-active);
+}
+
+.ds-popup__item--selected .ds-popup__mark {
+  visibility: visible;
+}
+
+/* Disabled (exento de contraste por WCAG). */
+.ds-popup__item[aria-disabled='true'] {
+  cursor: not-allowed;
+  color: var(--ds-color-text-disabled);
+  background: none;
+}

@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { chooseOption } from './select';
 
 // Utilidades comunes de los e2e del rediseño visual (AC-047 … AC-057).
 
@@ -10,6 +11,7 @@ export const TOKENS = {
     background: 'rgb(248, 250, 252)',
     actionPrimary: 'rgb(79, 70, 229)',
     actionTint: 'rgb(238, 242, 255)',
+    surfaceRaised: 'rgb(255, 255, 255)',
     appbarBg: 'rgb(255, 255, 255)',
     appbarAccent: 'rgb(79, 70, 229)',
     borderDefault: 'rgb(226, 232, 240)',
@@ -25,6 +27,7 @@ export const TOKENS = {
     background: 'rgb(15, 23, 42)',
     actionPrimary: 'rgb(139, 147, 250)',
     actionTint: 'rgb(30, 27, 75)',
+    surfaceRaised: 'rgb(36, 49, 71)',
     appbarBg: 'rgb(30, 41, 59)',
     appbarAccent: 'rgb(139, 147, 250)',
     borderDefault: 'rgb(51, 65, 85)',
@@ -54,7 +57,7 @@ export const colorModeSelect = (page: Page) =>
 
 /** Fuerza el modo de color desde el selector de la cabecera. */
 export async function setMode(page: Page, mode: Mode) {
-  await colorModeSelect(page).selectOption(mode);
+  await chooseOption(page.getByRole('banner'), 'Modo de color', mode === 'dark' ? 'Oscuro' : 'Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', mode);
 }
 
@@ -93,8 +96,8 @@ export async function addCard(
   if (opts.type || opts.priority) {
     await column(page, columnName).getByRole('button', { name: title, exact: true }).click();
     const edit = page.getByRole('dialog', { name: 'Editar tarjeta' });
-    if (opts.type) await edit.getByLabel('Tipo').selectOption({ label: opts.type });
-    if (opts.priority) await edit.getByLabel('Prioridad').selectOption({ label: opts.priority });
+    if (opts.type) await chooseOption(edit, 'Tipo', opts.type);
+    if (opts.priority) await chooseOption(edit, 'Prioridad', opts.priority);
     await edit.getByRole('button', { name: 'Guardar cambios' }).click();
     await expect(edit).toBeHidden();
   }

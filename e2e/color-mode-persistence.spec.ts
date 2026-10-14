@@ -1,4 +1,5 @@
 import { expect, test, type FileChooser, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 // AC-043 (D-017): la preferencia de modo de color se recuerda entre sesiones
 // (localStorage), no viaja en los exports, ninguna importación la cambia y,
@@ -12,15 +13,13 @@ const projectList = (page: Page) => page.getByRole('region', { name: 'Proyectos'
 const storedMode = (page: Page) => page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
 
 async function expectDark(page: Page) {
-  await expect(colorModeSelect(page)).toHaveValue('dark');
-  await expect(colorModeSelect(page).locator('option:checked')).toHaveText('Oscuro');
+  await expect(colorModeSelect(page)).toHaveText('Oscuro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveCSS('background-color', DARK_BACKGROUND);
 }
 
 async function expectAutoLight(page: Page) {
-  await expect(colorModeSelect(page)).toHaveValue('auto');
-  await expect(colorModeSelect(page).locator('option:checked')).toHaveText('Auto');
+  await expect(colorModeSelect(page)).toHaveText('Auto');
   await expect(page.locator('html')).not.toHaveAttribute('data-theme');
   await expect(page.locator('body')).toHaveCSS('background-color', LIGHT_BACKGROUND);
 }
@@ -67,7 +66,7 @@ test('AC-043: tras elegir "Oscuro" y recargar sigue en oscuro con el sistema en 
   await expectAutoLight(page);
   expect(await storedMode(page)).toBeNull();
 
-  await colorModeSelect(page).selectOption({ label: 'Oscuro' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
   await expectDark(page);
   expect(await storedMode(page)).toBe('dark');
 
@@ -88,7 +87,7 @@ test('AC-043: tras elegir "Oscuro" y recargar sigue en oscuro con el sistema en 
   );
 
   // Volver a "Auto" elimina la preferencia: al recargar sigue al sistema.
-  await colorModeSelect(page).selectOption({ label: 'Auto' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Auto');
   await expect.poll(() => storedMode(page)).toBeNull();
   await page.reload();
   await expectAutoLight(page);
@@ -97,9 +96,9 @@ test('AC-043: tras elegir "Oscuro" y recargar sigue en oscuro con el sistema en 
 test('AC-043: "Claro" también se recuerda con el sistema en oscuro', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
-  await colorModeSelect(page).selectOption({ label: 'Claro' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Claro');
   await page.reload();
-  await expect(colorModeSelect(page)).toHaveValue('light');
+  await expect(colorModeSelect(page)).toHaveText('Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('body')).toHaveCSS('background-color', LIGHT_BACKGROUND);
 });
@@ -108,7 +107,7 @@ test('AC-043: la preferencia no aparece en los exports e importar cualquier arch
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');
   await createProject(page, 'Mi app');
-  await colorModeSelect(page).selectOption({ label: 'Oscuro' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
   await expectDark(page);
 
   // Export completo y de proyecto: solo datos del modelo, sin la preferencia.
@@ -197,11 +196,11 @@ test('AC-043: con localStorage bloqueado el selector funciona en la sesión, al 
   await page.goto('/');
   await expectAutoLight(page);
 
-  await colorModeSelect(page).selectOption({ label: 'Oscuro' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
   await expectDark(page);
-  await colorModeSelect(page).selectOption({ label: 'Claro' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Claro');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await colorModeSelect(page).selectOption({ label: 'Oscuro' });
+  await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
   await expectDark(page);
 
   await page.reload();

@@ -20,13 +20,15 @@
     block    ocupa todo el ancho
     icon     icono de @lucide/svelte delante del texto (decorativo). Sin
              texto, el botón es cuadrado (solo icono).
+    href     lo convierte en un enlace (<a>) con el mismo aspecto, para
+             navegar (p. ej. "Volver a proyectos"). Sin loading ni disabled.
     + cualquier atributo nativo de <button> (onclick, aria-label…).
   aria-label es obligatorio si el botón no tiene texto (solo icono):
     <Button variant="ghost" size="sm" icon={X} aria-label="Cerrar" />
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import type { HTMLButtonAttributes } from 'svelte/elements';
+  import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
   import Icon, { type IconComponent } from '../icon/Icon.svelte';
 
   type Props = Omit<HTMLButtonAttributes, 'class'> & {
@@ -35,6 +37,7 @@
     loading?: boolean;
     block?: boolean;
     icon?: IconComponent;
+    href?: string;
     children?: Snippet;
   };
 
@@ -46,6 +49,7 @@
     block = false,
     disabled = false,
     icon,
+    href,
     onclick,
     children,
     ...rest
@@ -62,23 +66,39 @@
   };
 </script>
 
-<button
-  {...rest}
-  {type}
-  {disabled}
-  class="ds-btn ds-btn--{variant} ds-btn--{size}"
-  class:ds-btn--block={block}
-  class:ds-btn--icon-only={!!icon && !children}
-  aria-disabled={loading ? 'true' : undefined}
-  aria-busy={loading ? 'true' : undefined}
-  onclick={handleClick}
->
-  <span class="ds-btn__spinner" aria-hidden="true"></span>
-  <span class="ds-btn__label">
-    {#if icon}<Icon {icon} size={size === 'lg' ? 'lg' : 'md'} />{/if}
-    {@render children?.()}
-  </span>
-</button>
+{#if href}
+  <a
+    {...rest as HTMLAnchorAttributes}
+    {href}
+    class="ds-btn ds-btn--{variant} ds-btn--{size}"
+    class:ds-btn--block={block}
+    class:ds-btn--icon-only={!!icon && !children}
+    onclick={onclick as HTMLAnchorAttributes['onclick']}
+  >
+    <span class="ds-btn__label">
+      {#if icon}<Icon {icon} size={size === 'lg' ? 'lg' : 'md'} />{/if}
+      {@render children?.()}
+    </span>
+  </a>
+{:else}
+  <button
+    {...rest}
+    {type}
+    {disabled}
+    class="ds-btn ds-btn--{variant} ds-btn--{size}"
+    class:ds-btn--block={block}
+    class:ds-btn--icon-only={!!icon && !children}
+    aria-disabled={loading ? 'true' : undefined}
+    aria-busy={loading ? 'true' : undefined}
+    onclick={handleClick}
+  >
+    <span class="ds-btn__spinner" aria-hidden="true"></span>
+    <span class="ds-btn__label">
+      {#if icon}<Icon {icon} size={size === 'lg' ? 'lg' : 'md'} />{/if}
+      {@render children?.()}
+    </span>
+  </button>
+{/if}
 
 <style>
   /* ── Base ───────────────────────────────────────────────── */
@@ -106,6 +126,7 @@
 
     cursor: pointer;
     user-select: none;
+    text-decoration: none;
     -webkit-tap-highlight-color: transparent;
     outline: none;
     transition: background-color var(--ds-duration-fast) var(--ds-easing-standard),

@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import App from './App.svelte';
+import { chooseOption, getCombobox, optionLabels } from './views/choose-option';
 import { buildExport, createCard, createProject, type Card, type CardType, type Project } from './domain';
 import type { Repository } from './persistence/repository';
 
@@ -74,16 +75,16 @@ describe('App', () => {
 
   it('AC-042: la cabecera tiene el selector "Modo de color" que aplica data-theme a <html>', async () => {
     render(App, { repository: memoryRepository() });
-    const select = within(screen.getByRole('banner')).getByRole('combobox', { name: 'Modo de color' });
-    expect(select).toHaveValue('auto');
-    expect([...select.querySelectorAll('option')].map((o) => o.textContent)).toEqual(['Auto', 'Claro', 'Oscuro']);
+    const banner = screen.getByRole('banner');
+    expect(getCombobox('Modo de color', banner)).toHaveTextContent('Auto');
+    expect(await optionLabels('Modo de color', banner)).toEqual(['Auto', 'Claro', 'Oscuro']);
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
 
-    await fireEvent.change(select, { target: { value: 'dark' } });
+    await chooseOption('Modo de color', 'Oscuro', banner);
     await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('dark'));
-    await fireEvent.change(select, { target: { value: 'light' } });
+    await chooseOption('Modo de color', 'Claro', banner);
     await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('light'));
-    await fireEvent.change(select, { target: { value: 'auto' } });
+    await chooseOption('Modo de color', 'Auto', banner);
     await waitFor(() => expect(document.documentElement.hasAttribute('data-theme')).toBe(false));
   });
 
@@ -103,13 +104,13 @@ describe('App', () => {
     localStorage.setItem('kanban-board:color-mode', 'dark');
     try {
       const { unmount } = render(App, { repository: memoryRepository() });
-      const select = within(screen.getByRole('banner')).getByRole('combobox', { name: 'Modo de color' });
-      expect(select).toHaveValue('dark');
+      const banner = screen.getByRole('banner');
+      expect(getCombobox('Modo de color', banner)).toHaveTextContent('Oscuro');
       await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('dark'));
 
-      await fireEvent.change(select, { target: { value: 'light' } });
+      await chooseOption('Modo de color', 'Claro', banner);
       await waitFor(() => expect(localStorage.getItem('kanban-board:color-mode')).toBe('light'));
-      await fireEvent.change(select, { target: { value: 'auto' } });
+      await chooseOption('Modo de color', 'Auto', banner);
       await waitFor(() => expect(localStorage.getItem('kanban-board:color-mode')).toBeNull());
       expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
       unmount();

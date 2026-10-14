@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 async function createProject(page: Page, name: string) {
   await page.getByRole('button', { name: 'Crear proyecto' }).click();
@@ -19,9 +20,9 @@ async function addFullCard(page: Page) {
 
   await enCurso.getByRole('button', { name: 'Login', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Editar tarjeta' });
-  await edit.getByLabel('Tipo').selectOption({ label: 'Arreglo' });
+  await chooseOption(edit, 'Tipo', 'Arreglo');
   await edit.getByLabel('Descripción').fill('Primera línea\nSegunda línea');
-  await edit.getByLabel('Prioridad').selectOption({ label: 'Alta' });
+  await chooseOption(edit, 'Prioridad', 'Alta');
   await edit.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(edit).toBeHidden();
 }

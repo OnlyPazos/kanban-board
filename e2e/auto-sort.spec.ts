@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 async function createProject(page: Page, name: string) {
   await page.getByRole('button', { name: 'Crear proyecto' }).click();
@@ -19,7 +20,7 @@ async function addCard(page: Page, column: string, title: string) {
 async function setPriority(page: Page, column: string, title: string, priority: string) {
   await page.getByRole('region', { name: column }).getByRole('button', { name: title, exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Editar tarjeta' });
-  await dialog.getByLabel('Prioridad').selectOption({ label: priority });
+  await chooseOption(dialog, 'Prioridad', priority);
   await dialog.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(dialog).toBeHidden();
 }
