@@ -684,11 +684,12 @@ interface Card {
 - Acceptance Checks: AC-060
 - Depende de: [WI-AC-059]
 - Rama sugerida: feature/wi-ac-060-column-surface
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - D-036. No se espera cambio de producto: `Column` ya pinta su cuerpo con `status.*.surface`. Revisar que ningún estilo de la app sobrescriba el fondo de la columna o de su cuerpo (p. ej. un `background` heredado de cuando era `surface.sunken`); si lo hay, quitarlo.
   - Test e2e (p. ej. añadir a `e2e/redesign-columns.spec.ts` o uno nuevo): en el tablero activo y en el de solo lectura, en claro y oscuro, `background-color` de cada `getByRole('region', { name: <estado> })` con los valores de AC-060, y la cabecera sigue con `status.<x>.tint` (AC-049).
-- Historial QA: []
+- Historial QA:
+  - 2026-10-14 PASS (AC-060): `npx playwright test` 126/126 (AC-060 en `redesign-columns.spec.ts`: tablero activo y de solo lectura, claro y oscuro, cabecera en `status.<x>.tint`); `npm run check` 0 errores; `npx vitest run` 303/303. Sin cambios de producto: `Board.svelte` y `ArchivedCards.svelte` no definen `background`. Reglas base OK.
 
 ## WI-AC-062
 - Contexto: apariencia
