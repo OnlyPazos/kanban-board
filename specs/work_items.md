@@ -669,14 +669,15 @@ interface Card {
 - Acceptance Checks: AC-058
 - Depende de: [WI-AC-059]
 - Rama sugerida: feature/wi-ac-058-color-mode-menu
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - D-035. Sustituir `src/lib/ColorModeSelect.svelte` por un `ColorModeMenu.svelte` (o similar) con `MenuButton` de `design-system`: `label="Modo de color"`, `items` de `COLOR_MODES` con `COLOR_MODE_LABELS` ("Auto", "Claro", "Oscuro") e iconos `Monitor` / `Sun` / `Moon` (`@lucide/svelte/icons/monitor|sun|moon`), `icon` según el modo actual y `bind:value` con la misma guarda `isColorMode`. Variante y tamaño por defecto (`ghost`, `md` → 44 × 44 px), `align="end"`. La correspondencia modo → icono va en `src/lib/icons.ts` (no en `domain`).
   - `AppHeader` y las 4 vistas usan el nuevo control donde estaba el selector. Quitar los estilos de la app que solo existían para la etiqueta visible (AC-045).
   - Tests: eliminar `e2e/color-mode-label.spec.ts` (AC-045 retirado); adaptar `color-mode.spec.ts`, `color-mode-persistence.spec.ts`, `no-uncaught-save-errors.spec.ts` (fallo al guardar la preferencia), `e2e/support/redesign.ts` (helper de cambiar modo) y `src/App.test.ts` a "abrir menú → pulsar `menuitemradio`"; "el selector muestra X" se comprueba con `aria-checked="true"` en la opción X y el icono `svg.lucide-<x>` del botón (notas de AC-042 y AC-043). AC-048 (3): a la derecha de la cabecera está el botón "Modo de color".
   - Test e2e nuevo de AC-058 (p. ej. `e2e/color-mode-menu.spec.ts`): puntos (1) a (5) en las 4 vistas; para (5), viewport 375×667, `scrollWidth` ≤ 375, caja del botón dentro del viewport y ≥ 44 × 44, y las 3 opciones dentro del viewport con el menú abierto. Comprobar también que no existe `getByRole('combobox', { name: 'Modo de color' })` ni texto visible "Modo de color".
   - AC-057 (1) sigue pasando: el botón es de solo icono con nombre accesible y sus iconos (y los del menú) están en `aria-hidden`.
-- Historial QA: []
+- Historial QA:
+  - 2026-10-14 PASS (AC-058): `npm run check` 0 errores; `npx vitest run` 303/303; `npx playwright test` 124/125 (incluye `color-mode-menu.spec.ts` (1)…(5) en las 4 vistas; AC-042, AC-043, AC-048 y AC-057 siguen pasando). Reglas base OK: iconos importados uno a uno, correspondencia modo → icono en `src/lib/icons.ts`, sin dependencias nuevas ni valores sueltos. Observación: el fallo es `drag-and-drop.spec.ts` AC-017 (teclado), que es intermitente y anterior a este item: 4/30 fallos en `integration/kanban-board` sin este cambio y 2/30 en la rama. Recarga antes de que termine el guardado; queda fuera de alcance y hay que devolverlo a planner.
 
 ## WI-AC-060
 - Contexto: tablero
