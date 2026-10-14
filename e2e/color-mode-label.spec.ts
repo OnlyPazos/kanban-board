@@ -70,7 +70,7 @@ async function checkLabel(page: Page) {
   // Encima del selector.
   expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(selectBox.y);
 
-  // Es la <label for> del <select>.
+  // Es la <label for> del combobox.
   const selectId = await select.getAttribute('id');
   expect(selectId).toBeTruthy();
   await expect(label).toHaveAttribute('for', selectId as string);
@@ -112,13 +112,19 @@ test.describe('AC-045: etiqueta visible "Modo de color"', () => {
       await expect(banner(page).getByRole('link', { name: 'Kanban de proyectos' })).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(select).toBeFocused();
-      await page.keyboard.press('ArrowDown'); // Auto → Claro
-      await expect(select).toHaveValue('light');
-      await page.keyboard.press('ArrowDown'); // Claro → Oscuro
-      await expect(select).toHaveValue('dark');
+      // Combobox del sistema de diseño (D-034): ↓ abre la lista, ↓ mueve e Intro elige.
+      await page.keyboard.press('ArrowDown'); // abre en Auto
+      await page.keyboard.press('ArrowDown'); // → Claro
+      await page.keyboard.press('Enter');
+      await expect(select).toHaveText('Claro');
+      await page.keyboard.press('ArrowDown'); // abre en Claro
+      await page.keyboard.press('ArrowDown'); // → Oscuro
+      await page.keyboard.press('Enter');
+      await expect(select).toHaveText('Oscuro');
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-      await page.keyboard.press('Home'); // → Auto
-      await expect(select).toHaveValue('auto');
+      await page.keyboard.press('Home'); // abre en la primera: Auto
+      await page.keyboard.press('Enter');
+      await expect(select).toHaveText('Auto');
       await expect(page.locator('html')).not.toHaveAttribute('data-theme');
     }
   });

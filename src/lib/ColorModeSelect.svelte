@@ -1,9 +1,9 @@
 <!--
-  Selector "Modo de color" de la cabecera (AC-042, D-017). Select nativo
-  del sistema de diseño: se maneja solo con el teclado.
-  La etiqueta "Modo de color" es visible y va encima del selector, que es
-  la disposición de serie de `Field` (AC-045, D-019). Es la <label for>
-  del <select>, así que también le da su nombre accesible.
+  Selector "Modo de color" de la cabecera (AC-042, D-017). Select del
+  sistema de diseño (combobox con lista propia, D-034): se maneja solo con
+  el teclado. La etiqueta "Modo de color" es visible y va encima del
+  selector, que es la disposición de serie de `Field` (AC-045, D-019). Es
+  la <label for> del combobox, así que también le da su nombre accesible.
 -->
 <script lang="ts">
   import { Select } from 'design-system';

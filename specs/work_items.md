@@ -651,7 +651,7 @@ interface Card {
 - Acceptance Checks: AC-059, AC-061
 - Depende de: []
 - Rama sugerida: feature/wi-ac-059-adopt-ds-select-chip
-- Estado: pendiente
+- Estado: qa
 - Notas de implementación:
   - D-034, D-037. **Primer commit de la rama (git-manager):** la iteración de `design-system/` pendiente en `integration/kanban-board` + `design-system/design_system.md` + `specs/templates/design_system.md` + `specs/project_specs.md` + `specs/work_items.md`. El builder parte de ahí y no toca `design-system/`.
   - Objetivo: adoptar el `Select` y el `Chip` nuevos y dejar **toda** la suite en verde con ellos (`npm run check`, `npm run test`, `npm run test:e2e`). El selector de modo de color sigue siendo `ColorModeSelect` (con el `Select` nuevo) hasta WI-AC-058.

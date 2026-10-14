@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseOption } from './support/select';
 
 // AC-042 (D-017): selector "Modo de color" en la cabecera con Auto / Claro / Oscuro.
 // El color de fondo del body debe ser el del token `background`.
@@ -18,8 +19,7 @@ test.describe('AC-042: modo de color', () => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
     const select = colorModeSelect(page);
-    await expect(select).toHaveValue('auto');
-    await expect(select.locator('option:checked')).toHaveText('Auto');
+    await expect(select).toHaveText('Auto');
     await expect(page.locator('html')).not.toHaveAttribute('data-theme');
     await expectBackground(page, LIGHT_BACKGROUND);
   });
@@ -27,7 +27,7 @@ test.describe('AC-042: modo de color', () => {
   test('Auto con el sistema en oscuro usa el fondo oscuro', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/');
-    await expect(colorModeSelect(page)).toHaveValue('auto');
+    await expect(colorModeSelect(page)).toHaveText('Auto');
     await expectBackground(page, DARK_BACKGROUND);
   });
 
@@ -36,16 +36,15 @@ test.describe('AC-042: modo de color', () => {
   }) => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
-    const select = colorModeSelect(page);
     // Marca para detectar una recarga.
     await page.evaluate(() => ((window as unknown as { __noReload: boolean }).__noReload = true));
 
-    await select.selectOption({ label: 'Oscuro' });
+    await chooseOption(page.getByRole('banner'), 'Modo de color', 'Oscuro');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expectBackground(page, DARK_BACKGROUND);
     expect(await page.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true);
 
-    await select.selectOption({ label: 'Auto' });
+    await chooseOption(page.getByRole('banner'), 'Modo de color', 'Auto');
     await expect(page.locator('html')).not.toHaveAttribute('data-theme');
     await expectBackground(page, LIGHT_BACKGROUND);
     // Sigue al sistema: si el sistema cambia a oscuro, la interfaz también.
@@ -56,13 +55,12 @@ test.describe('AC-042: modo de color', () => {
   test('con el sistema en oscuro, "Claro" pasa a claro y "Auto" vuelve al oscuro del sistema', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/');
-    const select = colorModeSelect(page);
 
-    await select.selectOption({ label: 'Claro' });
+    await chooseOption(page.getByRole('banner'), 'Modo de color', 'Claro');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await expectBackground(page, LIGHT_BACKGROUND);
 
-    await select.selectOption({ label: 'Auto' });
+    await chooseOption(page.getByRole('banner'), 'Modo de color', 'Auto');
     await expect(page.locator('html')).not.toHaveAttribute('data-theme');
     await expectBackground(page, DARK_BACKGROUND);
   });
@@ -103,17 +101,24 @@ test.describe('AC-042: modo de color', () => {
       await page.keyboard.press('Tab');
       await expect(select).toBeFocused();
 
-      await page.keyboard.press('ArrowDown'); // Auto → Claro
-      await expect(select).toHaveValue('light');
+      // Combobox del sistema de diseño (D-034): ↓ abre la lista en la opción
+      // elegida, ↓ mueve y Intro elige y cierra.
+      await page.keyboard.press('ArrowDown'); // abre en Auto
+      await page.keyboard.press('ArrowDown'); // → Claro
+      await page.keyboard.press('Enter');
+      await expect(select).toHaveText('Claro');
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
-      await page.keyboard.press('ArrowDown'); // Claro → Oscuro
-      await expect(select).toHaveValue('dark');
+      await page.keyboard.press('ArrowDown'); // abre en Claro
+      await page.keyboard.press('ArrowDown'); // → Oscuro
+      await page.keyboard.press('Enter');
+      await expect(select).toHaveText('Oscuro');
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
       await expectBackground(page, DARK_BACKGROUND);
 
-      await page.keyboard.press('Home'); // → Auto
-      await expect(select).toHaveValue('auto');
+      await page.keyboard.press('Home'); // abre en la primera: Auto
+      await page.keyboard.press('Enter');
+      await expect(select).toHaveText('Auto');
       await expect(page.locator('html')).not.toHaveAttribute('data-theme');
       await expectBackground(page, LIGHT_BACKGROUND);
     }

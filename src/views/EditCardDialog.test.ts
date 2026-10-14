@@ -2,6 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { trackUnhandledRejections } from './unhandled-rejections';
 import EditCardDialog from './EditCardDialog.svelte';
+import { chooseOption, getCombobox, optionLabels } from './choose-option';
 import { createCard } from '../domain';
 
 // jsdom no implementa showModal/close de <dialog>.
@@ -26,19 +27,17 @@ describe('EditCardDialog', () => {
   it('parte de los valores actuales de la tarjeta', () => {
     render(EditCardDialog, { card: makeCard(), open: true, onsave: vi.fn() });
     expect((screen.getByLabelText(/^Título/) as HTMLInputElement).value).toBe('Login');
-    expect((screen.getByLabelText(/^Tipo/) as HTMLSelectElement).value).toBe('novedad');
-    expect((screen.getByLabelText(/^Estado/) as HTMLSelectElement).value).toBe('sin-empezar');
+    expect(getCombobox(/^Tipo/)).toHaveTextContent('Novedad');
+    expect(getCombobox(/^Estado/)).toHaveTextContent('Sin empezar');
     expect((screen.getByLabelText(/^Descripción/) as HTMLTextAreaElement).value).toBe('Demo');
-    expect((screen.getByLabelText(/^Prioridad/) as HTMLSelectElement).value).toBe('media');
+    expect(getCombobox(/^Prioridad/)).toHaveTextContent('Media');
   });
 
-  it('ofrece los 4 tipos, los 4 estados y las prioridades Alta, Media, Baja y Sin prioridad', () => {
+  it('ofrece los 4 tipos, los 4 estados y las prioridades Alta, Media, Baja y Sin prioridad', async () => {
     render(EditCardDialog, { card: makeCard(), open: true, onsave: vi.fn() });
-    const labels = (name: RegExp) =>
-      [...(screen.getByLabelText(name) as HTMLSelectElement).options].map((o) => o.textContent);
-    expect(labels(/^Tipo/)).toEqual(['Novedad', 'Mejora', 'Arreglo', 'Técnico']);
-    expect(labels(/^Estado/)).toEqual(['Sin empezar', 'En curso', 'En pausa', 'Finalizado']);
-    expect(labels(/^Prioridad/)).toEqual(['Alta', 'Media', 'Baja', 'Sin prioridad']);
+    expect(await optionLabels(/^Tipo/)).toEqual(['Novedad', 'Mejora', 'Arreglo', 'Técnico']);
+    expect(await optionLabels(/^Estado/)).toEqual(['Sin empezar', 'En curso', 'En pausa', 'Finalizado']);
+    expect(await optionLabels(/^Prioridad/)).toEqual(['Alta', 'Media', 'Baja', 'Sin prioridad']);
   });
 
   it('muestra las fechas de creación y modificación en solo lectura (no son campos editables)', () => {
@@ -48,8 +47,9 @@ describe('EditCardDialog', () => {
     expect(screen.getByTestId('card-updated-at')).toHaveAttribute('datetime', card.updatedAt);
     expect(screen.getByText('Creada')).toBeInTheDocument();
     expect(screen.getByText('Última modificación')).toBeInTheDocument();
-    // Solo hay 5 controles editables: título, tipo, estado, descripción y prioridad.
-    expect(document.querySelectorAll('form input, form select, form textarea')).toHaveLength(5);
+    // Solo hay 5 controles editables: título y descripción, más los combobox tipo, estado y prioridad.
+    expect(document.querySelectorAll('form input, form select, form textarea')).toHaveLength(2);
+    expect(screen.getAllByRole('combobox')).toHaveLength(3);
   });
 
   it('guarda todos los campos con el id de la tarjeta; "Sin prioridad" se guarda como null', async () => {
@@ -58,10 +58,10 @@ describe('EditCardDialog', () => {
     render(EditCardDialog, { card, open: true, onsave });
 
     await fireEvent.input(screen.getByLabelText(/^Título/), { target: { value: 'Login 2' } });
-    await fireEvent.change(screen.getByLabelText(/^Tipo/), { target: { value: 'arreglo' } });
-    await fireEvent.change(screen.getByLabelText(/^Estado/), { target: { value: 'en-pausa' } });
+    await chooseOption(/^Tipo/, 'Arreglo');
+    await chooseOption(/^Estado/, 'En pausa');
     await fireEvent.input(screen.getByLabelText(/^Descripción/), { target: { value: 'línea 1\nlínea 2' } });
-    await fireEvent.change(screen.getByLabelText(/^Prioridad/), { target: { value: '' } });
+    await chooseOption(/^Prioridad/, 'Sin prioridad');
     await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
     await waitFor(() =>
