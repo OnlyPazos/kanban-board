@@ -924,6 +924,8 @@ Chip seleccionado del filtro por tipo. En claro y en oscuro: (1) un chip selecci
 ### AC-062 [apariencia] [categoría: functional]
 Enlaces de navegación con aspecto de botón. Estos enlaces siguen siendo enlaces (`getByRole('link', { name })`), con el mismo nombre accesible, el mismo destino y el icono de AC-055, pero se muestran con el `Button` del sistema de diseño (`Button href`, elemento `a.ds-btn`) y tamaño `sm`: "Volver a proyectos" (tablero, proyectos archivados y página no encontrada), "Volver a proyectos archivados" (tablero de solo lectura) y "Volver al tablero" (tarjetas archivadas), con variante `ghost` (`a.ds-btn--ghost`); y "Tarjetas archivadas" (tablero) y "Proyectos archivados" (lista de proyectos), con variante `secondary` (`a.ds-btn--secondary`). En claro y en oscuro, cada uno: (1) tiene `text-decoration-line` `none` y una altura de al menos 36 px; (2) los `secondary` tienen `background-color` de `surface.raised` (claro `rgb(255, 255, 255)`, oscuro `rgb(36, 49, 71)`) y un borde de 1 px; (3) se alcanza con Tab, muestra el anillo de foco (`outline-style` distinto de `none` con `:focus-visible`) e Intro navega a su destino; (4) su área de pulsación mide al menos 44 × 44 px, medida como en AC-057 (3) (`elementFromPoint` a 3,5 px fuera del borde visible por los 4 lados devuelve el propio enlace o un descendiente). AC-055 y AC-057 siguen pasando. depende_de: [AC-055, AC-057]
 
+> Nota (2026-10-14): el punto (4) queda precisado por D-039. Arriba y abajo se mide como en AC-057 (3): `elementFromPoint` a 3,5 px fuera del borde visible devuelve el propio enlace o un descendiente. En horizontal basta con que el ancho visible del enlace sea de al menos 44 px. Los puntos (1) a (3) no cambian. El texto original se conserva como historial.
+
 ## Decisiones de diseño
 
 ### D-001 [tema: ambiguedad]
@@ -1199,8 +1201,18 @@ Elegido: A. El título "Kanban de proyectos" de la cabecera (AC-048) y los enlac
 Razón: Elimina estilos propios de enlace repetidos en 4 vistas (regla "Estilos") y alinea "Tarjetas archivadas" con "Exportar proyecto", que ya es un `Button secondary sm`. Con `sm` hay zona táctil de 44 px por el `::after`.
 Prueba (AC): AC-062
 
+### D-039 [tema: edge-case]
+Pregunta: AC-062 (4) mide el área de pulsación como AC-057 (3), con `elementFromPoint` a 3,5 px fuera del borde por los 4 lados. El `::after` de `Button size="sm"` solo crece hasta `control.hit-area` (44 px). En un enlace con texto, que ya mide más de 44 px de ancho, no sobresale por los lados, así que los puntos de la izquierda y la derecha caen fuera, aunque el área mida ancho × 44 ≥ 44 × 44. ¿Cómo se mide?
+Opciones: A) Arriba y abajo a 3,5 px, como D-033; en horizontal, ancho visible ≥ 44 px; B) Ampliar el `::after` en `design-system/` para que sobresalga también por los lados; C) Retirar el punto (4).
+Elegido: A. Lo decidió el usuario (2026-10-14) al detectarlo `builder` en WI-AC-062.
+Razón: El objetivo es un área mínima de 44 × 44, y el método de AC-057 (3) se pensó para botones cuadrados de solo icono. Con un ancho de 44 px o más, el lado horizontal ya cumple sin ampliar nada, y no hace falta tocar el sistema de diseño.
+Prueba (AC): AC-062
+
 ## Preguntas abiertas
 Ninguna pendiente. D-035 la tomó `spec-writer` sin preguntar (ejecución desatendida pedida por el usuario el 2026-10-14) y se puede revertir como indica la propia decisión.
+
+Resuelta el 2026-10-14:
+- **P-5 (AC-062, D-039)**: ¿cómo se mide el área de pulsación de los enlaces con texto, más anchos de 44 px? → **Resuelta**: arriba y abajo a 3,5 px fuera del borde; en horizontal, ancho visible ≥ 44 px.
 
 Resuelta el 2026-10-13:
 - **P-4 (AC-057, D-033)**: ¿a qué distancia del borde visible se comprueba el área de pulsación de 44 × 44? → **Resuelta**: a 3,5 px; a 4,0 px exactos el punto cae en el borde exclusivo de la zona.

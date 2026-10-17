@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Download from '@lucide/svelte/icons/download';
-  import { Alert, Button, Icon } from 'design-system';
+  import { Alert, Button } from 'design-system';
   import AppHeader from './lib/AppHeader.svelte';
   import ColorModeMenu from './lib/ColorModeMenu.svelte';
   import ProjectList from './views/ProjectList.svelte';
@@ -174,7 +174,9 @@
     {:else if store.loaded}
       <section class="not-found">
         <h1 class="not-found__title">Proyecto no encontrado</h1>
-        <a class="not-found__back" href={LIST_HREF}><Icon icon={ArrowLeft} size="sm" />Volver a proyectos</a>
+        <div class="not-found__nav">
+          <Button href={LIST_HREF} variant="ghost" size="sm" icon={ArrowLeft}>Volver a proyectos</Button>
+        </div>
       </section>
     {/if}
   {:else}
@@ -235,17 +237,7 @@
     letter-spacing: var(--ds-font-heading-letter-spacing);
   }
 
-  .not-found__back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-spacing-1);
+  .not-found__nav {
     align-self: flex-start;
-    color: var(--ds-color-action-primary);
-    border-radius: var(--ds-radii-small);
-  }
-
-  .not-found__back:focus-visible {
-    outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
-    outline-offset: var(--ds-focus-ring-offset);
   }
 </style>

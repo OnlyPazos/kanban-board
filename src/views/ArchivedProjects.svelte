@@ -14,7 +14,7 @@
   import ArchiveRestore from '@lucide/svelte/icons/archive-restore';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Trash2 from '@lucide/svelte/icons/trash-2';
-  import { Button, Card, Dialog, Icon } from 'design-system';
+  import { Button, Card, Dialog } from 'design-system';
   import type { Card as CardData, Project } from '../domain';
   import { boardHref, LIST_HREF } from '../lib/route';
 
@@ -77,7 +77,9 @@
 
 <section class="archived-projects" aria-labelledby="archived-projects-title">
   <div class="archived-projects__header">
-    <a class="archived-projects__back" href={LIST_HREF}><Icon icon={ArrowLeft} size="sm" />Volver a proyectos</a>
+    <div class="archived-projects__nav">
+      <Button href={LIST_HREF} variant="ghost" size="sm" icon={ArrowLeft}>Volver a proyectos</Button>
+    </div>
     <h1 id="archived-projects-title" class="archived-projects__title">Proyectos archivados</h1>
   </div>
 
@@ -148,16 +150,8 @@
     margin: 0 0 var(--ds-spacing-5);
   }
 
-  .archived-projects__back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-spacing-1);
+  .archived-projects__nav {
     align-self: flex-start;
-    color: var(--ds-color-action-primary);
-    font-size: var(--ds-font-label-size);
-    font-weight: var(--ds-font-label-weight);
-    line-height: var(--ds-font-label-line-height);
-    border-radius: var(--ds-radii-small);
   }
 
   .archived-projects__open {
@@ -169,8 +163,7 @@
     border-radius: var(--ds-radii-small);
   }
 
-  .archived-projects__open:focus-visible,
-  .archived-projects__back:focus-visible {
+  .archived-projects__open:focus-visible {
     outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
     outline-offset: var(--ds-focus-ring-offset);
   }

@@ -73,9 +73,7 @@
   <div class="project-list__header">
     <div class="project-list__heading">
       <h1 id="project-list-title" class="project-list__title">Proyectos</h1>
-      <a class="project-list__link" href={ARCHIVED_PROJECTS_HREF}
-        ><Icon icon={Archive} size="sm" />Proyectos archivados</a
-      >
+      <Button href={ARCHIVED_PROJECTS_HREF} variant="secondary" size="sm" icon={Archive}>Proyectos archivados</Button>
     </div>
     {#if projects.length > 0 || canExportAll}
       <div class="project-list__actions">
@@ -163,22 +161,6 @@
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--ds-spacing-2) var(--ds-spacing-4);
-  }
-
-  .project-list__link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-spacing-1);
-    color: var(--ds-color-action-primary);
-    font-size: var(--ds-font-label-size);
-    font-weight: var(--ds-font-label-weight);
-    line-height: var(--ds-font-label-line-height);
-    border-radius: var(--ds-radii-small);
-  }
-
-  .project-list__link:focus-visible {
-    outline: var(--ds-focus-ring-width) solid var(--ds-color-focus);
-    outline-offset: var(--ds-focus-ring-offset);
   }
 
   .project-list__actions {
