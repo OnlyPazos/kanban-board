@@ -696,7 +696,7 @@ interface Card {
 - Acceptance Checks: AC-062
 - Depende de: [WI-AC-059]
 - Rama sugerida: feature/wi-ac-062-nav-links-as-buttons
-- Estado: qa
+- Estado: verificado
 - Notas de implementación:
   - D-038. Cambiar los `<a>` con `Icon` por `<Button href={…} size="sm" icon={…}>texto</Button>`:
     - `variant="ghost"`, icono `ArrowLeft`: "Volver a proyectos" (`Board.svelte`, `ArchivedProjects.svelte`, página no encontrada en `App.svelte`), "Volver a proyectos archivados" (`Board.svelte`, solo lectura) y "Volver al tablero" (`ArchivedCards.svelte`).
@@ -704,4 +704,5 @@ interface Card {
   - Quitar las clases y estilos propios que ya no se usan (`.board__back`, `.board__link`, `.archived__back`, `.archived-projects__back`, `.project-list__link`, `.not-found__back` y sus `:focus-visible`); si alguna clase se usaba solo para maquetación (márgenes), sustituirla por un contenedor con `--ds-spacing-*`. No tocar el título de `AppHeader` ni los enlaces de cada proyecto o tarjeta.
   - Los nombres accesibles y destinos no cambian, así que los tests por `getByRole('link', { name })` deberían seguir pasando; actualizar los que usen las clases quitadas. `e2e/redesign-button-icons.spec.ts` (AC-055) debe seguir pasando.
   - Test e2e nuevo de AC-062 (p. ej. `e2e/nav-links-as-buttons.spec.ts`): por cada enlace y vista, en claro y oscuro, `a.ds-btn` con la variante indicada, `text-decoration-line: none`, altura ≥ 36 px, fondo y borde de `secondary`, foco con Tab (`outline-style` ≠ `none`) e Intro navega; y área de pulsación con `elementFromPoint` a 3,5 px fuera del borde arriba y abajo (como WI-AC-057 (3)) y ancho visible ≥ 44 px (D-039, 2026-10-14: el `::after` de `sm` no sobresale por los lados en enlaces con texto).
-- Historial QA: []
+- Historial QA:
+  - 2026-10-17 PASS (AC-062): `npx playwright test` 128/128 (AC-062 en `nav-links-as-buttons.spec.ts`: 6 vistas, claro y oscuro, `a.ds-btn--sm` de su variante, sin subrayado, alto ≥ 36 px, `secondary` con `surface.raised` y borde 1 px, Tab + anillo de foco + Intro navega, área de pulsación según D-039; AC-055 y AC-057 siguen pasando); `npm run check` 0 errores; `npx vitest run` 303/303. Clases propias retiradas sin restos; contenedores de maquetación sin colores propios. Reglas base OK.
