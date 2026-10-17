@@ -696,7 +696,7 @@ interface Card {
 - Acceptance Checks: AC-062
 - Depende de: [WI-AC-059]
 - Rama sugerida: feature/wi-ac-062-nav-links-as-buttons
-- Estado: verificado
+- Estado: integrado
 - Notas de implementación:
   - D-038. Cambiar los `<a>` con `Icon` por `<Button href={…} size="sm" icon={…}>texto</Button>`:
     - `variant="ghost"`, icono `ArrowLeft`: "Volver a proyectos" (`Board.svelte`, `ArchivedProjects.svelte`, página no encontrada en `App.svelte`), "Volver a proyectos archivados" (`Board.svelte`, solo lectura) y "Volver al tablero" (`ArchivedCards.svelte`).
